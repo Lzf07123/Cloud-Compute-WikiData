@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="全面介绍Kubernetes集群的资源监控、日志收集和故障排查解决方案">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kubernetes可观测性完整指南">
+<meta property="og:url" content="http://example.com/2026/05/14/Kubernetes%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="我的学习之路">
+<meta property="og:description" content="全面介绍Kubernetes集群的资源监控、日志收集和故障排查解决方案">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-13T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-19T21:55:03.987Z">
+<meta property="article:author" content="Li Zhifeng">
+<meta property="article:tag" content="Kubernetes">
+<meta property="article:tag" content="可观测性">
+<meta property="article:tag" content="故障排查">
+<meta property="article:tag" content="日志">
+<meta property="article:tag" content="监控">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2026/05/14/Kubernetes%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E8%AF%A6%E8%A7%A3/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/05/14/Kubernetes%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E8%AF%A6%E8%A7%A3/","path":"2026/05/14/Kubernetes可观测性详解/","title":"Kubernetes可观测性完整指南"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Kubernetes可观测性完整指南 | 我的学习之路</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">我的学习之路</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E7%9B%91%E6%8E%A7%EF%BC%88Metrics-Server%EF%BC%89%F0%9F%93%88"><span class="nav-number">1.</span> <span class="nav-text">资源监控（Metrics Server）📈</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%92%8C%E9%85%8D%E7%BD%AE"><span class="nav-number">1.1.</span> <span class="nav-text">安装和配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E5%8F%82%E6%95%B0%E9%85%8D%E7%BD%AE"><span class="nav-number">1.2.</span> <span class="nav-text">核心参数配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">1.3.</span> <span class="nav-text">使用命令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%EF%BC%88EFK%EF%BC%89%F0%9F%93%9D"><span class="nav-number">2.</span> <span class="nav-text">日志收集（EFK）📝</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#EFK%E6%9E%B6%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">EFK架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E6%AD%A5%E9%AA%A4"><span class="nav-number">2.2.</span> <span class="nav-text">部署步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Fluentd%E9%85%8D%E7%BD%AE%E8%A6%81%E7%82%B9"><span class="nav-number">2.3.</span> <span class="nav-text">Fluentd配置要点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E6%8E%92%E6%9F%A5%E5%91%BD%E4%BB%A4%F0%9F%94%A7"><span class="nav-number">3.</span> <span class="nav-text">常见排查命令🔧</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E7%8A%B6%E6%80%81%E6%A3%80%E6%9F%A5"><span class="nav-number">3.1.</span> <span class="nav-text">基础状态检查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%A6%E7%BB%86%E4%BF%A1%E6%81%AF%E6%9F%A5%E8%AF%A2"><span class="nav-number">3.2.</span> <span class="nav-text">详细信息查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E6%9F%A5%E7%9C%8B"><span class="nav-number">3.3.</span> <span class="nav-text">日志查看</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%B9%E5%99%A8%E6%93%8D%E4%BD%9C"><span class="nav-number">3.4.</span> <span class="nav-text">容器操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%92%8C%E5%AD%98%E5%82%A8%E6%8E%92%E6%9F%A5"><span class="nav-number">3.5.</span> <span class="nav-text">网络和存储排查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E7%9B%91%E6%8E%A7"><span class="nav-number">3.6.</span> <span class="nav-text">资源监控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5"><span class="nav-number">3.7.</span> <span class="nav-text">常见问题排查</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Li Zhifeng</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">173</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/05/14/Kubernetes%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Li Zhifeng">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="我的学习之路">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Kubernetes可观测性完整指南 | 我的学习之路">
+      <meta itemprop="description" content="全面介绍Kubernetes集群的资源监控、日志收集和故障排查解决方案">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Kubernetes可观测性完整指南
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-05-14 00:00:00" itemprop="dateCreated datePublished" datetime="2026-05-14T00:00:00+08:00">2026-05-14</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-05-20 05:55:03" itemprop="dateModified" datetime="2026-05-20T05:55:03+08:00">2026-05-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AE%B9%E5%99%A8%E7%BC%96%E6%8E%92/" itemprop="url" rel="index"><span itemprop="name">容器编排</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AE%B9%E5%99%A8%E7%BC%96%E6%8E%92/%E8%BF%90%E7%BB%B4/" itemprop="url" rel="index"><span itemprop="name">运维</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">全面介绍Kubernetes集群的资源监控、日志收集和故障排查解决方案</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h2 id="资源监控（Metrics-Server）📈"><a href="#资源监控（Metrics-Server）📈" class="headerlink" title="资源监控（Metrics Server）📈"></a>资源监控（Metrics Server）📈</h2><h3 id="安装和配置"><a href="#安装和配置" class="headerlink" title="安装和配置"></a>安装和配置</h3><ul>
+<li><strong>准备工作</strong>：确保Kubernetes版本1.8及以上，API聚合层必须启用，Kubelet必须启用Webhook认证和授权 ⚙️</li>
+<li><strong>安装命令</strong>：<ul>
+<li>下载部署文件：<code>wget https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml</code></li>
+<li>高可用版本：<code>kubectl apply -f high-availability-1.21+.yaml</code></li>
+<li>国内镜像替换：将<code>registry.k8s.io/metrics-server/metrics-server:v0.7.2</code>替换为可用镜像地址 🌏</li>
+</ul>
+</li>
+</ul>
+<h3 id="核心参数配置"><a href="#核心参数配置" class="headerlink" title="核心参数配置"></a>核心参数配置</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">args:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">--kubelet-insecure-tls</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">--cert-dir=/tmp</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">--secure-port=10250</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">--kubelet-preferred-address-types=InternalIP,Hostname,InternalDNS,ExternalDNS,ExternalIP</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">--kubelet-use-node-status-port</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">--metric-resolution=15s</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="使用命令"><a href="#使用命令" class="headerlink" title="使用命令"></a>使用命令</h3><ul>
+<li>查看节点资源使用：<code>kubectl top nodes</code></li>
+<li>查看Pod资源使用：<code>kubectl top pods -n &lt;NAMESPACE&gt;</code></li>
+<li>验证安装：<code>kubectl get pods -n kube-system | grep metrics-server</code></li>
+</ul>
+<h2 id="日志收集（EFK）📝"><a href="#日志收集（EFK）📝" class="headerlink" title="日志收集（EFK）📝"></a>日志收集（EFK）📝</h2><h3 id="EFK架构"><a href="#EFK架构" class="headerlink" title="EFK架构"></a>EFK架构</h3><ul>
+<li><strong>Elasticsearch</strong>：分布式搜索和分析引擎，用于存储和索引日志数据 🔍</li>
+<li><strong>Fluentd</strong>：日志收集器，作为DaemonSet部署在每个节点上，收集容器日志 🔄</li>
+<li><strong>Kibana</strong>：可视化分析平台，提供日志查询和展示界面 📊</li>
+</ul>
+<h3 id="部署步骤"><a href="#部署步骤" class="headerlink" title="部署步骤"></a>部署步骤</h3><ol>
+<li><strong>创建命名空间</strong>：<code>kubectl create namespace logging</code></li>
+<li><strong>部署Elasticsearch</strong>：<ul>
+<li>使用StatefulSet部署ES集群</li>
+<li>配置存储卷和环境变量 💾</li>
+</ul>
+</li>
+<li><strong>部署Fluentd</strong>：<ul>
+<li>作为DaemonSet部署，确保每个节点都有实例</li>
+<li>配置RBAC权限访问Kubernetes API 🔐</li>
+</ul>
+</li>
+<li><strong>部署Kibana</strong>：<ul>
+<li>使用Deployment部署</li>
+<li>配置Service和Ingress暴露服务 🌐</li>
+</ul>
+</li>
+</ol>
+<h3 id="Fluentd配置要点"><a href="#Fluentd配置要点" class="headerlink" title="Fluentd配置要点"></a>Fluentd配置要点</h3><ul>
+<li>监听路径：<code>/var/log/containers/*.log</code></li>
+<li>输出目标：Elasticsearch集群</li>
+<li>使用kubernetes插件增强日志信息</li>
+</ul>
+<h2 id="常见排查命令🔧"><a href="#常见排查命令🔧" class="headerlink" title="常见排查命令🔧"></a>常见排查命令🔧</h2><h3 id="基础状态检查"><a href="#基础状态检查" class="headerlink" title="基础状态检查"></a>基础状态检查</h3><ul>
+<li><strong>查看Pod状态</strong>：<code>kubectl get pods -n &lt;NAMESPACE&gt;</code></li>
+<li><strong>查看节点状态</strong>：<code>kubectl get nodes</code></li>
+<li><strong>查看集群事件</strong>：<code>kubectl get events --all-namespaces</code></li>
+</ul>
+<h3 id="详细信息查询"><a href="#详细信息查询" class="headerlink" title="详细信息查询"></a>详细信息查询</h3><ul>
+<li><strong>查看Pod详细信息</strong>：<code>kubectl describe pod &lt;POD-NAME&gt; -n &lt;NAMESPACE&gt;</code></li>
+<li><strong>查看节点详细信息</strong>：<code>kubectl describe node &lt;NODE-NAME&gt;</code></li>
+<li><strong>查看Service信息</strong>：<code>kubectl describe svc &lt;SERVICE-NAME&gt; -n &lt;NAMESPACE&gt;</code></li>
+</ul>
+<h3 id="日志查看"><a href="#日志查看" class="headerlink" title="日志查看"></a>日志查看</h3><ul>
+<li><strong>查看容器日志</strong>：<code>kubectl logs &lt;POD-NAME&gt; -c &lt;CONTAINER-NAME&gt; -n &lt;NAMESPACE&gt;</code></li>
+<li><strong>查看前一次日志</strong>：<code>kubectl logs &lt;POD-NAME&gt; --previous</code></li>
+<li><strong>实时跟踪日志</strong>：<code>kubectl logs -f &lt;POD-NAME&gt;</code></li>
+</ul>
+<h3 id="容器操作"><a href="#容器操作" class="headerlink" title="容器操作"></a>容器操作</h3><ul>
+<li><strong>进入容器</strong>：<code>kubectl exec -it &lt;POD-NAME&gt; -n &lt;NAMESPACE&gt; -- /bin/bash</code></li>
+<li><strong>在容器中执行命令</strong>：<code>kubectl exec &lt;POD-NAME&gt; -- &lt;COMMAND&gt;</code></li>
+<li><strong>文件拷贝</strong>：<code>kubectl cp &lt;LOCAL-FILE&gt; &lt;POD-NAME&gt;:&lt;PATH&gt;</code></li>
+</ul>
+<h3 id="网络和存储排查"><a href="#网络和存储排查" class="headerlink" title="网络和存储排查"></a>网络和存储排查</h3><ul>
+<li><strong>端口转发</strong>：<code>kubectl port-forward &lt;POD-NAME&gt; &lt;LOCAL-PORT&gt;:&lt;POD-PORT&gt;</code></li>
+<li><strong>检查Endpoints</strong>：<code>kubectl get endpoints &lt;SERVICE-NAME&gt; -n &lt;NAMESPACE&gt;</code></li>
+<li><strong>检查PVC状态</strong>：<code>kubectl get pvc -n &lt;NAMESPACE&gt;</code></li>
+</ul>
+<h3 id="资源监控"><a href="#资源监控" class="headerlink" title="资源监控"></a>资源监控</h3><ul>
+<li><strong>查看资源使用情况</strong>：<code>kubectl top nodes</code> 和 <code>kubectl top pods -n &lt;NAMESPACE&gt;</code></li>
+<li><strong>检查API服务器健康</strong>：<code>kubectl get --raw=/healthz</code></li>
+</ul>
+<h3 id="常见问题排查"><a href="#常见问题排查" class="headerlink" title="常见问题排查"></a>常见问题排查</h3><ul>
+<li><strong>Pod Pending</strong>：检查资源不足、节点Selector不匹配 ⏳</li>
+<li><strong>CrashLoopBackOff</strong>：查看应用日志，检查启动命令 🔄</li>
+<li><strong>ImagePullBackOff</strong>：检查镜像名称和认证配置 🐳</li>
+<li><strong>Service无法访问</strong>：检查Endpoints和网络策略 🌐</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%9B%91%E6%8E%A7/" rel="tag"># 监控</a>
+              <a href="/tags/Kubernetes/" rel="tag"># Kubernetes</a>
+              <a href="/tags/%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/" rel="tag"># 可观测性</a>
+              <a href="/tags/%E6%97%A5%E5%BF%97/" rel="tag"># 日志</a>
+              <a href="/tags/%E6%95%85%E9%9A%9C%E6%8E%92%E6%9F%A5/" rel="tag"># 故障排查</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/05/14/Kubernetes%E5%AE%89%E5%85%A8%E5%9F%BA%E7%A1%80%E8%AF%A6%E8%A7%A3/" rel="prev" title="Kubernetes安全基础">
+                  <i class="fa fa-angle-left"></i> Kubernetes安全基础
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/05/15/%E7%A7%81%E6%9C%89%E4%BA%91%E5%AD%A6%E4%B9%A0%E8%B7%AF%E5%BE%84/" rel="next" title="私有云 OpenStack 学习路径">
+                  私有云 OpenStack 学习路径 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Li Zhifeng</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

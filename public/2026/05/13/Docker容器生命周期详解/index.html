@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="全面介绍Docker容器的生命周期状态、管理命令及最佳实践">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker容器生命周期管理详解">
+<meta property="og:url" content="http://example.com/2026/05/13/Docker%E5%AE%B9%E5%99%A8%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="我的学习之路">
+<meta property="og:description" content="全面介绍Docker容器的生命周期状态、管理命令及最佳实践">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-12T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-19T21:55:03.983Z">
+<meta property="article:author" content="Li Zhifeng">
+<meta property="article:tag" content="Docker">
+<meta property="article:tag" content="容器">
+<meta property="article:tag" content="生命周期管理">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2026/05/13/Docker%E5%AE%B9%E5%99%A8%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E8%AF%A6%E8%A7%A3/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/05/13/Docker%E5%AE%B9%E5%99%A8%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E8%AF%A6%E8%A7%A3/","path":"2026/05/13/Docker容器生命周期详解/","title":"Docker容器生命周期管理详解"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Docker容器生命周期管理详解 | 我的学习之路</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">我的学习之路</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Docker%E5%AE%B9%E5%99%A8%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%AE%A1%E7%90%86%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.</span> <span class="nav-text">Docker容器生命周期管理详解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81Docker%E5%AE%B9%E5%99%A8%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%8A%B6%E6%80%81"><span class="nav-number">1.1.</span> <span class="nav-text">一、Docker容器生命周期状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81Docker%E5%AE%B9%E5%99%A8%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4"><span class="nav-number">1.2.</span> <span class="nav-text">二、Docker容器生命周期管理命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%88%9B%E5%BB%BA%E5%AE%B9%E5%99%A8"><span class="nav-number">1.2.1.</span> <span class="nav-text">1. 创建容器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%90%AF%E5%8A%A8%E5%AE%B9%E5%99%A8"><span class="nav-number">1.2.2.</span> <span class="nav-text">2. 启动容器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E8%BF%90%E8%A1%8C%E5%AE%B9%E5%99%A8"><span class="nav-number">1.2.3.</span> <span class="nav-text">3. 运行容器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E6%9A%82%E5%81%9C%E5%AE%B9%E5%99%A8"><span class="nav-number">1.2.4.</span> <span class="nav-text">4. 暂停容器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%81%A2%E5%A4%8D%E5%AE%B9%E5%99%A8"><span class="nav-number">1.2.5.</span> <span class="nav-text">5. 恢复容器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-%E5%81%9C%E6%AD%A2%E5%AE%B9%E5%99%A8"><span class="nav-number">1.2.6.</span> <span class="nav-text">6. 停止容器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-%E5%BC%BA%E5%88%B6%E5%81%9C%E6%AD%A2%E5%AE%B9%E5%99%A8"><span class="nav-number">1.2.7.</span> <span class="nav-text">7. 强制停止容器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-%E9%87%8D%E5%90%AF%E5%AE%B9%E5%99%A8"><span class="nav-number">1.2.8.</span> <span class="nav-text">8. 重启容器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#9-%E5%88%A0%E9%99%A4%E5%AE%B9%E5%99%A8"><span class="nav-number">1.2.9.</span> <span class="nav-text">9. 删除容器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#10-%E6%9F%A5%E7%9C%8B%E5%AE%B9%E5%99%A8%E7%8A%B6%E6%80%81"><span class="nav-number">1.2.10.</span> <span class="nav-text">10. 查看容器状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#11-%E6%9F%A5%E7%9C%8B%E5%AE%B9%E5%99%A8%E6%97%A5%E5%BF%97"><span class="nav-number">1.2.11.</span> <span class="nav-text">11. 查看容器日志</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#12-%E8%BF%9B%E5%85%A5%E5%AE%B9%E5%99%A8"><span class="nav-number">1.2.12.</span> <span class="nav-text">12. 进入容器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#13-%E6%9F%A5%E7%9C%8B%E5%AE%B9%E5%99%A8%E8%AF%A6%E7%BB%86%E4%BF%A1%E6%81%AF"><span class="nav-number">1.2.13.</span> <span class="nav-text">13. 查看容器详细信息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#14-%E6%9F%A5%E7%9C%8B%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E4%BD%BF%E7%94%A8"><span class="nav-number">1.2.14.</span> <span class="nav-text">14. 查看容器资源使用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#15-%E6%9F%A5%E7%9C%8B%E5%AE%B9%E5%99%A8%E8%BF%9B%E7%A8%8B"><span class="nav-number">1.2.15.</span> <span class="nav-text">15. 查看容器进程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#16-%E5%AE%B9%E5%99%A8%E9%97%B4%E6%96%87%E4%BB%B6%E5%A4%8D%E5%88%B6"><span class="nav-number">1.2.16.</span> <span class="nav-text">16. 容器间文件复制</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E5%B8%B8%E7%94%A8%E6%93%8D%E4%BD%9C%E7%A4%BA%E4%BE%8B"><span class="nav-number">1.3.</span> <span class="nav-text">三、常用操作示例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%89%B9%E9%87%8F%E6%93%8D%E4%BD%9C"><span class="nav-number">1.3.1.</span> <span class="nav-text">1. 批量操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E8%87%AA%E5%8A%A8%E9%87%8D%E5%90%AF%E7%AD%96%E7%95%A5"><span class="nav-number">1.3.2.</span> <span class="nav-text">2. 自动重启策略</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E4%B8%B4%E6%97%B6%E5%AE%B9%E5%99%A8%E8%BF%90%E8%A1%8C"><span class="nav-number">1.3.3.</span> <span class="nav-text">3. 临时容器运行</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E8%B5%84%E6%BA%90%E9%99%90%E5%88%B6"><span class="nav-number">1.3.4.</span> <span class="nav-text">4. 资源限制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E7%AB%AF%E5%8F%A3%E6%98%A0%E5%B0%84"><span class="nav-number">1.3.5.</span> <span class="nav-text">5. 端口映射</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8C%82%E8%BD%BD"><span class="nav-number">1.3.6.</span> <span class="nav-text">6. 数据卷挂载</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.3.7.</span> <span class="nav-text">7. 环境变量设置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-%E4%BA%A4%E4%BA%92%E5%BC%8F%E8%BF%90%E8%A1%8C"><span class="nav-number">1.3.8.</span> <span class="nav-text">8. 交互式运行</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%AE%A1%E7%90%86%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">1.4.</span> <span class="nav-text">四、生命周期管理最佳实践</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Li Zhifeng</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">173</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/05/13/Docker%E5%AE%B9%E5%99%A8%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Li Zhifeng">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="我的学习之路">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Docker容器生命周期管理详解 | 我的学习之路">
+      <meta itemprop="description" content="全面介绍Docker容器的生命周期状态、管理命令及最佳实践">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Docker容器生命周期管理详解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-05-13 00:00:00" itemprop="dateCreated datePublished" datetime="2026-05-13T00:00:00+08:00">2026-05-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-05-20 05:55:03" itemprop="dateModified" datetime="2026-05-20T05:55:03+08:00">2026-05-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/" itemprop="url" rel="index"><span itemprop="name">技术文档</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">全面介绍Docker容器的生命周期状态、管理命令及最佳实践</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="Docker容器生命周期管理详解"><a href="#Docker容器生命周期管理详解" class="headerlink" title="Docker容器生命周期管理详解"></a>Docker容器生命周期管理详解</h1><h3 id="一、Docker容器生命周期状态"><a href="#一、Docker容器生命周期状态" class="headerlink" title="一、Docker容器生命周期状态"></a>一、Docker容器生命周期状态</h3><p>Docker容器具有完整的生命周期状态，从创建到销毁，每个阶段都有其特定的作用和命令支持：</p>
+<ul>
+<li><strong>Created（已创建）</strong>：容器已创建但尚未运行</li>
+<li><strong>Running（运行中）</strong>：容器正在运行，执行进程活跃</li>
+<li><strong>Paused（暂停）</strong>：容器进程被挂起，暂时停止调度</li>
+<li><strong>Stopped&#x2F;Exited（已停止&#x2F;退出）</strong>：容器运行完毕或被手动停止</li>
+<li><strong>Dead（死掉）</strong>：异常中止或资源清理失败时的状态</li>
+</ul>
+<h3 id="二、Docker容器生命周期管理命令"><a href="#二、Docker容器生命周期管理命令" class="headerlink" title="二、Docker容器生命周期管理命令"></a>二、Docker容器生命周期管理命令</h3><h4 id="1-创建容器"><a href="#1-创建容器" class="headerlink" title="1. 创建容器"></a>1. 创建容器</h4><p><strong>docker create命令</strong>：创建容器但不启动</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker create --name mycontainer nginx</span><br></pre></td></tr></table></figure>
+
+<p><strong>docker run命令</strong>：创建并启动容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --name mycontainer nginx</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用参数</strong>：</p>
+<ul>
+<li><code>-d, --detach</code>：后台运行容器</li>
+<li><code>--name</code>：指定容器名称</li>
+<li><code>-p</code>：端口映射，格式：主机端口:容器端口</li>
+<li><code>-v</code>：挂载卷，格式：主机路径:容器路径</li>
+<li><code>-e</code>：设置环境变量</li>
+<li><code>-m</code>：限制内存使用</li>
+<li><code>--cpus</code>：限制CPU使用</li>
+<li><code>--restart</code>：设置重启策略</li>
+<li><code>--rm</code>：容器退出时自动删除</li>
+</ul>
+<h4 id="2-启动容器"><a href="#2-启动容器" class="headerlink" title="2. 启动容器"></a>2. 启动容器</h4><p><strong>docker start命令</strong>：启动已创建的容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker start mycontainer</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用参数</strong>：</p>
+<ul>
+<li><code>-a, --attach</code>：附加STDOUT&#x2F;STDERR并向前传递信号</li>
+<li><code>-i, --interactive</code>：保持STDIN打开</li>
+</ul>
+<h4 id="3-运行容器"><a href="#3-运行容器" class="headerlink" title="3. 运行容器"></a>3. 运行容器</h4><p><strong>docker run命令</strong>：创建并启动容器（常用组合）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --name webserver -p 80:80 nginx</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-暂停容器"><a href="#4-暂停容器" class="headerlink" title="4. 暂停容器"></a>4. 暂停容器</h4><p><strong>docker pause命令</strong>：暂停容器运行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pause mycontainer</span><br></pre></td></tr></table></figure>
+
+<h4 id="5-恢复容器"><a href="#5-恢复容器" class="headerlink" title="5. 恢复容器"></a>5. 恢复容器</h4><p><strong>docker unpause命令</strong>：恢复暂停的容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker unpause mycontainer</span><br></pre></td></tr></table></figure>
+
+<h4 id="6-停止容器"><a href="#6-停止容器" class="headerlink" title="6. 停止容器"></a>6. 停止容器</h4><p><strong>docker stop命令</strong>：优雅停止容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker stop mycontainer</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用参数</strong>：</p>
+<ul>
+<li><code>-t, --time</code>：停止前等待时间（默认10秒）</li>
+</ul>
+<h4 id="7-强制停止容器"><a href="#7-强制停止容器" class="headerlink" title="7. 强制停止容器"></a>7. 强制停止容器</h4><p><strong>docker kill命令</strong>：强制终止容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">kill</span> mycontainer</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用参数</strong>：</p>
+<ul>
+<li><code>-s, --signal</code>：发送指定信号（默认SIGKILL）</li>
+</ul>
+<h4 id="8-重启容器"><a href="#8-重启容器" class="headerlink" title="8. 重启容器"></a>8. 重启容器</h4><p><strong>docker restart命令</strong>：重启容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker restart mycontainer</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用参数</strong>：</p>
+<ul>
+<li><code>-t, --time</code>：停止前等待时间（默认10秒）</li>
+</ul>
+<h4 id="9-删除容器"><a href="#9-删除容器" class="headerlink" title="9. 删除容器"></a>9. 删除容器</h4><p><strong>docker rm命令</strong>：删除已停止的容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">rm</span> mycontainer</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用参数</strong>：</p>
+<ul>
+<li><code>-f, --force</code>：强制删除运行中的容器</li>
+<li><code>-v, --volumes</code>：删除容器关联的卷</li>
+<li><code>-l, --link</code>：删除指定的连接</li>
+</ul>
+<h4 id="10-查看容器状态"><a href="#10-查看容器状态" class="headerlink" title="10. 查看容器状态"></a>10. 查看容器状态</h4><p><strong>docker ps命令</strong>：查看运行中的容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker ps</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用参数</strong>：</p>
+<ul>
+<li><code>-a</code>：显示所有容器（包括已停止的）</li>
+<li><code>-q</code>：仅显示容器ID</li>
+</ul>
+<h4 id="11-查看容器日志"><a href="#11-查看容器日志" class="headerlink" title="11. 查看容器日志"></a>11. 查看容器日志</h4><p><strong>docker logs命令</strong>：查看容器日志</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker logs mycontainer</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用参数</strong>：</p>
+<ul>
+<li><code>-f</code>：跟踪日志输出</li>
+<li><code>--tail</code>：显示最后N行</li>
+<li><code>-t</code>：显示时间戳</li>
+</ul>
+<h4 id="12-进入容器"><a href="#12-进入容器" class="headerlink" title="12. 进入容器"></a>12. 进入容器</h4><p><strong>docker exec命令</strong>：在运行中的容器执行命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> -it mycontainer /bin/bash</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用参数</strong>：</p>
+<ul>
+<li><code>-i</code>：保持STDIN打开</li>
+<li><code>-t</code>：分配伪终端<br><strong>docker attach命令</strong>：附加到运行中的容器</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker attach mycontainer</span><br></pre></td></tr></table></figure>
+
+<h4 id="13-查看容器详细信息"><a href="#13-查看容器详细信息" class="headerlink" title="13. 查看容器详细信息"></a>13. 查看容器详细信息</h4><p><strong>docker inspect命令</strong>：查看容器详细信息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker inspect mycontainer</span><br></pre></td></tr></table></figure>
+
+<h4 id="14-查看容器资源使用"><a href="#14-查看容器资源使用" class="headerlink" title="14. 查看容器资源使用"></a>14. 查看容器资源使用</h4><p><strong>docker stats命令</strong>：查看容器资源使用情况</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker stats mycontainer</span><br></pre></td></tr></table></figure>
+
+<h4 id="15-查看容器进程"><a href="#15-查看容器进程" class="headerlink" title="15. 查看容器进程"></a>15. 查看容器进程</h4><p><strong>docker top命令</strong>：查看容器内运行的进程</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker top mycontainer</span><br></pre></td></tr></table></figure>
+
+<h4 id="16-容器间文件复制"><a href="#16-容器间文件复制" class="headerlink" title="16. 容器间文件复制"></a>16. 容器间文件复制</h4><p><strong>docker cp命令</strong>：在容器和主机间复制文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">cp</span> localfile mycontainer:/path/in/container</span><br><span class="line">docker <span class="built_in">cp</span> mycontainer:/path/in/container localfile</span><br></pre></td></tr></table></figure>
+
+<h3 id="三、常用操作示例"><a href="#三、常用操作示例" class="headerlink" title="三、常用操作示例"></a>三、常用操作示例</h3><h4 id="1-批量操作"><a href="#1-批量操作" class="headerlink" title="1. 批量操作"></a>1. 批量操作</h4><p><strong>批量停止所有运行中的容器</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker stop $(docker ps -q)</span><br></pre></td></tr></table></figure>
+
+<p><strong>批量删除已停止的容器</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">rm</span> $(docker ps -aq -f status=exited)</span><br></pre></td></tr></table></figure>
+
+<p><strong>批量启动所有容器</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker start $(docker ps -aq)</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-自动重启策略"><a href="#2-自动重启策略" class="headerlink" title="2. 自动重启策略"></a>2. 自动重启策略</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --restart unless-stopped nginx</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-临时容器运行"><a href="#3-临时容器运行" class="headerlink" title="3. 临时容器运行"></a>3. 临时容器运行</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run --<span class="built_in">rm</span> myapp:<span class="built_in">test</span> ./run_tests.sh</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-资源限制"><a href="#4-资源限制" class="headerlink" title="4. 资源限制"></a>4. 资源限制</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -m 512m --cpus=1.0 nginx</span><br></pre></td></tr></table></figure>
+
+<h4 id="5-端口映射"><a href="#5-端口映射" class="headerlink" title="5. 端口映射"></a>5. 端口映射</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -p 8080:80 nginx</span><br></pre></td></tr></table></figure>
+
+<h4 id="6-数据卷挂载"><a href="#6-数据卷挂载" class="headerlink" title="6. 数据卷挂载"></a>6. 数据卷挂载</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -v /host/path:/container/path nginx</span><br></pre></td></tr></table></figure>
+
+<h4 id="7-环境变量设置"><a href="#7-环境变量设置" class="headerlink" title="7. 环境变量设置"></a>7. 环境变量设置</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -e MYSQL_ROOT_PASSWORD=password mysql</span><br></pre></td></tr></table></figure>
+
+<h4 id="8-交互式运行"><a href="#8-交互式运行" class="headerlink" title="8. 交互式运行"></a>8. 交互式运行</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -it ubuntu /bin/bash</span><br></pre></td></tr></table></figure>
+
+<h3 id="四、生命周期管理最佳实践"><a href="#四、生命周期管理最佳实践" class="headerlink" title="四、生命周期管理最佳实践"></a>四、生命周期管理最佳实践</h3><ol>
+<li>使用<code>--name</code>参数为容器指定有意义的名称</li>
+<li>合理设置重启策略确保服务可用性</li>
+<li>使用资源限制防止单个容器占用过多资源</li>
+<li>定期清理已停止的容器释放系统资源</li>
+<li>使用<code>docker logs</code>监控容器运行状态</li>
+<li>优雅停止容器使用<code>docker stop</code>而非<code>docker kill</code></li>
+<li>生产环境建议使用<code>docker-compose</code>或Kubernetes进行管理</li>
+<li>定期备份重要容器的数据卷</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Docker/" rel="tag"># Docker</a>
+              <a href="/tags/%E5%AE%B9%E5%99%A8/" rel="tag"># 容器</a>
+              <a href="/tags/%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%AE%A1%E7%90%86/" rel="tag"># 生命周期管理</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/05/13/Docker%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96%E8%AF%A6%E8%A7%A3/" rel="prev" title="Docker数据持久化详解">
+                  <i class="fa fa-angle-left"></i> Docker数据持久化详解
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/05/13/Docker%E5%A4%9A%E5%AE%B9%E5%99%A8%E7%BC%96%E6%8E%92%E8%AF%A6%E8%A7%A3/" rel="next" title="Docker多容器编排详解">
+                  Docker多容器编排详解 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Li Zhifeng</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

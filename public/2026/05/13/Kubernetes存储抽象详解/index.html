@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.json","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="深入解析Kubernetes存储抽象体系的核心组件PV、PVC和StorageClass，包括概念解析、配置方法和管理命令">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kubernetes存储抽象详解">
+<meta property="og:url" content="http://example.com/2026/05/13/Kubernetes%E5%AD%98%E5%82%A8%E6%8A%BD%E8%B1%A1%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="我的学习之路">
+<meta property="og:description" content="深入解析Kubernetes存储抽象体系的核心组件PV、PVC和StorageClass，包括概念解析、配置方法和管理命令">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-12T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-19T21:55:03.987Z">
+<meta property="article:author" content="Li Zhifeng">
+<meta property="article:tag" content="Kubernetes">
+<meta property="article:tag" content="PV">
+<meta property="article:tag" content="PVC">
+<meta property="article:tag" content="StorageClass">
+<meta property="article:tag" content="存储">
+<meta property="article:tag" content="持久化">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2026/05/13/Kubernetes%E5%AD%98%E5%82%A8%E6%8A%BD%E8%B1%A1%E8%AF%A6%E8%A7%A3/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/05/13/Kubernetes%E5%AD%98%E5%82%A8%E6%8A%BD%E8%B1%A1%E8%AF%A6%E8%A7%A3/","path":"2026/05/13/Kubernetes存储抽象详解/","title":"Kubernetes存储抽象详解"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Kubernetes存储抽象详解 | 我的学习之路</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">我的学习之路</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E8%A7%A3%E6%9E%90-%F0%9F%93%9A"><span class="nav-number">1.</span> <span class="nav-text">核心概念解析 📚</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81PV%EF%BC%88%E6%8C%81%E4%B9%85%E5%8D%B7%EF%BC%89%F0%9F%92%BE"><span class="nav-number">1.1.</span> <span class="nav-text">一、PV（持久卷）💾</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E7%89%B9%E6%80%A7"><span class="nav-number">1.1.1.</span> <span class="nav-text">主要特性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%99%E6%80%81PV%E5%88%9B%E5%BB%BA%E7%A4%BA%E4%BE%8B"><span class="nav-number">1.1.2.</span> <span class="nav-text">静态PV创建示例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81PVC%EF%BC%88%E6%8C%81%E4%B9%85%E5%8D%B7%E5%A3%B0%E6%98%8E%EF%BC%89%F0%9F%93%9D"><span class="nav-number">1.2.</span> <span class="nav-text">二、PVC（持久卷声明）📝</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E4%BD%9C%E7%94%A8"><span class="nav-number">1.2.1.</span> <span class="nav-text">核心作用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PVC%E5%88%9B%E5%BB%BA%E7%A4%BA%E4%BE%8B"><span class="nav-number">1.2.2.</span> <span class="nav-text">PVC创建示例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81StorageClass%EF%BC%88%E5%AD%98%E5%82%A8%E7%B1%BB%EF%BC%89%E2%9A%99%EF%B8%8F"><span class="nav-number">1.3.</span> <span class="nav-text">三、StorageClass（存储类）⚙️</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E5%AD%97%E6%AE%B5"><span class="nav-number">1.3.1.</span> <span class="nav-text">关键字段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#StorageClass%E5%88%9B%E5%BB%BA%E7%A4%BA%E4%BE%8B"><span class="nav-number">1.3.2.</span> <span class="nav-text">StorageClass创建示例</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E4%BE%9B%E5%BA%94%E6%A8%A1%E5%BC%8F-%F0%9F%94%84"><span class="nav-number">2.</span> <span class="nav-text">存储供应模式 🔄</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E4%BE%9B%E5%BA%94%E6%A8%A1%E5%BC%8F-%F0%9F%93%A6"><span class="nav-number">2.1.</span> <span class="nav-text">静态供应模式 📦</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%91%BD%E4%BB%A4"><span class="nav-number">2.1.1.</span> <span class="nav-text">创建命令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E4%BE%9B%E5%BA%94%E6%A8%A1%E5%BC%8F-%F0%9F%9A%80"><span class="nav-number">2.2.</span> <span class="nav-text">动态供应模式 🚀</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%91%BD%E4%BB%A4-1"><span class="nav-number">2.2.1.</span> <span class="nav-text">创建命令</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PV%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%8A%B6%E6%80%81-%F0%9F%93%8A"><span class="nav-number">3.</span> <span class="nav-text">PV生命周期状态 📊</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9B%9E%E6%94%B6%E7%AD%96%E7%95%A5-%E2%99%BB%EF%B8%8F"><span class="nav-number">4.</span> <span class="nav-text">回收策略 ♻️</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E5%88%9B%E5%BB%BA%E6%96%B9%E6%B3%95-%F0%9F%94%A7"><span class="nav-number">5.</span> <span class="nav-text">完整创建方法 🔧</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E4%BE%9B%E5%BA%94%E5%AE%8C%E6%95%B4%E9%85%8D%E7%BD%AE"><span class="nav-number">5.1.</span> <span class="nav-text">动态供应完整配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RBAC%E6%9D%83%E9%99%90%E9%85%8D%E7%BD%AE"><span class="nav-number">5.1.1.</span> <span class="nav-text">RBAC权限配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NFS-Provisioner%E9%83%A8%E7%BD%B2"><span class="nav-number">5.1.2.</span> <span class="nav-text">NFS Provisioner部署</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%8A%A8%E6%80%81%E4%BE%9B%E5%BA%94%E7%BB%84%E4%BB%B6"><span class="nav-number">5.1.3.</span> <span class="nav-text">创建动态供应组件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Pod%E4%BD%BF%E7%94%A8PVC%E5%88%9B%E5%BB%BA%E6%96%B9%E6%B3%95-%F0%9F%90%B3"><span class="nav-number">6.</span> <span class="nav-text">Pod使用PVC创建方法 🐳</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Pod%E4%BD%BF%E7%94%A8PVC%E7%9A%84YAML%E7%A4%BA%E4%BE%8B"><span class="nav-number">6.1.</span> <span class="nav-text">Pod使用PVC的YAML示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#StatefulSet%E4%BD%BF%E7%94%A8PVC%E6%A8%A1%E6%9D%BF"><span class="nav-number">6.2.</span> <span class="nav-text">StatefulSet使用PVC模板</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4%E6%B1%87%E6%80%BB-%F0%9F%9B%A0%EF%B8%8F"><span class="nav-number">7.</span> <span class="nav-text">管理命令汇总 🛠️</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E5%88%9B%E5%BB%BA%E5%91%BD%E4%BB%A4"><span class="nav-number">7.1.</span> <span class="nav-text">资源创建命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E6%9F%A5%E7%9C%8B%E5%91%BD%E4%BB%A4"><span class="nav-number">7.2.</span> <span class="nav-text">资源查看命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E5%88%A0%E9%99%A4%E5%91%BD%E4%BB%A4"><span class="nav-number">7.3.</span> <span class="nav-text">资源删除命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%85%E9%9A%9C%E6%8E%92%E6%9F%A5%E5%91%BD%E4%BB%A4"><span class="nav-number">7.4.</span> <span class="nav-text">故障排查命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E8%B5%84%E6%BA%90%E6%89%A9%E5%B1%95%E5%91%BD%E4%BB%A4"><span class="nav-number">7.5.</span> <span class="nav-text">存储资源扩展命令</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%8D%E5%90%8C%E5%AD%98%E5%82%A8%E7%B1%BB%E5%9E%8B%E5%88%9B%E5%BB%BA%E7%A4%BA%E4%BE%8B-%F0%9F%92%BF"><span class="nav-number">8.</span> <span class="nav-text">不同存储类型创建示例 💿</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E5%AD%98%E5%82%A8PV%E5%88%9B%E5%BB%BA"><span class="nav-number">8.1.</span> <span class="nav-text">本地存储PV创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%91%E5%AD%98%E5%82%A8PV%E5%88%9B%E5%BB%BA%EF%BC%88AWS-EBS%E7%A4%BA%E4%BE%8B%EF%BC%89"><span class="nav-number">8.2.</span> <span class="nav-text">云存储PV创建（AWS EBS示例）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Ceph-RBD-PV%E5%88%9B%E5%BB%BA"><span class="nav-number">8.3.</span> <span class="nav-text">Ceph RBD PV创建</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E4%BE%9B%E5%BA%94%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B-%F0%9F%94%84"><span class="nav-number">9.</span> <span class="nav-text">动态供应工作流程 🔄</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%E5%BB%BA%E8%AE%AE-%E2%9C%A8"><span class="nav-number">10.</span> <span class="nav-text">最佳实践建议 ✨</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Li Zhifeng</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">173</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/05/13/Kubernetes%E5%AD%98%E5%82%A8%E6%8A%BD%E8%B1%A1%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Li Zhifeng">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="我的学习之路">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Kubernetes存储抽象详解 | 我的学习之路">
+      <meta itemprop="description" content="深入解析Kubernetes存储抽象体系的核心组件PV、PVC和StorageClass，包括概念解析、配置方法和管理命令">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Kubernetes存储抽象详解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-05-13 00:00:00" itemprop="dateCreated datePublished" datetime="2026-05-13T00:00:00+08:00">2026-05-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-05-20 05:55:03" itemprop="dateModified" datetime="2026-05-20T05:55:03+08:00">2026-05-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E4%BA%91%E5%8E%9F%E7%94%9F/" itemprop="url" rel="index"><span itemprop="name">云原生</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E4%BA%91%E5%8E%9F%E7%94%9F/%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">容器技术</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">深入解析Kubernetes存储抽象体系的核心组件PV、PVC和StorageClass，包括概念解析、配置方法和管理命令</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="核心概念解析-📚"><a href="#核心概念解析-📚" class="headerlink" title="核心概念解析 📚"></a>核心概念解析 📚</h1><h2 id="一、PV（持久卷）💾"><a href="#一、PV（持久卷）💾" class="headerlink" title="一、PV（持久卷）💾"></a>一、PV（持久卷）💾</h2><p>PV是集群级别的存储资源，代表实际的存储设备或存储空间，如NFS、Ceph、云硬盘等。</p>
+<h3 id="主要特性"><a href="#主要特性" class="headerlink" title="主要特性"></a>主要特性</h3><ul>
+<li><strong>独立生命周期</strong>: 即使Pod被删除，PV中的数据仍然保留</li>
+<li><strong>访问模式支持</strong>:<ul>
+<li>ReadWriteOnce（单节点读写）</li>
+<li>ReadOnlyMany（多节点只读）</li>
+<li>ReadWriteMany（多节点读写）</li>
+</ul>
+</li>
+</ul>
+<h3 id="静态PV创建示例"><a href="#静态PV创建示例" class="headerlink" title="静态PV创建示例"></a>静态PV创建示例</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolume</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nfs-pv</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">capacity:</span></span><br><span class="line">    <span class="attr">storage:</span> <span class="string">2Gi</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteMany</span></span><br><span class="line">  <span class="attr">persistentVolumeReclaimPolicy:</span> <span class="string">Recycle</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">nfs</span></span><br><span class="line">  <span class="attr">mountOptions:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">hard</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">nfsvers=4.1</span></span><br><span class="line">  <span class="attr">nfs:</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">/opt/k8s-pods/data</span></span><br><span class="line">    <span class="attr">server:</span> <span class="number">192.168</span><span class="number">.179</span><span class="number">.102</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="二、PVC（持久卷声明）📝"><a href="#二、PVC（持久卷声明）📝" class="headerlink" title="二、PVC（持久卷声明）📝"></a>二、PVC（持久卷声明）📝</h2><p>PVC是用户对存储资源的请求，定义了所需存储的大小、访问模式等属性。</p>
+<h3 id="核心作用"><a href="#核心作用" class="headerlink" title="核心作用"></a>核心作用</h3><ul>
+<li>作为存储的”接口”，封装底层存储复杂性</li>
+<li>使开发者无需关心具体存储实现</li>
+<li>一个PV只能被一个PVC绑定</li>
+</ul>
+<h3 id="PVC创建示例"><a href="#PVC创建示例" class="headerlink" title="PVC创建示例"></a>PVC创建示例</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nfs-pvc</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteMany</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">2Gi</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">nfs</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="三、StorageClass（存储类）⚙️"><a href="#三、StorageClass（存储类）⚙️" class="headerlink" title="三、StorageClass（存储类）⚙️"></a>三、StorageClass（存储类）⚙️</h2><p>StorageClass是实现动态存储供应的核心组件，定义了如何创建PV的模板。</p>
+<h3 id="关键字段"><a href="#关键字段" class="headerlink" title="关键字段"></a>关键字段</h3><ul>
+<li><strong>provisioner</strong>: 存储供应者</li>
+<li><strong>parameters</strong>: 存储参数</li>
+<li><strong>reclaimPolicy</strong>: 回收策略</li>
+<li><strong>volumeBindingMode</strong>: 绑定模式</li>
+</ul>
+<h3 id="StorageClass创建示例"><a href="#StorageClass创建示例" class="headerlink" title="StorageClass创建示例"></a>StorageClass创建示例</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">storage.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StorageClass</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nfs-client-storageclass</span></span><br><span class="line"><span class="attr">provisioner:</span> <span class="string">nfs-storage</span></span><br><span class="line"><span class="attr">parameters:</span></span><br><span class="line">  <span class="attr">archiveOnDelete:</span> <span class="string">&quot;false&quot;</span></span><br><span class="line"><span class="attr">reclaimPolicy:</span> <span class="string">Delete</span></span><br><span class="line"><span class="attr">allowVolumeExpansion:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">volumeBindingMode:</span> <span class="string">Immediate</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="存储供应模式-🔄"><a href="#存储供应模式-🔄" class="headerlink" title="存储供应模式 🔄"></a>存储供应模式 🔄</h1><h2 id="静态供应模式-📦"><a href="#静态供应模式-📦" class="headerlink" title="静态供应模式 📦"></a>静态供应模式 📦</h2><p>由管理员预先创建PV，然后PVC进行绑定。</p>
+<h3 id="创建命令"><a href="#创建命令" class="headerlink" title="创建命令"></a>创建命令</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl create -f pv.yaml</span><br><span class="line">kubectl create -f pvc.yaml</span><br><span class="line">kubectl create -f storageclass.yaml</span><br></pre></td></tr></table></figure>
+
+<h2 id="动态供应模式-🚀"><a href="#动态供应模式-🚀" class="headerlink" title="动态供应模式 🚀"></a>动态供应模式 🚀</h2><p>通过StorageClass自动创建PV，大大简化存储管理。</p>
+<h3 id="创建命令-1"><a href="#创建命令-1" class="headerlink" title="创建命令"></a>创建命令</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f pv.yaml</span><br><span class="line">kubectl apply -f pvc.yaml</span><br><span class="line">kubectl apply -f storageclass.yaml</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="PV生命周期状态-📊"><a href="#PV生命周期状态-📊" class="headerlink" title="PV生命周期状态 📊"></a>PV生命周期状态 📊</h1><p>PV的生命周期包括四种状态：</p>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Available</strong></td>
+<td>还未与某个PVC绑定</td>
+</tr>
+<tr>
+<td><strong>Bound</strong></td>
+<td>已与某个PVC绑定</td>
+</tr>
+<tr>
+<td><strong>Released</strong></td>
+<td>绑定的PVC已经删除，资源已释放，但未被集群回收</td>
+</tr>
+<tr>
+<td><strong>Failed</strong></td>
+<td>自动资源回收失败</td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="回收策略-♻️"><a href="#回收策略-♻️" class="headerlink" title="回收策略 ♻️"></a>回收策略 ♻️</h1><p>回收策略决定了PVC删除后PV的处理方式：</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Retain</strong></td>
+<td>PV不会被自动删除，数据依然保留</td>
+</tr>
+<tr>
+<td><strong>Delete</strong></td>
+<td>PV会被自动删除，关联的存储资源也会被清理</td>
+</tr>
+<tr>
+<td><strong>Recycle</strong></td>
+<td>对卷执行基本清理操作，但已被弃用</td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="完整创建方法-🔧"><a href="#完整创建方法-🔧" class="headerlink" title="完整创建方法 🔧"></a>完整创建方法 🔧</h1><h2 id="动态供应完整配置"><a href="#动态供应完整配置" class="headerlink" title="动态供应完整配置"></a>动态供应完整配置</h2><h3 id="RBAC权限配置"><a href="#RBAC权限配置" class="headerlink" title="RBAC权限配置"></a>RBAC权限配置</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nfs-client-provisioner</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterRole</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nfs-client-provisioner-runner</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">apiGroups:</span> [<span class="string">&quot;&quot;</span>]</span><br><span class="line">    <span class="attr">resources:</span> [<span class="string">&quot;persistentvolumes&quot;</span>]</span><br><span class="line">    <span class="attr">verbs:</span> [<span class="string">&quot;get&quot;</span>, <span class="string">&quot;list&quot;</span>, <span class="string">&quot;watch&quot;</span>, <span class="string">&quot;create&quot;</span>, <span class="string">&quot;delete&quot;</span>]</span><br><span class="line">  <span class="bullet">-</span> <span class="attr">apiGroups:</span> [<span class="string">&quot;&quot;</span>]</span><br><span class="line">    <span class="attr">resources:</span> [<span class="string">&quot;persistentvolumeclaims&quot;</span>]</span><br><span class="line">    <span class="attr">verbs:</span> [<span class="string">&quot;get&quot;</span>, <span class="string">&quot;list&quot;</span>, <span class="string">&quot;watch&quot;</span>, <span class="string">&quot;update&quot;</span>]</span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterRoleBinding</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">run-nfs-client-provisioner</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">nfs-client-provisioner</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line">  <span class="attr">kind:</span> <span class="string">ClusterRole</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nfs-client-provisioner-runner</span></span><br><span class="line">  <span class="attr">apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="NFS-Provisioner部署"><a href="#NFS-Provisioner部署" class="headerlink" title="NFS Provisioner部署"></a>NFS Provisioner部署</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nfs-client-provisioner</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">nfs-client-provisioner</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">nfs-client-provisioner</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">serviceAccountName:</span> <span class="string">nfs-client-provisioner</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nfs-client-provisioner</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">quay.io/external_storage/nfs-client-provisioner:latest</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nfs-client-root</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">/persistentvolumes</span></span><br><span class="line">          <span class="attr">env:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">PROVISIONER_NAME</span></span><br><span class="line">              <span class="attr">value:</span> <span class="string">nfs-storage</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">NFS_SERVER</span></span><br><span class="line">              <span class="attr">value:</span> <span class="number">192.168</span><span class="number">.179</span><span class="number">.102</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">NFS_PATH</span></span><br><span class="line">              <span class="attr">value:</span> <span class="string">/opt/k8s</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nfs-client-root</span></span><br><span class="line">          <span class="attr">nfs:</span></span><br><span class="line">            <span class="attr">server:</span> <span class="number">192.168</span><span class="number">.179</span><span class="number">.102</span></span><br><span class="line">            <span class="attr">path:</span> <span class="string">/opt/k8s</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="创建动态供应组件"><a href="#创建动态供应组件" class="headerlink" title="创建动态供应组件"></a>创建动态供应组件</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f rbac.yaml</span><br><span class="line">kubectl apply -f nfs-provisioner.yaml</span><br><span class="line">kubectl apply -f storageclass.yaml</span><br><span class="line">kubectl apply -f dynamic-pvc.yaml</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="Pod使用PVC创建方法-🐳"><a href="#Pod使用PVC创建方法-🐳" class="headerlink" title="Pod使用PVC创建方法 🐳"></a>Pod使用PVC创建方法 🐳</h1><h2 id="Pod使用PVC的YAML示例"><a href="#Pod使用PVC的YAML示例" class="headerlink" title="Pod使用PVC的YAML示例"></a>Pod使用PVC的YAML示例</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-pv-pod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">      <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">&quot;http-server&quot;</span></span><br><span class="line">      <span class="attr">volumeMounts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx-pv-storage</span></span><br><span class="line">          <span class="attr">mountPath:</span> <span class="string">&quot;/usr/share/nginx/html&quot;</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx-pv-storage</span></span><br><span class="line">      <span class="attr">persistentVolumeClaim:</span></span><br><span class="line">        <span class="attr">claimName:</span> <span class="string">nfs-pvc</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="StatefulSet使用PVC模板"><a href="#StatefulSet使用PVC模板" class="headerlink" title="StatefulSet使用PVC模板"></a>StatefulSet使用PVC模板</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StatefulSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">web</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">serviceName:</span> <span class="string">&quot;nginx&quot;</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">3</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">nginx:latest</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">web</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">www</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">/usr/share/nginx/html</span></span><br><span class="line">  <span class="attr">volumeClaimTemplates:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">metadata:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">www</span></span><br><span class="line">      <span class="attr">spec:</span></span><br><span class="line">        <span class="attr">accessModes:</span> [<span class="string">&quot;ReadWriteOnce&quot;</span>]</span><br><span class="line">        <span class="attr">storageClassName:</span> <span class="string">&quot;nfs-client-storageclass&quot;</span></span><br><span class="line">        <span class="attr">resources:</span></span><br><span class="line">          <span class="attr">requests:</span></span><br><span class="line">            <span class="attr">storage:</span> <span class="string">1Gi</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="管理命令汇总-🛠️"><a href="#管理命令汇总-🛠️" class="headerlink" title="管理命令汇总 🛠️"></a>管理命令汇总 🛠️</h1><h2 id="资源创建命令"><a href="#资源创建命令" class="headerlink" title="资源创建命令"></a>资源创建命令</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl create -f &lt;yaml-file&gt;           <span class="comment"># 创建资源</span></span><br><span class="line">kubectl apply -f &lt;yaml-file&gt;            <span class="comment"># 应用配置</span></span><br><span class="line">kubectl apply -f &lt;directory&gt;            <span class="comment"># 应用目录下所有配置</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="资源查看命令"><a href="#资源查看命令" class="headerlink" title="资源查看命令"></a>资源查看命令</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">kubectl get pv,pvc,sc                   <span class="comment"># 查看所有存储资源</span></span><br><span class="line">kubectl get pv -o wide                  <span class="comment"># 查看PV详细信息</span></span><br><span class="line">kubectl get pvc -o wide                 <span class="comment"># 查看PVC详细信息</span></span><br><span class="line">kubectl describe sc &lt;sc-name&gt;           <span class="comment"># 查看StorageClass详情</span></span><br><span class="line">kubectl get pv --sort-by=.spec.capacity.storage  <span class="comment"># 按容量排序PV</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="资源删除命令"><a href="#资源删除命令" class="headerlink" title="资源删除命令"></a>资源删除命令</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">kubectl delete pv &lt;pv-name&gt;             <span class="comment"># 删除PV</span></span><br><span class="line">kubectl delete pvc &lt;pvc-name&gt;           <span class="comment"># 删除PVC</span></span><br><span class="line">kubectl delete sc &lt;sc-name&gt;             <span class="comment"># 删除StorageClass</span></span><br><span class="line">kubectl delete -f &lt;yaml-file&gt;           <span class="comment"># 删除配置文件中的资源</span></span><br><span class="line">kubectl delete pod,pvc,pv --all        <span class="comment"># 删除所有相关资源</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="故障排查命令"><a href="#故障排查命令" class="headerlink" title="故障排查命令"></a>故障排查命令</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">kubectl describe pvc &lt;pvc-name&gt;         <span class="comment"># 查看PVC详细状态</span></span><br><span class="line">kubectl describe pv &lt;pv-name&gt;           <span class="comment"># 查看PV详细状态</span></span><br><span class="line">kubectl logs &lt;provisioner-pod&gt;          <span class="comment"># 查看Provisioner日志</span></span><br><span class="line">kubectl get events --sort-by=.metadata.creationTimestamp  <span class="comment"># 查看事件</span></span><br><span class="line">kubectl <span class="built_in">exec</span> -it &lt;pod-name&gt; -- /bin/bash  <span class="comment"># 进入容器调试</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="存储资源扩展命令"><a href="#存储资源扩展命令" class="headerlink" title="存储资源扩展命令"></a>存储资源扩展命令</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubectl patch pvc &lt;pvc-name&gt; -p <span class="string">&#x27;&#123;&quot;spec&quot;:&#123;&quot;resources&quot;:&#123;&quot;requests&quot;:&#123;&quot;storage&quot;:&quot;10Gi&quot;&#125;&#125;&#125;&#125;&#x27;</span>  <span class="comment"># 扩展PVC容量</span></span><br><span class="line">kubectl get pv,pvc -o wide              <span class="comment"># 查看扩展后的状态</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="不同存储类型创建示例-💿"><a href="#不同存储类型创建示例-💿" class="headerlink" title="不同存储类型创建示例 💿"></a>不同存储类型创建示例 💿</h1><h2 id="本地存储PV创建"><a href="#本地存储PV创建" class="headerlink" title="本地存储PV创建"></a>本地存储PV创建</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolume</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">local-pv</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">capacity:</span></span><br><span class="line">    <span class="attr">storage:</span> <span class="string">5Gi</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">persistentVolumeReclaimPolicy:</span> <span class="string">Delete</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">local-storage</span></span><br><span class="line">  <span class="attr">local:</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">/mnt/disks/ssd1</span></span><br><span class="line">  <span class="attr">nodeAffinity:</span></span><br><span class="line">    <span class="attr">required:</span></span><br><span class="line">      <span class="attr">nodeSelectorTerms:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">matchExpressions:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">kubernetes.io/hostname</span></span><br><span class="line">              <span class="attr">operator:</span> <span class="string">In</span></span><br><span class="line">              <span class="attr">values:</span></span><br><span class="line">                <span class="bullet">-</span> <span class="string">node1</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="云存储PV创建（AWS-EBS示例）"><a href="#云存储PV创建（AWS-EBS示例）" class="headerlink" title="云存储PV创建（AWS EBS示例）"></a>云存储PV创建（AWS EBS示例）</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolume</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">aws-ebs-pv</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">capacity:</span></span><br><span class="line">    <span class="attr">storage:</span> <span class="string">10Gi</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">persistentVolumeReclaimPolicy:</span> <span class="string">Delete</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">aws-ebs</span></span><br><span class="line">  <span class="attr">awsElasticBlockStore:</span></span><br><span class="line">    <span class="attr">volumeID:</span> <span class="string">vol-0123456789abcdef0</span></span><br><span class="line">    <span class="attr">fsType:</span> <span class="string">ext4</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Ceph-RBD-PV创建"><a href="#Ceph-RBD-PV创建" class="headerlink" title="Ceph RBD PV创建"></a>Ceph RBD PV创建</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolume</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ceph-rbd-pv</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">capacity:</span></span><br><span class="line">    <span class="attr">storage:</span> <span class="string">5Gi</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">persistentVolumeReclaimPolicy:</span> <span class="string">Retain</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">ceph-rbd</span></span><br><span class="line">  <span class="attr">rbd:</span></span><br><span class="line">    <span class="attr">monitors:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;192.168.1.100:6789&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;192.168.1.101:6789&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;192.168.1.102:6789&quot;</span></span><br><span class="line">    <span class="attr">pool:</span> <span class="string">rbd</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">foo</span></span><br><span class="line">    <span class="attr">fsType:</span> <span class="string">ext4</span></span><br><span class="line">    <span class="attr">readOnly:</span> <span class="literal">false</span></span><br><span class="line">    <span class="attr">user:</span> <span class="string">admin</span></span><br><span class="line">    <span class="attr">secretRef:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">ceph-secret</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="动态供应工作流程-🔄"><a href="#动态供应工作流程-🔄" class="headerlink" title="动态供应工作流程 🔄"></a>动态供应工作流程 🔄</h1><p>动态供应机制的工作流程为：</p>
+<ol>
+<li><strong>用户创建PVC并指定StorageClass</strong> 📝</li>
+<li><strong>Kubernetes根据StorageClass调用对应的provisioner创建PV</strong> ⚙️</li>
+<li><strong>PV自动绑定到PVC</strong> 🔗</li>
+<li><strong>Pod通过PVC使用存储资源</strong> 🐳</li>
+</ol>
+<hr>
+<h1 id="最佳实践建议-✨"><a href="#最佳实践建议-✨" class="headerlink" title="最佳实践建议 ✨"></a>最佳实践建议 ✨</h1><ol>
+<li><strong>存储类规划</strong>: 根据应用需求创建多个StorageClass，如高性能存储、标准存储、归档存储等</li>
+<li><strong>回收策略选择</strong>: 生产环境建议使用Retain策略以避免数据意外丢失</li>
+<li><strong>容量规划</strong>: 合理设置PV容量，避免资源浪费或不足</li>
+<li><strong>监控告警</strong>: 定期检查PV&#x2F;PVC状态，设置存储使用率告警</li>
+<li><strong>备份策略</strong>: 为重要数据制定定期备份计划</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%AD%98%E5%82%A8/" rel="tag"># 存储</a>
+              <a href="/tags/Kubernetes/" rel="tag"># Kubernetes</a>
+              <a href="/tags/PV/" rel="tag"># PV</a>
+              <a href="/tags/PVC/" rel="tag"># PVC</a>
+              <a href="/tags/StorageClass/" rel="tag"># StorageClass</a>
+              <a href="/tags/%E6%8C%81%E4%B9%85%E5%8C%96/" rel="tag"># 持久化</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/05/13/Kubernetes%E8%B0%83%E5%BA%A6%E4%B8%8E%E9%83%A8%E7%BD%B2%E8%AF%A6%E8%A7%A3/" rel="prev" title="Kubernetes调度与部署机制详解">
+                  <i class="fa fa-angle-left"></i> Kubernetes调度与部署机制详解
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/05/13/Docker%E9%95%9C%E5%83%8F%E7%AE%A1%E7%90%86%E8%AF%A6%E8%A7%A3/" rel="next" title="Docker镜像操作详解">
+                  Docker镜像操作详解 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Li Zhifeng</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
