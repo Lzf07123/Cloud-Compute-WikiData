@@ -1,1 +1,2 @@
 name: Deploy Hexo Blog
+on: push
