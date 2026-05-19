@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="全面介绍OpenStack Horizon架构、核心功能、部署配置、主题定制及面板扩展开发">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack Horizon（Web控制面板）详解">
+<meta property="og:url" content="http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="“我的学习之路”">
+<meta property="og:description" content="全面介绍OpenStack Horizon架构、核心功能、部署配置、主题定制及面板扩展开发">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-19T17:44:50.638Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="OpenStack">
+<meta property="article:tag" content="Horizon">
+<meta property="article:tag" content="仪表板">
+<meta property="article:tag" content="Django">
+<meta property="article:tag" content="云管理">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>OpenStack Horizon（Web控制面板）详解</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&text=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&title=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&is_video=false&description=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Horizon（Web控制面板）详解&body=Check out this article: http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&title=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&title=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&title=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&title=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&name=OpenStack Horizon（Web控制面板）详解&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&t=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Horizon%EF%BC%88Web%E6%8E%A7%E5%88%B6%E9%9D%A2%E6%9D%BF%EF%BC%89%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Horizon（Web控制面板）详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81Horizon%E6%9E%B6%E6%9E%84%E6%A6%82%E8%BF%B0"><span class="toc-number">1.0.1.</span> <span class="toc-text">一、Horizon架构概述</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="toc-number">1.0.1.1.</span> <span class="toc-text">设计原则</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E4%B8%89%E5%A4%A7%E6%A0%B8%E5%BF%83%E9%9D%A2%E6%9D%BF"><span class="toc-number">1.0.2.</span> <span class="toc-text">二、三大核心面板</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81Project%E9%9D%A2%E6%9D%BF%EF%BC%88%E9%A1%B9%E7%9B%AE%E9%9D%A2%E6%9D%BF%EF%BC%89"><span class="toc-number">1.0.2.1.</span> <span class="toc-text">1、Project面板（项目面板）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81Admin%E9%9D%A2%E6%9D%BF%EF%BC%88%E7%AE%A1%E7%90%86%E5%91%98%E9%9D%A2%E6%9D%BF%EF%BC%89"><span class="toc-number">1.0.2.2.</span> <span class="toc-text">2、Admin面板（管理员面板）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81Settings%E9%9D%A2%E6%9D%BF%EF%BC%88%E8%AE%BE%E7%BD%AE%E9%9D%A2%E6%9D%BF%EF%BC%89"><span class="toc-number">1.0.2.3.</span> <span class="toc-text">3、Settings面板（设置面板）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%83%A8%E7%BD%B2%E9%85%8D%E7%BD%AE"><span class="toc-number">1.0.3.</span> <span class="toc-text">三、部署配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%89%E8%A3%85%E6%96%B9%E5%BC%8F"><span class="toc-number">1.0.3.1.</span> <span class="toc-text">安装方式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%B7%AF%E5%BE%84"><span class="toc-number">1.0.3.2.</span> <span class="toc-text">配置文件路径</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E9%85%8D%E7%BD%AE%E9%A1%B9"><span class="toc-number">1.0.3.3.</span> <span class="toc-text">核心配置项</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Web%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2"><span class="toc-number">1.0.3.4.</span> <span class="toc-text">Web服务器部署</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E4%B8%BB%E9%A2%98%E4%B8%8E%E5%93%81%E7%89%8C%E5%AE%9A%E5%88%B6"><span class="toc-number">1.0.4.</span> <span class="toc-text">四、主题与品牌定制</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E5%9F%BA%E7%A1%80%E5%93%81%E7%89%8C%E9%85%8D%E7%BD%AE%EF%BC%88local-settings-py%EF%BC%89"><span class="toc-number">1.0.4.1.</span> <span class="toc-text">1、基础品牌配置（local_settings.py）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%BB%E9%A2%98"><span class="toc-number">1.0.4.2.</span> <span class="toc-text">2、创建自定义主题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E4%B8%BB%E9%A2%98%E6%A0%B7%E5%BC%8F%E5%8F%98%E9%87%8F%E7%A4%BA%E4%BE%8B%EF%BC%88-variables-scss%EF%BC%89"><span class="toc-number">1.0.4.3.</span> <span class="toc-text">3、主题样式变量示例（_variables.scss）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E5%90%AF%E7%94%A8%E4%B8%BB%E9%A2%98"><span class="toc-number">1.0.4.4.</span> <span class="toc-text">4、启用主题</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E9%9D%A2%E6%9D%BF%E6%89%A9%E5%B1%95%E5%BC%80%E5%8F%91"><span class="toc-number">1.0.5.</span> <span class="toc-text">五、面板扩展开发</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="toc-number">1.0.5.1.</span> <span class="toc-text">1、目录结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E6%B3%A8%E5%86%8C%E6%96%B0Panel%E7%A4%BA%E4%BE%8B"><span class="toc-number">1.0.5.2.</span> <span class="toc-text">2、注册新Panel示例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81Views%E7%A4%BA%E4%BE%8B"><span class="toc-number">1.0.5.3.</span> <span class="toc-text">3、Views示例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E5%90%AF%E7%94%A8-%E7%A6%81%E7%94%A8%E5%B7%B2%E6%9C%89%E9%9D%A2%E6%9D%BF"><span class="toc-number">1.0.5.4.</span> <span class="toc-text">4、启用&#x2F;禁用已有面板</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%B8%B8%E7%94%A8%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4"><span class="toc-number">1.0.6.</span> <span class="toc-text">六、常用管理命令</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E6%96%87%E4%BB%B6%E5%A4%84%E7%90%86"><span class="toc-number">1.0.6.1.</span> <span class="toc-text">静态文件处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%B0%83%E8%AF%95%E4%B8%8E%E6%8E%92%E9%9A%9C"><span class="toc-number">1.0.6.2.</span> <span class="toc-text">调试与排障</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%AE%89%E5%85%A8%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-number">1.0.7.</span> <span class="toc-text">七、安全最佳实践</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        OpenStack Horizon（Web控制面板）详解
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">John Doe</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-05-15T16:00:00.000Z" class="dt-published" itemprop="datePublished">2026-05-16</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/">技术文档</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/Django/" rel="tag">Django</a>, <a class="p-category" href="/tags/Horizon/" rel="tag">Horizon</a>, <a class="p-category" href="/tags/OpenStack/" rel="tag">OpenStack</a>, <a class="p-category" href="/tags/%E4%BA%91%E7%AE%A1%E7%90%86/" rel="tag">云管理</a>, <a class="p-category" href="/tags/%E4%BB%AA%E8%A1%A8%E6%9D%BF/" rel="tag">仪表板</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="OpenStack-Horizon（Web控制面板）详解"><a href="#OpenStack-Horizon（Web控制面板）详解" class="headerlink" title="OpenStack Horizon（Web控制面板）详解"></a>OpenStack Horizon（Web控制面板）详解</h1><p>Horizon是OpenStack的官方Web管理界面，基于 <strong>Python Django框架</strong> 开发，为云管理员和租户用户提供图形化的可视化管理入口。</p>
+<hr>
+<h3 id="一、Horizon架构概述"><a href="#一、Horizon架构概述" class="headerlink" title="一、Horizon架构概述"></a>一、Horizon架构概述</h3><p>Horizon采用经典的 <strong>Django MTV架构</strong>，通过REST API与各OpenStack核心服务通信：</p>
+<table>
+<thead>
+<tr>
+<th>交互组件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Nova</strong></td>
+<td>计算服务，管理虚拟机实例</td>
+</tr>
+<tr>
+<td><strong>Neutron</strong></td>
+<td>网络服务，管理网络与安全组</td>
+</tr>
+<tr>
+<td><strong>Cinder</strong></td>
+<td>块存储服务，管理卷与快照</td>
+</tr>
+<tr>
+<td><strong>Glance</strong></td>
+<td>镜像服务，管理虚拟机镜像</td>
+</tr>
+<tr>
+<td><strong>Keystone</strong></td>
+<td>认证服务，管理用户与项目</td>
+</tr>
+<tr>
+<td><strong>Swift</strong></td>
+<td>对象存储服务，管理文件容器</td>
+</tr>
+</tbody></table>
+<h4 id="设计原则"><a href="#设计原则" class="headerlink" title="设计原则"></a>设计原则</h4><ul>
+<li><strong>Core Support</strong>：内置Project、Admin、Settings三大面板</li>
+<li><strong>Extensible</strong>：通过Dashboard+Panel注册机制支持任意扩展</li>
+<li><strong>Consistent</strong>：提供可复用的模板、表单和表格基类</li>
+<li><strong>Stable</strong>：核心API保证向后兼容</li>
+</ul>
+<hr>
+<h3 id="二、三大核心面板"><a href="#二、三大核心面板" class="headerlink" title="二、三大核心面板"></a>二、三大核心面板</h3><h4 id="1、Project面板（项目面板）"><a href="#1、Project面板（项目面板）" class="headerlink" title="1、Project面板（项目面板）"></a>1、Project面板（项目面板）</h4><p>面向 <strong>终端租户用户</strong> 的自助服务门户：</p>
+<ul>
+<li>💻 实例管理：创建&#x2F;启动&#x2F;停止&#x2F;重启&#x2F;删除&#x2F;快照</li>
+<li>💾 卷管理：创建&#x2F;挂载&#x2F;卸载&#x2F;删除卷及快照</li>
+<li>🌐 网络管理：网络&#x2F;子网&#x2F;路由器&#x2F;浮动IP&#x2F;安全组</li>
+<li>🖼️ 镜像管理：上传&#x2F;删除&#x2F;启动镜像</li>
+<li>🔑 密钥对管理：生成&#x2F;导入&#x2F;删除SSH密钥</li>
+<li>📊 访问与安全：安全组规则、API访问权限</li>
+</ul>
+<h4 id="2、Admin面板（管理员面板）"><a href="#2、Admin面板（管理员面板）" class="headerlink" title="2、Admin面板（管理员面板）"></a>2、Admin面板（管理员面板）</h4><p>面向 <strong>云平台管理员</strong> 的全局管控入口：</p>
+<ul>
+<li>📋 资源总览：计算&#x2F;存储&#x2F;网络资源的全局用量</li>
+<li>👥 项目与用户管理：创建&#x2F;编辑&#x2F;删除项目、用户及角色分配</li>
+<li>📏 配额管理：为各项目设置CPU&#x2F;内存&#x2F;存储上限</li>
+<li>🖥️ 主机聚合：管理计算节点与主机聚合（Host Aggregate）</li>
+<li>🔄 实例迁移：跨计算节点的实例调度与迁移</li>
+<li>📈 系统信息：服务状态、系统用量报告</li>
+</ul>
+<h4 id="3、Settings面板（设置面板）"><a href="#3、Settings面板（设置面板）" class="headerlink" title="3、Settings面板（设置面板）"></a>3、Settings面板（设置面板）</h4><p>面向 <strong>所有用户</strong> 的个性化配置：</p>
+<ul>
+<li>🌍 语言与时区设置</li>
+<li>🔐 密码修改</li>
+<li>🔔 仪表板主题切换</li>
+</ul>
+<hr>
+<h3 id="三、部署配置"><a href="#三、部署配置" class="headerlink" title="三、部署配置"></a>三、部署配置</h3><h4 id="安装方式"><a href="#安装方式" class="headerlink" title="安装方式"></a>安装方式</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install openstack-dashboard</span><br></pre></td></tr></table></figure>
+
+<h4 id="配置文件路径"><a href="#配置文件路径" class="headerlink" title="配置文件路径"></a>配置文件路径</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/etc/openstack-dashboard/local_settings.py</span><br></pre></td></tr></table></figure>
+
+<h4 id="核心配置项"><a href="#核心配置项" class="headerlink" title="核心配置项"></a>核心配置项</h4><table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>说明</th>
+<th>示例值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>OPENSTACK_HOST</code></td>
+<td>Keystone服务地址</td>
+<td><code>&quot;192.168.1.100&quot;</code></td>
+</tr>
+<tr>
+<td><code>OPENSTACK_KEYSTONE_URL</code></td>
+<td>Keystone认证URL</td>
+<td><code>&quot;http://192.168.1.100:5000/v3&quot;</code></td>
+</tr>
+<tr>
+<td><code>OPENSTACK_KEYSTONE_DEFAULT_ROLE</code></td>
+<td>默认角色</td>
+<td><code>&quot;member&quot;</code></td>
+</tr>
+<tr>
+<td><code>ALLOWED_HOSTS</code></td>
+<td>允许访问的主机列表</td>
+<td><code>[&quot;*&quot;]</code></td>
+</tr>
+<tr>
+<td><code>TIME_ZONE</code></td>
+<td>时区</td>
+<td><code>&quot;Asia/Shanghai&quot;</code></td>
+</tr>
+<tr>
+<td><code>DEBUG</code></td>
+<td>调试模式开关（生产环境需关闭）</td>
+<td><code>False</code></td>
+</tr>
+</tbody></table>
+<h4 id="Web服务器部署"><a href="#Web服务器部署" class="headerlink" title="Web服务器部署"></a>Web服务器部署</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Apache部署（mod_wsgi）</span></span><br><span class="line">apt install apache2 libapache2-mod-wsgi-py3</span><br><span class="line"></span><br><span class="line"><span class="comment"># Nginx + uwsgi部署</span></span><br><span class="line">pip install uwsgi</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="四、主题与品牌定制"><a href="#四、主题与品牌定制" class="headerlink" title="四、主题与品牌定制"></a>四、主题与品牌定制</h3><p>Horizon支持完整的品牌定制，覆盖Logo、颜色、字体、页脚等视觉元素。</p>
+<h4 id="1、基础品牌配置（local-settings-py）"><a href="#1、基础品牌配置（local-settings-py）" class="headerlink" title="1、基础品牌配置（local_settings.py）"></a>1、基础品牌配置（local_settings.py）</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">SITE_BRANDING = <span class="string">&quot;My Cloud Platform&quot;</span></span><br><span class="line">SITE_BRANDING_LINK = <span class="string">&quot;https://cloud.example.com&quot;</span></span><br><span class="line"></span><br><span class="line">AVAILABLE_THEMES = [</span><br><span class="line">    (<span class="string">&quot;default&quot;</span>, <span class="string">&quot;Default&quot;</span>, <span class="string">&quot;themes/default&quot;</span>),</span><br><span class="line">    (<span class="string">&quot;mytheme&quot;</span>, <span class="string">&quot;My Custom Theme&quot;</span>, <span class="string">&quot;themes/mytheme&quot;</span>),</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、创建自定义主题"><a href="#2、创建自定义主题" class="headerlink" title="2、创建自定义主题"></a>2、创建自定义主题</h4><p>主题目录结构：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">themes/mytheme/</span><br><span class="line">├── manifest.py              # 品牌声明文件</span><br><span class="line">├── static/</span><br><span class="line">│   └── img/</span><br><span class="line">│       ├── logo.png         # 导航栏Logo</span><br><span class="line">│       ├── logo-splash.png  # 登录页Logo</span><br><span class="line">│       └── favicon.ico      # 浏览器图标</span><br><span class="line">├── templates/</span><br><span class="line">│   └── auth/</span><br><span class="line">│       └── login.html       # 自定义登录页</span><br><span class="line">└── scss/</span><br><span class="line">    ├── _variables.scss      # 颜色/字体变量</span><br><span class="line">    └── _styles.scss         # 自定义样式</span><br></pre></td></tr></table></figure>
+
+<h4 id="3、主题样式变量示例（-variables-scss）"><a href="#3、主题样式变量示例（-variables-scss）" class="headerlink" title="3、主题样式变量示例（_variables.scss）"></a>3、主题样式变量示例（_variables.scss）</h4><figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$brand-primary</span>: <span class="number">#00a1c9</span>; <span class="comment">// 主色调</span></span><br><span class="line"><span class="variable">$navbar-bg-color</span>: <span class="number">#2a4e77</span>; <span class="comment">// 导航栏背景</span></span><br><span class="line"><span class="variable">$body-bg-color</span>: <span class="number">#f5f5f5</span>; <span class="comment">// 页面背景</span></span><br><span class="line"><span class="variable">$font-family-base</span>: <span class="string">&quot;Microsoft YaHei&quot;</span>, sans-serif;</span><br></pre></td></tr></table></figure>
+
+<h4 id="4、启用主题"><a href="#4、启用主题" class="headerlink" title="4、启用主题"></a>4、启用主题</h4><p>在配置目录下创建 <code>_12_mytheme_theme.py</code>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">AVAILABLE_THEMES = [</span><br><span class="line">    (<span class="string">&quot;mytheme&quot;</span>, <span class="string">&quot;My Cloud Theme&quot;</span>, <span class="string">&quot;themes/mytheme&quot;</span>),</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>注意</strong>：文件名中的数字前缀控制加载顺序，多个主题文件按文件名升序加载。</p>
+</blockquote>
+<hr>
+<h3 id="五、面板扩展开发"><a href="#五、面板扩展开发" class="headerlink" title="五、面板扩展开发"></a>五、面板扩展开发</h3><p>Horizon通过 <strong>Dashboard + Panel</strong> 机制实现功能扩展。</p>
+<h4 id="1、目录结构"><a href="#1、目录结构" class="headerlink" title="1、目录结构"></a>1、目录结构</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">my_plugin/</span><br><span class="line">├── dashboard.py        # 注册新Dashboard</span><br><span class="line">├── panel.py            # 注册Panel</span><br><span class="line">├── urls.py             # URL路由</span><br><span class="line">├── views.py            # 视图处理</span><br><span class="line">├── tables.py           # 数据表格</span><br><span class="line">├── forms.py            # 表单定义</span><br><span class="line">└── templates/</span><br><span class="line">    └── my_plugin/</span><br><span class="line">        └── index.html  # 模板文件</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、注册新Panel示例"><a href="#2、注册新Panel示例" class="headerlink" title="2、注册新Panel示例"></a>2、注册新Panel示例</h4><p><strong>dashboard.py</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.conf <span class="keyword">import</span> settings</span><br><span class="line"><span class="keyword">from</span> horizon.dashboards <span class="keyword">import</span> Dashboard, panels</span><br><span class="line"><span class="keyword">from</span> openstack_dashboard.dashboards.project <span class="keyword">import</span> dashboard</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MyPanel</span>(panels.Panel):</span><br><span class="line">    name = <span class="string">&quot;我的插件&quot;</span></span><br><span class="line">    slug = <span class="string">&quot;my_panel&quot;</span></span><br><span class="line">    permissions = (<span class="string">&quot;openstack.roles.member&quot;</span>,)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">dashboard.Project.register(MyPanel)</span><br></pre></td></tr></table></figure>
+
+<p><strong>enabled&#x2F;_50_my_plugin.py</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ADD_INSTALLED_APPS = [</span><br><span class="line">    <span class="string">&quot;my_plugin&quot;</span>,</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">ADD_PANEL = &#123;</span><br><span class="line">    <span class="string">&quot;panel_group&quot;</span>: <span class="string">&quot;compute&quot;</span>,</span><br><span class="line">    <span class="string">&quot;panel&quot;</span>: <span class="string">&quot;my_panel&quot;</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="3、Views示例"><a href="#3、Views示例" class="headerlink" title="3、Views示例"></a>3、Views示例</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> horizon <span class="keyword">import</span> tables</span><br><span class="line"><span class="keyword">from</span> my_plugin <span class="keyword">import</span> tables <span class="keyword">as</span> my_tables</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">IndexView</span>(tables.DataTableView):</span><br><span class="line">    table_class = my_tables.MyTable</span><br><span class="line">    template_name = <span class="string">&quot;my_plugin/index.html&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">get_data</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.request.user.my_data</span><br></pre></td></tr></table></figure>
+
+<h4 id="4、启用-禁用已有面板"><a href="#4、启用-禁用已有面板" class="headerlink" title="4、启用&#x2F;禁用已有面板"></a>4、启用&#x2F;禁用已有面板</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 从Admin面板中移除卷备份面板</span></span><br><span class="line">REMOVE_PANEL = &#123;</span><br><span class="line">    <span class="string">&quot;openstack_dashboard.dashboards.admin.volumes.panel_volume_backups&quot;</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 修改面板显示名称</span></span><br><span class="line">UPDATE_PANEL = &#123;</span><br><span class="line">    <span class="string">&quot;project.volumes&quot;</span>: &#123;</span><br><span class="line">        <span class="string">&quot;name&quot;</span>: <span class="string">&quot;云硬盘&quot;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="六、常用管理命令"><a href="#六、常用管理命令" class="headerlink" title="六、常用管理命令"></a>六、常用管理命令</h3><h4 id="静态文件处理"><a href="#静态文件处理" class="headerlink" title="静态文件处理"></a>静态文件处理</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 收集静态文件</span></span><br><span class="line">python manage.py COLLECTSTATIC</span><br><span class="line"></span><br><span class="line"><span class="comment"># 压缩CSS/JS（修改静态资源后需执行）</span></span><br><span class="line">python manage.py COMPRESS</span><br></pre></td></tr></table></figure>
+
+<h4 id="调试与排障"><a href="#调试与排障" class="headerlink" title="调试与排障"></a>调试与排障</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 检查配置正确性</span></span><br><span class="line">python manage.py CHECK</span><br><span class="line"></span><br><span class="line"><span class="comment"># 开发服务器启动（仅用于开发调试）</span></span><br><span class="line">python manage.py RUNSERVER 0.0.0.0:8080</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看Horizon版本</span></span><br><span class="line">python manage.py VERSION</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="七、安全最佳实践"><a href="#七、安全最佳实践" class="headerlink" title="七、安全最佳实践"></a>七、安全最佳实践</h3><ol>
+<li>🔒 生产环境务必关闭 <code>DEBUG = True</code></li>
+<li>🛡️ 配置 <code>ALLOWED_HOSTS</code> 限制可访问域名</li>
+<li>🔐 启用HTTPS，使用SSL证书加密传输</li>
+<li>👮 严格遵循最小权限原则分配Keystone角色</li>
+<li>⏰ 为JWT Token设置合理过期时间</li>
+<li>📝 定期审查安全组规则与API访问日志</li>
+<li>🔄 保持Horizon版本与OpenStack各组件版本兼容</li>
+</ol>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Horizon%EF%BC%88Web%E6%8E%A7%E5%88%B6%E9%9D%A2%E6%9D%BF%EF%BC%89%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Horizon（Web控制面板）详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81Horizon%E6%9E%B6%E6%9E%84%E6%A6%82%E8%BF%B0"><span class="toc-number">1.0.1.</span> <span class="toc-text">一、Horizon架构概述</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="toc-number">1.0.1.1.</span> <span class="toc-text">设计原则</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E4%B8%89%E5%A4%A7%E6%A0%B8%E5%BF%83%E9%9D%A2%E6%9D%BF"><span class="toc-number">1.0.2.</span> <span class="toc-text">二、三大核心面板</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81Project%E9%9D%A2%E6%9D%BF%EF%BC%88%E9%A1%B9%E7%9B%AE%E9%9D%A2%E6%9D%BF%EF%BC%89"><span class="toc-number">1.0.2.1.</span> <span class="toc-text">1、Project面板（项目面板）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81Admin%E9%9D%A2%E6%9D%BF%EF%BC%88%E7%AE%A1%E7%90%86%E5%91%98%E9%9D%A2%E6%9D%BF%EF%BC%89"><span class="toc-number">1.0.2.2.</span> <span class="toc-text">2、Admin面板（管理员面板）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81Settings%E9%9D%A2%E6%9D%BF%EF%BC%88%E8%AE%BE%E7%BD%AE%E9%9D%A2%E6%9D%BF%EF%BC%89"><span class="toc-number">1.0.2.3.</span> <span class="toc-text">3、Settings面板（设置面板）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%83%A8%E7%BD%B2%E9%85%8D%E7%BD%AE"><span class="toc-number">1.0.3.</span> <span class="toc-text">三、部署配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%89%E8%A3%85%E6%96%B9%E5%BC%8F"><span class="toc-number">1.0.3.1.</span> <span class="toc-text">安装方式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%B7%AF%E5%BE%84"><span class="toc-number">1.0.3.2.</span> <span class="toc-text">配置文件路径</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E9%85%8D%E7%BD%AE%E9%A1%B9"><span class="toc-number">1.0.3.3.</span> <span class="toc-text">核心配置项</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Web%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%83%A8%E7%BD%B2"><span class="toc-number">1.0.3.4.</span> <span class="toc-text">Web服务器部署</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E4%B8%BB%E9%A2%98%E4%B8%8E%E5%93%81%E7%89%8C%E5%AE%9A%E5%88%B6"><span class="toc-number">1.0.4.</span> <span class="toc-text">四、主题与品牌定制</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E5%9F%BA%E7%A1%80%E5%93%81%E7%89%8C%E9%85%8D%E7%BD%AE%EF%BC%88local-settings-py%EF%BC%89"><span class="toc-number">1.0.4.1.</span> <span class="toc-text">1、基础品牌配置（local_settings.py）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%BB%E9%A2%98"><span class="toc-number">1.0.4.2.</span> <span class="toc-text">2、创建自定义主题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E4%B8%BB%E9%A2%98%E6%A0%B7%E5%BC%8F%E5%8F%98%E9%87%8F%E7%A4%BA%E4%BE%8B%EF%BC%88-variables-scss%EF%BC%89"><span class="toc-number">1.0.4.3.</span> <span class="toc-text">3、主题样式变量示例（_variables.scss）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E5%90%AF%E7%94%A8%E4%B8%BB%E9%A2%98"><span class="toc-number">1.0.4.4.</span> <span class="toc-text">4、启用主题</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E9%9D%A2%E6%9D%BF%E6%89%A9%E5%B1%95%E5%BC%80%E5%8F%91"><span class="toc-number">1.0.5.</span> <span class="toc-text">五、面板扩展开发</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="toc-number">1.0.5.1.</span> <span class="toc-text">1、目录结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E6%B3%A8%E5%86%8C%E6%96%B0Panel%E7%A4%BA%E4%BE%8B"><span class="toc-number">1.0.5.2.</span> <span class="toc-text">2、注册新Panel示例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81Views%E7%A4%BA%E4%BE%8B"><span class="toc-number">1.0.5.3.</span> <span class="toc-text">3、Views示例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E5%90%AF%E7%94%A8-%E7%A6%81%E7%94%A8%E5%B7%B2%E6%9C%89%E9%9D%A2%E6%9D%BF"><span class="toc-number">1.0.5.4.</span> <span class="toc-text">4、启用&#x2F;禁用已有面板</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%B8%B8%E7%94%A8%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4"><span class="toc-number">1.0.6.</span> <span class="toc-text">六、常用管理命令</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E6%96%87%E4%BB%B6%E5%A4%84%E7%90%86"><span class="toc-number">1.0.6.1.</span> <span class="toc-text">静态文件处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%B0%83%E8%AF%95%E4%B8%8E%E6%8E%92%E9%9A%9C"><span class="toc-number">1.0.6.2.</span> <span class="toc-text">调试与排障</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%AE%89%E5%85%A8%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-number">1.0.7.</span> <span class="toc-text">七、安全最佳实践</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&text=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&title=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&is_video=false&description=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Horizon（Web控制面板）详解&body=Check out this article: http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&title=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&title=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&title=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&title=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&name=OpenStack Horizon（Web控制面板）详解&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/&t=OpenStack Horizon（Web控制面板）详解"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2026
+    John Doe
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

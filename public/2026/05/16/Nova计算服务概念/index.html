@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="全面介绍OpenStack Nova计算服务的核心概念，包括nova-api、nova-scheduler、nova-conductor、nova-compute四大组件架构，虚拟化技术支持（KVM&#x2F;QEMU&#x2F;Xen），虚拟机生命周期及调度策略">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack Nova计算服务概念">
+<meta property="og:url" content="http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/index.html">
+<meta property="og:site_name" content="“我的学习之路”">
+<meta property="og:description" content="全面介绍OpenStack Nova计算服务的核心概念，包括nova-api、nova-scheduler、nova-conductor、nova-compute四大组件架构，虚拟化技术支持（KVM&#x2F;QEMU&#x2F;Xen），虚拟机生命周期及调度策略">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-19T17:44:50.630Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="OpenStack">
+<meta property="article:tag" content="云计算">
+<meta property="article:tag" content="Nova">
+<meta property="article:tag" content="计算服务">
+<meta property="article:tag" content="虚拟化">
+<meta property="article:tag" content="调度策略">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>OpenStack Nova计算服务概念</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2026/05/16/Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/05/16/OpenStack-Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&text=OpenStack Nova计算服务概念"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Nova计算服务概念"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&is_video=false&description=OpenStack Nova计算服务概念"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Nova计算服务概念&body=Check out this article: http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Nova计算服务概念"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Nova计算服务概念"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Nova计算服务概念"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Nova计算服务概念"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&name=OpenStack Nova计算服务概念&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&t=OpenStack Nova计算服务概念"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">Nova计算服务概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%9B%9B%E5%A4%A7%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6%E6%9E%B6%E6%9E%84"><span class="toc-number">1.0.1.</span> <span class="toc-text">一、四大核心组件架构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#nova-api-%E2%80%94-%E5%89%8D%E7%AB%AF%E5%85%A5%E5%8F%A3-%F0%9F%9A%AA"><span class="toc-number">1.0.1.1.</span> <span class="toc-text">nova-api — 前端入口 🚪</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#nova-scheduler-%E2%80%94-%E8%B0%83%E5%BA%A6%E5%86%B3%E7%AD%96%E5%BC%95%E6%93%8E-%F0%9F%A7%A0"><span class="toc-number">1.0.1.2.</span> <span class="toc-text">nova-scheduler — 调度决策引擎 🧠</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#nova-conductor-%E2%80%94-%E5%AE%89%E5%85%A8%E4%BB%A3%E7%90%86%E4%B8%8E%E7%BC%96%E6%8E%92%E5%99%A8-%F0%9F%9B%A1%EF%B8%8F"><span class="toc-number">1.0.1.3.</span> <span class="toc-text">nova-conductor — 安全代理与编排器 🛡️</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#nova-compute-%E2%80%94-%E5%AE%9E%E9%99%85%E6%89%A7%E8%A1%8C%E8%80%85-%E2%9A%99%EF%B8%8F"><span class="toc-number">1.0.1.4.</span> <span class="toc-text">nova-compute — 实际执行者 ⚙️</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%AE%8C%E6%95%B4%E5%B7%A5%E4%BD%9C%E6%B5%81%EF%BC%9A%E5%88%9B%E5%BB%BA%E4%B8%80%E5%8F%B0%E8%99%9A%E6%8B%9F%E6%9C%BA-%F0%9F%94%84"><span class="toc-number">1.0.2.</span> <span class="toc-text">二、完整工作流：创建一台虚拟机 🔄</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%99%9A%E6%8B%9F%E5%8C%96%E6%8A%80%E6%9C%AF%E6%94%AF%E6%8C%81-%F0%9F%92%BB"><span class="toc-number">1.0.3.</span> <span class="toc-text">三、虚拟化技术支持 💻</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E8%99%9A%E6%8B%9F%E5%8C%96%E6%9C%BA%E5%88%B6"><span class="toc-number">1.0.3.1.</span> <span class="toc-text">关键虚拟化机制</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E8%B0%83%E5%BA%A6%E7%AD%96%E7%95%A5%E8%AF%A6%E8%A7%A3-%F0%9F%8E%AF"><span class="toc-number">1.0.4.</span> <span class="toc-text">四、调度策略详解 🎯</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BF%87%E6%BB%A4%E9%98%B6%E6%AE%B5%E6%A0%B8%E5%BF%83%E8%BF%87%E6%BB%A4%E5%99%A8"><span class="toc-number">1.0.4.1.</span> <span class="toc-text">过滤阶段核心过滤器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%9D%83%E9%87%8D%E6%89%93%E5%88%86"><span class="toc-number">1.0.4.2.</span> <span class="toc-text">权重打分</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81Cells-v2-%E6%9E%B6%E6%9E%84%EF%BC%88%E7%94%9F%E4%BA%A7%E9%83%A8%E7%BD%B2%EF%BC%89-%F0%9F%8F%97%EF%B8%8F"><span class="toc-number">1.0.5.</span> <span class="toc-text">五、Cells v2 架构（生产部署） 🏗️</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%BB%84%E4%BB%B6%E7%89%B9%E6%80%A7%E5%AF%B9%E6%AF%94"><span class="toc-number">1.0.6.</span> <span class="toc-text">六、组件特性对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">1.0.7.</span> <span class="toc-text">七、使用场景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%A6%82%E6%8B%AC"><span class="toc-number">1.0.8.</span> <span class="toc-text">一句话概括</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        OpenStack Nova计算服务概念
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">John Doe</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-05-15T16:00:00.000Z" class="dt-published" itemprop="datePublished">2026-05-16</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E4%BA%91%E8%AE%A1%E7%AE%97%E7%BB%84%E4%BB%B6/">云计算组件</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/Nova/" rel="tag">Nova</a>, <a class="p-category" href="/tags/OpenStack/" rel="tag">OpenStack</a>, <a class="p-category" href="/tags/%E4%BA%91%E8%AE%A1%E7%AE%97/" rel="tag">云计算</a>, <a class="p-category" href="/tags/%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="tag">虚拟化</a>, <a class="p-category" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1/" rel="tag">计算服务</a>, <a class="p-category" href="/tags/%E8%B0%83%E5%BA%A6%E7%AD%96%E7%95%A5/" rel="tag">调度策略</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="Nova计算服务概念"><a href="#Nova计算服务概念" class="headerlink" title="Nova计算服务概念"></a>Nova计算服务概念</h1><p>Nova 是 OpenStack 中的<strong>核心计算服务</strong>（Compute Service）☁️，负责管理虚拟机（VM）实例的完整生命周期——创建、启动、停止、删除、迁移、快照等。它采用<strong>分布式、无状态、消息驱动</strong>的架构设计，各组件通过消息队列（RabbitMQ）异步通信，通过共享数据库协调状态。<strong>状态保存在数据库中，不在服务进程中。</strong></p>
+<hr>
+<h3 id="一、四大核心组件架构"><a href="#一、四大核心组件架构" class="headerlink" title="一、四大核心组件架构"></a>一、四大核心组件架构</h3><h4 id="nova-api-—-前端入口-🚪"><a href="#nova-api-—-前端入口-🚪" class="headerlink" title="nova-api — 前端入口 🚪"></a>nova-api — 前端入口 🚪</h4><p><strong>角色</strong>：REST API 端点 &#x2F; 请求编排器</p>
+<ul>
+<li>接收所有用户&#x2F;运维操作请求（如 <code>POST /servers</code> 创建VM）</li>
+<li>通过 <strong>Keystone</strong> 进行身份认证 🔐</li>
+<li>校验请求参数并执行策略（Policy）</li>
+<li>将实例初始状态写入数据库（<code>vm_state=BUILDING</code>）</li>
+<li>将任务派发至消息队列，由其他服务处理</li>
+<li><strong>无状态</strong>，可水平扩展</li>
+</ul>
+<h4 id="nova-scheduler-—-调度决策引擎-🧠"><a href="#nova-scheduler-—-调度决策引擎-🧠" class="headerlink" title="nova-scheduler — 调度决策引擎 🧠"></a>nova-scheduler — 调度决策引擎 🧠</h4><p><strong>角色</strong>：确定<strong>哪台物理计算节点</strong>运行新创建的虚拟机</p>
+<p>采用<strong>两阶段算法</strong>：</p>
+<p><strong>阶段1：Filtering（过滤）</strong>——运行可配置过滤链，剔除不合格主机</p>
+<table>
+<thead>
+<tr>
+<th>过滤器</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>RetryFilter</code></td>
+<td>跳过之前调度失败的节点</td>
+</tr>
+<tr>
+<td><code>AvailabilityZoneFilter</code></td>
+<td>遵循可用域（AZ）约束</td>
+</tr>
+<tr>
+<td><code>RamFilter</code> &#x2F; <code>CoreFilter</code> &#x2F; <code>DiskFilter</code></td>
+<td>检查资源容量（支持超分比 <code>ram_allocation_ratio</code>、<code>cpu_allocation_ratio</code>）</td>
+</tr>
+<tr>
+<td><code>ComputeFilter</code></td>
+<td>仅选择 nova-compute 健康的节点</td>
+</tr>
+<tr>
+<td><code>ImagePropertiesFilter</code></td>
+<td>镜像属性与 Hypervisor 类型匹配</td>
+</tr>
+<tr>
+<td><code>ServerGroupAntiAffinityFilter</code></td>
+<td>实例分散到不同主机（高可用）</td>
+</tr>
+<tr>
+<td><code>ServerGroupAffinityFilter</code></td>
+<td>实例集中到相同主机</td>
+</tr>
+<tr>
+<td><code>PciPassthroughFilter</code></td>
+<td>仅选择支持 PCI 透传的节点</td>
+</tr>
+</tbody></table>
+<p><strong>阶段2：Weighting（权重打分）</strong>——对候选主机打分，最高分胜出（默认按剩余内存最多优先）</p>
+<blockquote>
+<p>自 Newton 版本起，资源清单追踪由独立的 <strong>Placement API</strong> 服务负责。调度器向 Placement 查询分配候选节点，再应用自身的过滤器和权重。</p>
+</blockquote>
+<h4 id="nova-conductor-—-安全代理与编排器-🛡️"><a href="#nova-conductor-—-安全代理与编排器-🛡️" class="headerlink" title="nova-conductor — 安全代理与编排器 🛡️"></a>nova-conductor — 安全代理与编排器 🛡️</h4><p><strong>角色</strong>：数据库访问代理 + 复杂工作流协调器</p>
+<p><strong>引入目的</strong>：解决安全隔离问题——计算节点<strong>永远不能直接访问</strong>中央数据库，防止计算节点被攻破时数据泄露。</p>
+<table>
+<thead>
+<tr>
+<th>职责</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>数据库代理</strong></td>
+<td>nova-compute 的所有数据库读写通过 RPC 路由到 conductor；计算节点强制 <code>DISABLE_DB_ACCESS = True</code></td>
+</tr>
+<tr>
+<td><strong>任务编排</strong></td>
+<td>管理多步骤复杂操作：实例创建、冷迁移、在线迁移、Resize、Rebuild（通过内部 <code>ComputeTaskManager</code>）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>同样<strong>无状态</strong>，可水平扩展。⚠️ <strong>禁止</strong>部署在 nova-compute 所在节点。</p>
+</blockquote>
+<h4 id="nova-compute-—-实际执行者-⚙️"><a href="#nova-compute-—-实际执行者-⚙️" class="headerlink" title="nova-compute — 实际执行者 ⚙️"></a>nova-compute — 实际执行者 ⚙️</h4><p><strong>角色</strong>：真正的 <strong>Hypervisor 管理器</strong>——唯一直接操作虚拟机的组件</p>
+<ul>
+<li>运行在每个<strong>计算节点</strong>（物理服务器）上</li>
+<li>监听消息队列获取工作指令</li>
+<li>调用 Hypervisor 驱动（如 <code>libvirt.LibvirtDriver</code> for KVM&#x2F;QEMU）</li>
+<li>管理实例全生命周期：创建、销毁、暂停、挂起、Resize、迁移、快照</li>
+<li>定期向 <strong>Placement API</strong> 报告资源使用情况</li>
+<li><strong>不能直接访问数据库</strong>——所有 DB 操作经 nova-conductor</li>
+</ul>
+<hr>
+<h3 id="二、完整工作流：创建一台虚拟机-🔄"><a href="#二、完整工作流：创建一台虚拟机-🔄" class="headerlink" title="二、完整工作流：创建一台虚拟机 🔄"></a>二、完整工作流：创建一台虚拟机 🔄</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">用户 → nova-api          发送 POST /servers（含 flavor、image、network）</span><br><span class="line">nova-api → Keystone      认证 Token</span><br><span class="line">nova-api → 数据库        创建实例记录（vm_state=BUILDING）</span><br><span class="line">nova-api → 消息队列      发送 boot RPC 消息</span><br><span class="line">nova-scheduler ← 队列    拾取 boot 任务</span><br><span class="line">nova-scheduler → Placement  查询 /allocation_candidates（找合适主机）</span><br><span class="line">Placement → nova-scheduler   返回候选主机列表及资源信息</span><br><span class="line">nova-scheduler → 数据库  过滤 + 权重打分，选出最佳主机</span><br><span class="line">nova-scheduler → 消息队列 发送 build_and_run_instance 到目标主机</span><br><span class="line">nova-compute ← 队列      拾取构建任务</span><br><span class="line">nova-compute → conductor RPC 请求完整实例详情</span><br><span class="line">conductor → 数据库        读取实例数据</span><br><span class="line">conductor → nova-compute 返回实例对象</span><br><span class="line">nova-compute → Placement  提交 /allocations（锁定资源）</span><br><span class="line">nova-compute → Libvirt    调用 spawn()——创建磁盘、启动虚拟机</span><br><span class="line">nova-compute → 数据库     更新 vm_state=ACTIVE（经 conductor）</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>关键特性</strong>：这是<strong>异步、最终一致性</strong>架构。API 立即返回 <code>202 Accepted</code>，实际 VM 创建在后台进行。</p>
+</blockquote>
+<hr>
+<h3 id="三、虚拟化技术支持-💻"><a href="#三、虚拟化技术支持-💻" class="headerlink" title="三、虚拟化技术支持 💻"></a>三、虚拟化技术支持 💻</h3><table>
+<thead>
+<tr>
+<th>Hypervisor</th>
+<th>驱动方式</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>KVM</strong></td>
+<td>libvirt</td>
+<td><strong>最常用</strong>，基于内核的虚拟化，将 Linux 转变为 Hypervisor</td>
+</tr>
+<tr>
+<td><strong>QEMU</strong></td>
+<td>libvirt</td>
+<td>机器模拟器，与 KVM 配合提供设备模拟和 I&#x2F;O 操作</td>
+</tr>
+<tr>
+<td><strong>Xen</strong></td>
+<td>libvirt &#x2F; XenAPI</td>
+<td>Type-1 Hypervisor，支持 libvirt 驱动或 XenAPI</td>
+</tr>
+<tr>
+<td><strong>VMware vCenter</strong></td>
+<td>VMwareAPI</td>
+<td>集成 vSphere 虚拟化环境</td>
+</tr>
+<tr>
+<td><strong>Hyper-V</strong></td>
+<td>HyperVDriver</td>
+<td>Windows Server 虚拟化平台</td>
+</tr>
+<tr>
+<td><strong>Ironic</strong></td>
+<td>IronicDriver</td>
+<td><strong>裸金属</strong>管理（非虚拟化，直接管理物理机）</td>
+</tr>
+<tr>
+<td><strong>LXC&#x2F;LXD</strong></td>
+<td>LXDDriver</td>
+<td>Linux 容器虚拟化</td>
+</tr>
+</tbody></table>
+<h4 id="关键虚拟化机制"><a href="#关键虚拟化机制" class="headerlink" title="关键虚拟化机制"></a>关键虚拟化机制</h4><ul>
+<li><strong>KVM&#x2F;QEMU 模式</strong>: nova-compute 通过 <code>libvirt</code> 库调用 KVM&#x2F;QEMU，libvirt 提供统一 API 屏蔽底层差异</li>
+<li><strong>Emulator Threads 策略</strong>（Pike+ 版本）: <code>hw:cpu_emulator_threads</code> 规格标签可设置：<ul>
+<li><code>share</code>（默认） — 模拟器线程与 vCPU 共享物理 CPU</li>
+<li><code>isolate</code> — 模拟器线程固定在专用物理 CPU（适合实时性要求高的场景）</li>
+</ul>
+</li>
+<li><strong>Xen 特殊处理</strong>: 重启 Xen 虚拟机时会先后发射 <code>STOPPED</code> 和 <code>STARTED</code> 事件，Nova 延迟处理 <code>STOPPED</code> 事件避免误停 VM</li>
+</ul>
+<hr>
+<h3 id="四、调度策略详解-🎯"><a href="#四、调度策略详解-🎯" class="headerlink" title="四、调度策略详解 🎯"></a>四、调度策略详解 🎯</h3><h4 id="过滤阶段核心过滤器"><a href="#过滤阶段核心过滤器" class="headerlink" title="过滤阶段核心过滤器"></a>过滤阶段核心过滤器</h4><table>
+<thead>
+<tr>
+<th>过滤器</th>
+<th>作用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>RetryFilter</code></td>
+<td>防止失败节点被重新选中</td>
+</tr>
+<tr>
+<td><code>AvailabilityZoneFilter</code></td>
+<td>将实例调度到指定可用域</td>
+</tr>
+<tr>
+<td><code>RamFilter</code></td>
+<td>检查内存是否充足（含超分比）</td>
+</tr>
+<tr>
+<td><code>DiskFilter</code></td>
+<td>检查磁盘空间</td>
+</tr>
+<tr>
+<td><code>CoreFilter</code></td>
+<td>检查 vCPU 是否充足</td>
+</tr>
+<tr>
+<td><code>ComputeCapabilitiesFilter</code></td>
+<td>根据计算节点额外特性过滤</td>
+</tr>
+<tr>
+<td><code>ImagePropertiesFilter</code></td>
+<td>确保镜像与 Hypervisor 兼容</td>
+</tr>
+<tr>
+<td><code>ServerGroupAntiAffinityFilter</code></td>
+<td>实现实例反亲和性分散</td>
+</tr>
+<tr>
+<td><code>ServerGroupAffinityFilter</code></td>
+<td>实现实例亲和性集中</td>
+</tr>
+<tr>
+<td><code>NumInstancesFilter</code></td>
+<td>限制单节点最大实例数</td>
+</tr>
+<tr>
+<td><code>IoOpsFilter</code></td>
+<td>避免 I&#x2F;O 繁忙节点</td>
+</tr>
+<tr>
+<td><code>PciPassthroughFilter</code></td>
+<td>仅选择支持 PCI 透传节点</td>
+</tr>
+</tbody></table>
+<h4 id="权重打分"><a href="#权重打分" class="headerlink" title="权重打分"></a>权重打分</h4><p>过滤后的候选主机进入权重阶段，默认策略：</p>
+<ul>
+<li><code>ram_weight_multiplier</code>（默认 1.0）— 剩余内存越多权重越高</li>
+<li>可自定义：<code>cpu_weight_multiplier</code>、<code>disk_weight_multiplier</code></li>
+</ul>
+<hr>
+<h3 id="五、Cells-v2-架构（生产部署）-🏗️"><a href="#五、Cells-v2-架构（生产部署）-🏗️" class="headerlink" title="五、Cells v2 架构（生产部署） 🏗️"></a>五、Cells v2 架构（生产部署） 🏗️</h3><p>对于大规模部署（数百上千计算节点），Nova 使用 <strong>Cells v2</strong> 横向分区：</p>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>组件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>全局（Global）</strong></td>
+<td>nova-api、Placement API、全局数据库（记录 Cell 映射）</td>
+</tr>
+<tr>
+<td><strong>每个 Cell</strong></td>
+<td>Cell 数据库（实例元数据）、Cell 消息队列、scheduler、conductor、compute</td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>Cell0</strong> — 特殊 Cell，存放调度失败实例记录，避免污染主数据库</li>
+<li>每个 Cell 拥有<strong>独立的消息队列和数据库</strong>，避免单点瓶颈</li>
+<li>实现真正<strong>水平扩展</strong>能力</li>
+</ul>
+<hr>
+<h3 id="六、组件特性对比"><a href="#六、组件特性对比" class="headerlink" title="六、组件特性对比"></a>六、组件特性对比</h3><table>
+<thead>
+<tr>
+<th>服务</th>
+<th>主要职责</th>
+<th>有状态？</th>
+<th>可扩展？</th>
+<th>数据库访问</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>nova-api</strong></td>
+<td>REST 端点、请求校验</td>
+<td>否</td>
+<td>水平扩展</td>
+<td>是（读写）</td>
+</tr>
+<tr>
+<td><strong>nova-scheduler</strong></td>
+<td>主机选择（过滤+权重）</td>
+<td>否</td>
+<td>水平扩展</td>
+<td>是（只读）</td>
+</tr>
+<tr>
+<td><strong>nova-conductor</strong></td>
+<td>数据库代理、任务编排</td>
+<td>否</td>
+<td>水平扩展</td>
+<td>是（读写）</td>
+</tr>
+<tr>
+<td><strong>nova-compute</strong></td>
+<td>VM 生命周期、Hypervisor 调用</td>
+<td>是（本地）</td>
+<td>增加计算节点</td>
+<td>经 conductor</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="七、使用场景"><a href="#七、使用场景" class="headerlink" title="七、使用场景"></a>七、使用场景</h3><ul>
+<li><strong>虚拟机全生命周期管理</strong> 🖥️：从创建、运行、迁移到销毁</li>
+<li><strong>多 Hypervisor 统一管理</strong> 🔧：同一 Nova 集群可混用 KVM、VMware、Xen 等</li>
+<li><strong>弹性伸缩</strong> 📈：水平扩展计算节点，结合调度策略优化资源利用率</li>
+<li><strong>高可用部署</strong> 🛡️：Cells v2 + Anti-Affinity 策略实现跨物理机&#x2F;跨可用域部署</li>
+</ul>
+<h3 id="一句话概括"><a href="#一句话概括" class="headerlink" title="一句话概括"></a>一句话概括</h3><p><strong>nova-api</strong> 是入口，<strong>nova-scheduler</strong> 决定在哪运行，<strong>nova-conductor</strong> 安全代理数据库，<strong>nova-compute</strong> 是真正干活的。四者通过消息队列 + Placement API 协作，支撑起 OpenStack 的计算服务能力。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">Nova计算服务概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%9B%9B%E5%A4%A7%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6%E6%9E%B6%E6%9E%84"><span class="toc-number">1.0.1.</span> <span class="toc-text">一、四大核心组件架构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#nova-api-%E2%80%94-%E5%89%8D%E7%AB%AF%E5%85%A5%E5%8F%A3-%F0%9F%9A%AA"><span class="toc-number">1.0.1.1.</span> <span class="toc-text">nova-api — 前端入口 🚪</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#nova-scheduler-%E2%80%94-%E8%B0%83%E5%BA%A6%E5%86%B3%E7%AD%96%E5%BC%95%E6%93%8E-%F0%9F%A7%A0"><span class="toc-number">1.0.1.2.</span> <span class="toc-text">nova-scheduler — 调度决策引擎 🧠</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#nova-conductor-%E2%80%94-%E5%AE%89%E5%85%A8%E4%BB%A3%E7%90%86%E4%B8%8E%E7%BC%96%E6%8E%92%E5%99%A8-%F0%9F%9B%A1%EF%B8%8F"><span class="toc-number">1.0.1.3.</span> <span class="toc-text">nova-conductor — 安全代理与编排器 🛡️</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#nova-compute-%E2%80%94-%E5%AE%9E%E9%99%85%E6%89%A7%E8%A1%8C%E8%80%85-%E2%9A%99%EF%B8%8F"><span class="toc-number">1.0.1.4.</span> <span class="toc-text">nova-compute — 实际执行者 ⚙️</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%AE%8C%E6%95%B4%E5%B7%A5%E4%BD%9C%E6%B5%81%EF%BC%9A%E5%88%9B%E5%BB%BA%E4%B8%80%E5%8F%B0%E8%99%9A%E6%8B%9F%E6%9C%BA-%F0%9F%94%84"><span class="toc-number">1.0.2.</span> <span class="toc-text">二、完整工作流：创建一台虚拟机 🔄</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%99%9A%E6%8B%9F%E5%8C%96%E6%8A%80%E6%9C%AF%E6%94%AF%E6%8C%81-%F0%9F%92%BB"><span class="toc-number">1.0.3.</span> <span class="toc-text">三、虚拟化技术支持 💻</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E8%99%9A%E6%8B%9F%E5%8C%96%E6%9C%BA%E5%88%B6"><span class="toc-number">1.0.3.1.</span> <span class="toc-text">关键虚拟化机制</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E8%B0%83%E5%BA%A6%E7%AD%96%E7%95%A5%E8%AF%A6%E8%A7%A3-%F0%9F%8E%AF"><span class="toc-number">1.0.4.</span> <span class="toc-text">四、调度策略详解 🎯</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BF%87%E6%BB%A4%E9%98%B6%E6%AE%B5%E6%A0%B8%E5%BF%83%E8%BF%87%E6%BB%A4%E5%99%A8"><span class="toc-number">1.0.4.1.</span> <span class="toc-text">过滤阶段核心过滤器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%9D%83%E9%87%8D%E6%89%93%E5%88%86"><span class="toc-number">1.0.4.2.</span> <span class="toc-text">权重打分</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81Cells-v2-%E6%9E%B6%E6%9E%84%EF%BC%88%E7%94%9F%E4%BA%A7%E9%83%A8%E7%BD%B2%EF%BC%89-%F0%9F%8F%97%EF%B8%8F"><span class="toc-number">1.0.5.</span> <span class="toc-text">五、Cells v2 架构（生产部署） 🏗️</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%BB%84%E4%BB%B6%E7%89%B9%E6%80%A7%E5%AF%B9%E6%AF%94"><span class="toc-number">1.0.6.</span> <span class="toc-text">六、组件特性对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">1.0.7.</span> <span class="toc-text">七、使用场景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%A6%82%E6%8B%AC"><span class="toc-number">1.0.8.</span> <span class="toc-text">一句话概括</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&text=OpenStack Nova计算服务概念"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Nova计算服务概念"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&is_video=false&description=OpenStack Nova计算服务概念"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Nova计算服务概念&body=Check out this article: http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Nova计算服务概念"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Nova计算服务概念"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Nova计算服务概念"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Nova计算服务概念"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&name=OpenStack Nova计算服务概念&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&t=OpenStack Nova计算服务概念"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2026
+    John Doe
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

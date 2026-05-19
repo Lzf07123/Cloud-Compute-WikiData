@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="全面介绍OpenStack Heat编排服务的核心概念、HOT模板结构、Stack&#x2F;Resource&#x2F;Parameter管理及与AWS CloudFormation的兼容性">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack Heat（编排）详解">
+<meta property="og:url" content="http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="“我的学习之路”">
+<meta property="og:description" content="全面介绍OpenStack Heat编排服务的核心概念、HOT模板结构、Stack&#x2F;Resource&#x2F;Parameter管理及与AWS CloudFormation的兼容性">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-19T17:44:50.662Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="OpenStack">
+<meta property="article:tag" content="Heat">
+<meta property="article:tag" content="CloudFormation">
+<meta property="article:tag" content="编排">
+<meta property="article:tag" content="HOT模板">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>OpenStack Heat（编排）详解</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2026/05/16/OpenStack-Cinder%E5%9D%97%E5%AD%98%E5%82%A8%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&text=OpenStack Heat（编排）详解"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&title=OpenStack Heat（编排）详解"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&is_video=false&description=OpenStack Heat（编排）详解"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Heat（编排）详解&body=Check out this article: http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&title=OpenStack Heat（编排）详解"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&title=OpenStack Heat（编排）详解"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&title=OpenStack Heat（编排）详解"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&title=OpenStack Heat（编排）详解"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&name=OpenStack Heat（编排）详解&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&t=OpenStack Heat（编排）详解"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Heat%EF%BC%88%E7%BC%96%E6%8E%92%EF%BC%89%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Heat（编排）详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3-%F0%9F%8C%9F"><span class="toc-number">1.0.1.</span> <span class="toc-text">一、核心思想 🌟</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81HOT-%E6%A8%A1%E6%9D%BF%E7%BB%93%E6%9E%84-%F0%9F%93%84"><span class="toc-number">1.0.2.</span> <span class="toc-text">二、HOT 模板结构 📄</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E6%A8%A1%E6%9D%BF%E7%89%88%E6%9C%AC"><span class="toc-number">1.0.2.1.</span> <span class="toc-text">1. 模板版本</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%8F%82%E6%95%B0%E5%AE%9A%E4%B9%89"><span class="toc-number">1.0.2.2.</span> <span class="toc-text">2. 参数定义</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E8%B5%84%E6%BA%90%E5%AE%9A%E4%B9%89-%F0%9F%A7%B1"><span class="toc-number">1.0.2.3.</span> <span class="toc-text">3. 资源定义 🧱</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E8%BE%93%E5%87%BA%E5%AE%9A%E4%B9%89"><span class="toc-number">1.0.2.4.</span> <span class="toc-text">4. 输出定义</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%86%85%E7%BD%AE%E5%87%BD%E6%95%B0-%F0%9F%94%A7"><span class="toc-number">1.0.3.</span> <span class="toc-text">三、内置函数 🔧</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81AWS-CloudFormation-%E5%85%BC%E5%AE%B9%E6%80%A7-%F0%9F%94%84"><span class="toc-number">1.0.4.</span> <span class="toc-text">四、AWS CloudFormation 兼容性 🔄</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81Stack-%E6%93%8D%E4%BD%9C%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F-%F0%9F%94%84"><span class="toc-number">1.0.5.</span> <span class="toc-text">五、Stack 操作生命周期 🔄</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%8E%AF%E5%A2%83%E6%96%87%E4%BB%B6%EF%BC%88Environment-File%EF%BC%89%F0%9F%93%81"><span class="toc-number">1.0.6.</span> <span class="toc-text">六、环境文件（Environment File）📁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E6%A8%A1%E6%9D%BF%E7%BB%84%E5%90%88%EF%BC%88Template-Composition%EF%BC%89%F0%9F%A7%A9"><span class="toc-number">1.0.7.</span> <span class="toc-text">七、模板组合（Template Composition）🧩</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E5%AE%8C%E6%95%B4%E7%BC%96%E6%8E%92%E6%B5%81%E7%A8%8B%E5%9B%BE-%F0%9F%8E%AF"><span class="toc-number">1.0.8.</span> <span class="toc-text">八、完整编排流程图 🎯</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%AE%8C%E6%95%B4%E6%A8%A1%E6%9D%BF%E7%A4%BA%E4%BE%8B-%F0%9F%93%9D"><span class="toc-number">1.0.9.</span> <span class="toc-text">九、完整模板示例 📝</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5-%F0%9F%92%A1"><span class="toc-number">1.0.10.</span> <span class="toc-text">十、最佳实践 💡</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        OpenStack Heat（编排）详解
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">John Doe</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-05-15T16:00:00.000Z" class="dt-published" itemprop="datePublished">2026-05-16</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/">技术文档</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/CloudFormation/" rel="tag">CloudFormation</a>, <a class="p-category" href="/tags/HOT%E6%A8%A1%E6%9D%BF/" rel="tag">HOT模板</a>, <a class="p-category" href="/tags/Heat/" rel="tag">Heat</a>, <a class="p-category" href="/tags/OpenStack/" rel="tag">OpenStack</a>, <a class="p-category" href="/tags/%E7%BC%96%E6%8E%92/" rel="tag">编排</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="OpenStack-Heat（编排）详解"><a href="#OpenStack-Heat（编排）详解" class="headerlink" title="OpenStack Heat（编排）详解"></a>OpenStack Heat（编排）详解</h1><h3 id="一、核心思想-🌟"><a href="#一、核心思想-🌟" class="headerlink" title="一、核心思想 🌟"></a>一、核心思想 🌟</h3><p>Heat 是 OpenStack 的编排服务（Orchestration Service），核心思想是**”基础设施即代码”（Infrastructure as Code）**，通过 HOT 模板定义一组云资源，实现一键式创建、更新、删除。</p>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Stack（栈）</strong></td>
+<td>一组被统一管理的云资源的集合，是 Heat 编排的最小部署单元</td>
+</tr>
+<tr>
+<td><strong>Resource（资源）</strong></td>
+<td>栈中的单个云资源（如虚拟机、网络、磁盘），每个资源有唯一的 <code>type</code></td>
+</tr>
+<tr>
+<td><strong>Parameter（参数）</strong></td>
+<td>模板的输入变量，允许用户自定义配置而不修改模板本身</td>
+</tr>
+</tbody></table>
+<h3 id="二、HOT-模板结构-📄"><a href="#二、HOT-模板结构-📄" class="headerlink" title="二、HOT 模板结构 📄"></a>二、HOT 模板结构 📄</h3><p>HOT（Heat Orchestration Template）使用 <strong>YAML</strong> 格式，包含四个核心段：</p>
+<h4 id="1-模板版本"><a href="#1-模板版本" class="headerlink" title="1. 模板版本"></a>1. 模板版本</h4><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">heat_template_version:</span> <span class="number">2015-04-30</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>对应 OpenStack 版本</th>
+<th>主要特性</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>2014-10-16</code></td>
+<td>Juno</td>
+<td>初始稳定版</td>
+</tr>
+<tr>
+<td><code>2015-04-30</code></td>
+<td>Kilo</td>
+<td>常用稳定版，支持条件函数</td>
+</tr>
+<tr>
+<td><code>2016-10-14</code></td>
+<td>Newton</td>
+<td>增强 <code>if</code> 函数</td>
+</tr>
+<tr>
+<td><code>2018-08-31</code></td>
+<td>Rocky</td>
+<td>新增 <code>yaql</code> 支持</td>
+</tr>
+<tr>
+<td><code>2021-04-16</code></td>
+<td>Wallaby</td>
+<td><code>if</code> 两参数变体</td>
+</tr>
+</tbody></table>
+<h4 id="2-参数定义"><a href="#2-参数定义" class="headerlink" title="2. 参数定义"></a>2. 参数定义</h4><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">parameters:</span></span><br><span class="line">  <span class="attr">key_name:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">    <span class="attr">label:</span> <span class="string">Key</span> <span class="string">Name</span></span><br><span class="line">    <span class="attr">description:</span> <span class="string">SSH</span> <span class="string">密钥对名称</span></span><br><span class="line">    <span class="attr">default:</span> <span class="string">my_key</span></span><br><span class="line">    <span class="attr">hidden:</span> <span class="literal">false</span></span><br><span class="line">    <span class="attr">constraints:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">allowed_values:</span> [<span class="string">m1.small</span>, <span class="string">m1.medium</span>, <span class="string">m1.large</span>]</span><br><span class="line">        <span class="attr">description:</span> <span class="string">规格必须为可选值之一</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">length:</span> &#123; <span class="attr">min:</span> <span class="number">6</span>, <span class="attr">max:</span> <span class="number">8</span> &#125;</span><br><span class="line">        <span class="attr">description:</span> <span class="string">密码长度</span> <span class="number">6</span><span class="number">-8</span> <span class="string">位</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>参数类型</strong>：<code>string</code>、<code>number</code>、<code>json</code>、<code>comma_delimited_list</code>、<code>boolean</code></p>
+<p><strong>常用修饰符</strong>：</p>
+<ul>
+<li><code>default</code> — 设置默认值</li>
+<li><code>hidden: true</code> — 隐藏输入（如密码）</li>
+<li><code>immutable: true</code> — 创建后不可修改</li>
+<li><code>constraints</code> — 约束条件</li>
+</ul>
+<h4 id="3-资源定义-🧱"><a href="#3-资源定义-🧱" class="headerlink" title="3. 资源定义 🧱"></a>3. 资源定义 🧱</h4><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">resources:</span></span><br><span class="line">  <span class="attr">my_instance:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">OS::Nova::Server</span></span><br><span class="line">    <span class="attr">properties:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">MyServer</span></span><br><span class="line">      <span class="attr">image:</span> &#123; <span class="attr">get_param:</span> <span class="string">image_id</span> &#125;</span><br><span class="line">      <span class="attr">flavor:</span> &#123; <span class="attr">get_param:</span> <span class="string">flavor</span> &#125;</span><br><span class="line">      <span class="attr">key_name:</span> &#123; <span class="attr">get_param:</span> <span class="string">key_name</span> &#125;</span><br><span class="line">    <span class="attr">depends_on:</span> [<span class="string">my_volume</span>]</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用资源类型速查</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>资源类型</th>
+<th>OpenStack 服务</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>OS::Nova::Server</code></td>
+<td>Nova</td>
+<td>计算实例</td>
+</tr>
+<tr>
+<td><code>OS::Neutron::Net</code></td>
+<td>Neutron</td>
+<td>网络</td>
+</tr>
+<tr>
+<td><code>OS::Neutron::Subnet</code></td>
+<td>Neutron</td>
+<td>子网</td>
+</tr>
+<tr>
+<td><code>OS::Neutron::Port</code></td>
+<td>Neutron</td>
+<td>端口</td>
+</tr>
+<tr>
+<td><code>OS::Neutron::Router</code></td>
+<td>Neutron</td>
+<td>路由器</td>
+</tr>
+<tr>
+<td><code>OS::Cinder::Volume</code></td>
+<td>Cinder</td>
+<td>云硬盘</td>
+</tr>
+<tr>
+<td><code>OS::Cinder::VolumeAttachment</code></td>
+<td>Cinder</td>
+<td>磁盘挂载</td>
+</tr>
+<tr>
+<td><code>OS::Heat::AutoScalingGroup</code></td>
+<td>Heat</td>
+<td>自动伸缩组</td>
+</tr>
+<tr>
+<td><code>OS::Heat::RandomString</code></td>
+<td>Heat</td>
+<td>随机字符串</td>
+</tr>
+<tr>
+<td><code>OS::Keystone::User</code></td>
+<td>Keystone</td>
+<td>用户</td>
+</tr>
+<tr>
+<td><code>OS::Swift::Container</code></td>
+<td>Swift</td>
+<td>对象存储容器</td>
+</tr>
+</tbody></table>
+<h4 id="4-输出定义"><a href="#4-输出定义" class="headerlink" title="4. 输出定义"></a>4. 输出定义</h4><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">outputs:</span></span><br><span class="line">  <span class="attr">instance_ip:</span></span><br><span class="line">    <span class="attr">description:</span> <span class="string">实例</span> <span class="string">IP</span> <span class="string">地址</span></span><br><span class="line">    <span class="attr">value:</span> &#123; <span class="attr">get_attr:</span> [<span class="string">my_instance</span>, <span class="string">first_address</span>] &#125;</span><br><span class="line">  <span class="attr">instance_id:</span></span><br><span class="line">    <span class="attr">description:</span> <span class="string">实例</span> <span class="string">UUID</span></span><br><span class="line">    <span class="attr">value:</span> &#123; <span class="attr">get_resource:</span> <span class="string">my_instance</span> &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="三、内置函数-🔧"><a href="#三、内置函数-🔧" class="headerlink" title="三、内置函数 🔧"></a>三、内置函数 🔧</h3><table>
+<thead>
+<tr>
+<th>函数</th>
+<th>用途</th>
+<th>类比 CloudFormation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>get_param</code></td>
+<td>获取参数值</td>
+<td><code>Ref</code></td>
+</tr>
+<tr>
+<td><code>get_attr</code></td>
+<td>获取资源属性</td>
+<td><code>Fn::GetAtt</code></td>
+</tr>
+<tr>
+<td><code>get_resource</code></td>
+<td>获取资源引用</td>
+<td><code>Ref</code>（资源本身）</td>
+</tr>
+<tr>
+<td><code>get_file</code></td>
+<td>嵌入外部文件</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>str_replace</code></td>
+<td>字符串模板替换</td>
+<td><code>Fn::Sub</code></td>
+</tr>
+<tr>
+<td><code>str_split</code></td>
+<td>字符串分割</td>
+<td><code>Fn::Split</code></td>
+</tr>
+<tr>
+<td><code>digest</code></td>
+<td>哈希计算</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>repeat</code></td>
+<td>循环生成值</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>list_join</code></td>
+<td>列表拼接</td>
+<td><code>Fn::Join</code></td>
+</tr>
+<tr>
+<td><code>yaql</code></td>
+<td>YAML 查询语言（v2018+）</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<p><strong>条件函数示例</strong>：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">conditions:</span></span><br><span class="line">  <span class="attr">create_volume:</span> &#123; <span class="attr">equals:</span> [&#123; <span class="attr">get_param:</span> <span class="string">volume_size</span> &#125;, <span class="string">&quot;0&quot;</span>] &#125;</span><br><span class="line">  <span class="attr">large_flavor:</span> &#123; <span class="attr">not:</span> &#123; <span class="attr">equals:</span> [&#123; <span class="attr">get_param:</span> <span class="string">flavor</span> &#125;, <span class="string">&quot;m1.small&quot;</span>] &#125; &#125;</span><br><span class="line"></span><br><span class="line"><span class="attr">resources:</span></span><br><span class="line">  <span class="attr">my_instance:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">OS::Nova::Server</span></span><br><span class="line">    <span class="attr">condition:</span> <span class="string">large_flavor</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="四、AWS-CloudFormation-兼容性-🔄"><a href="#四、AWS-CloudFormation-兼容性-🔄" class="headerlink" title="四、AWS CloudFormation 兼容性 🔄"></a>四、AWS CloudFormation 兼容性 🔄</h3><p>Heat 在设计上明确兼容 AWS CloudFormation 模板格式：</p>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>HOT（Heat 原生）</th>
+<th>CFN（CloudFormation 兼容）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>格式</td>
+<td>YAML（.yaml）</td>
+<td>JSON（.json）</td>
+</tr>
+<tr>
+<td>资源类型前缀</td>
+<td><code>OS::*</code></td>
+<td><code>AWS::*</code></td>
+</tr>
+<tr>
+<td>函数风格</td>
+<td><code>get_param</code>, <code>get_attr</code></td>
+<td><code>Ref</code>, <code>Fn::GetAtt</code></td>
+</tr>
+<tr>
+<td>API 端点</td>
+<td><code>heat-api</code></td>
+<td><code>heat-api-cfn</code></td>
+</tr>
+</tbody></table>
+<ul>
+<li>通过 <code>heat-api-cfn</code> 组件提供 CloudFormation 兼容 API</li>
+<li>已有的 AWS CloudFormation 模板可直接提交给 Heat 执行</li>
+<li>支持资源类型映射：<code>AWS::EC2::Instance</code> → <code>OS::Nova::Server</code></li>
+</ul>
+<h3 id="五、Stack-操作生命周期-🔄"><a href="#五、Stack-操作生命周期-🔄" class="headerlink" title="五、Stack 操作生命周期 🔄"></a>五、Stack 操作生命周期 🔄</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">创建（Create）→ 创建中 → 创建完成</span><br><span class="line">  ↓</span><br><span class="line">更新（Update）→ 更新中 → 更新完成</span><br><span class="line">  ↓</span><br><span class="line">回滚（Rollback）→ 回滚中 → 回滚完成</span><br><span class="line">  ↓</span><br><span class="line">删除（Delete）→ 删除中 → 删除完成</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用 CLI 命令</strong> 🖥️</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">openstack stack create -t TEMPLATE.YAML -e ENV.YAML MY_STACK</span><br><span class="line">openstack stack list</span><br><span class="line">openstack stack resource list MY_STACK</span><br><span class="line">openstack stack resource show MY_STACK MY_INSTANCE</span><br><span class="line">openstack stack update -t TEMPLATE.YAML --parameter <span class="string">&quot;FLAVOR=M1.MEDIUM&quot;</span> MY_STACK</span><br><span class="line">openstack stack event list MY_STACK</span><br><span class="line">openstack stack delete MY_STACK</span><br></pre></td></tr></table></figure>
+
+<p><strong>参数覆盖创建</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">openstack stack create -t TEMPLATE.YAML \</span><br><span class="line">  --parameter <span class="string">&quot;KEY_NAME=MY_KEY;IMAGE=CIRROS;FLAVOR=M1.SMALL&quot;</span> \</span><br><span class="line">  MY_STACK</span><br></pre></td></tr></table></figure>
+
+<h3 id="六、环境文件（Environment-File）📁"><a href="#六、环境文件（Environment-File）📁" class="headerlink" title="六、环境文件（Environment File）📁"></a>六、环境文件（Environment File）📁</h3><p>环境文件用于分离配置与模板：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">resource_registry:</span></span><br><span class="line">  <span class="attr">&quot;OS::Nova::Server::MyServer&quot;:</span> <span class="string">myserver.yaml</span></span><br><span class="line"></span><br><span class="line"><span class="attr">parameter_defaults:</span></span><br><span class="line">  <span class="attr">NetworkName:</span> <span class="string">my_network</span></span><br><span class="line"></span><br><span class="line"><span class="attr">parameters:</span></span><br><span class="line">  <span class="attr">MyIP:</span> <span class="number">192.168</span><span class="number">.0</span><span class="number">.1</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>⚠️ <code>parameter_defaults</code> 应用到所有嵌套栈，<code>parameters</code> 仅应用到顶级栈</p>
+</blockquote>
+<h3 id="七、模板组合（Template-Composition）🧩"><a href="#七、模板组合（Template-Composition）🧩" class="headerlink" title="七、模板组合（Template Composition）🧩"></a>七、模板组合（Template Composition）🧩</h3><p>将大型模板拆分为可复用的子模板：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">resources:</span></span><br><span class="line">  <span class="attr">my_server:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">my_nova.yaml</span></span><br><span class="line">    <span class="attr">properties:</span></span><br><span class="line">      <span class="attr">key_name:</span> &#123; <span class="attr">get_param:</span> <span class="string">key_name</span> &#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>嵌套栈属性访问</strong>：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">outputs:</span></span><br><span class="line">  <span class="attr">test_out:</span></span><br><span class="line">    <span class="attr">value:</span> &#123; <span class="attr">get_attr:</span> [<span class="string">my_server</span>, <span class="string">resource.server</span>, <span class="string">first_address</span>] &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="八、完整编排流程图-🎯"><a href="#八、完整编排流程图-🎯" class="headerlink" title="八、完整编排流程图 🎯"></a>八、完整编排流程图 🎯</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">用户输入 HOT 模板（YAML）</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">   Heat API（heat-api / heat-api-cfn）</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">   Heat Engine（引擎核心）</span><br><span class="line">        │</span><br><span class="line">        ├── 解析模板（参数绑定、条件判断）</span><br><span class="line">        ├── 依赖排序（depends_on / 隐式依赖）</span><br><span class="line">        ├── 逐个调用 OpenStack 服务 API</span><br><span class="line">        │    ├── Nova → 创建虚拟机</span><br><span class="line">        │    ├── Neutron → 创建网络/子网</span><br><span class="line">        │    ├── Cinder → 创建云硬盘</span><br><span class="line">        │    └── ...</span><br><span class="line">        ├── 监控资源创建状态</span><br><span class="line">        └── 返回结果（资源 ID、属性等）</span><br></pre></td></tr></table></figure>
+
+<h3 id="九、完整模板示例-📝"><a href="#九、完整模板示例-📝" class="headerlink" title="九、完整模板示例 📝"></a>九、完整模板示例 📝</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">heat_template_version:</span> <span class="number">2015-04-30</span></span><br><span class="line"></span><br><span class="line"><span class="attr">description:</span> <span class="string">完整的</span> <span class="string">Heat</span> <span class="string">编排模板示例</span></span><br><span class="line"></span><br><span class="line"><span class="attr">parameters:</span></span><br><span class="line">  <span class="attr">key_name:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">    <span class="attr">label:</span> <span class="string">Key</span> <span class="string">Name</span></span><br><span class="line">    <span class="attr">description:</span> <span class="string">密钥对名称</span></span><br><span class="line">    <span class="attr">default:</span> <span class="string">my_key</span></span><br><span class="line">  <span class="attr">image:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">    <span class="attr">description:</span> <span class="string">镜像名称或</span> <span class="string">ID</span></span><br><span class="line">    <span class="attr">default:</span> <span class="string">cirros</span></span><br><span class="line">  <span class="attr">flavor:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">    <span class="attr">description:</span> <span class="string">实例规格</span></span><br><span class="line">    <span class="attr">default:</span> <span class="string">m1.small</span></span><br><span class="line">    <span class="attr">constraints:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">allowed_values:</span> [<span class="string">m1.small</span>, <span class="string">m1.medium</span>, <span class="string">m1.large</span>]</span><br><span class="line"></span><br><span class="line"><span class="attr">resources:</span></span><br><span class="line">  <span class="attr">my_instance:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">OS::Nova::Server</span></span><br><span class="line">    <span class="attr">properties:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">My</span> <span class="string">Cirros</span> <span class="string">Instance</span></span><br><span class="line">      <span class="attr">image:</span> &#123; <span class="attr">get_param:</span> <span class="string">image</span> &#125;</span><br><span class="line">      <span class="attr">flavor:</span> &#123; <span class="attr">get_param:</span> <span class="string">flavor</span> &#125;</span><br><span class="line">      <span class="attr">key_name:</span> &#123; <span class="attr">get_param:</span> <span class="string">key_name</span> &#125;</span><br><span class="line"></span><br><span class="line">  <span class="attr">my_volume:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">OS::Cinder::Volume</span></span><br><span class="line">    <span class="attr">properties:</span></span><br><span class="line">      <span class="attr">size:</span> <span class="number">1</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">my_volume</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">volume_attachment:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">OS::Cinder::VolumeAttachment</span></span><br><span class="line">    <span class="attr">properties:</span></span><br><span class="line">      <span class="attr">volume_id:</span> &#123; <span class="attr">get_resource:</span> <span class="string">my_volume</span> &#125;</span><br><span class="line">      <span class="attr">instance_uuid:</span> &#123; <span class="attr">get_resource:</span> <span class="string">my_instance</span> &#125;</span><br><span class="line">      <span class="attr">mountpoint:</span> <span class="string">/dev/vdb</span></span><br><span class="line"></span><br><span class="line"><span class="attr">outputs:</span></span><br><span class="line">  <span class="attr">instance_name:</span></span><br><span class="line">    <span class="attr">description:</span> <span class="string">获取实例名称</span></span><br><span class="line">    <span class="attr">value:</span> &#123; <span class="attr">get_attr:</span> [<span class="string">my_instance</span>, <span class="string">name</span>] &#125;</span><br><span class="line">  <span class="attr">instance_ip:</span></span><br><span class="line">    <span class="attr">description:</span> <span class="string">获取实例</span> <span class="string">IP</span> <span class="string">地址</span></span><br><span class="line">    <span class="attr">value:</span> &#123; <span class="attr">get_attr:</span> [<span class="string">my_instance</span>, <span class="string">first_address</span>] &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="十、最佳实践-💡"><a href="#十、最佳实践-💡" class="headerlink" title="十、最佳实践 💡"></a>十、最佳实践 💡</h3><ol>
+<li>使用<strong>环境文件</strong>分离配置与模板，避免硬编码参数</li>
+<li>合理设置 <code>depends_on</code> 确保资源创建顺序</li>
+<li>使用 <code>parameter_defaults</code> 统一管理嵌套栈参数</li>
+<li>为栈开启<strong>回滚</strong>（Rollback）功能，防止失败时产生残留资源</li>
+<li>利用 <code>stack event list</code> 排查创建失败原因</li>
+<li>将大型模板拆分为<strong>可复用的子模板</strong>，提升维护性</li>
+<li>使用 <code>constraints</code> 对参数进行校验，提前发现错误</li>
+<li>生产环境建议使用 <strong>TOSCA</strong> 模板或结合 <code>tripleo-heat-templates</code> 进行大规模部署</li>
+</ol>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Heat%EF%BC%88%E7%BC%96%E6%8E%92%EF%BC%89%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Heat（编排）详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3-%F0%9F%8C%9F"><span class="toc-number">1.0.1.</span> <span class="toc-text">一、核心思想 🌟</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81HOT-%E6%A8%A1%E6%9D%BF%E7%BB%93%E6%9E%84-%F0%9F%93%84"><span class="toc-number">1.0.2.</span> <span class="toc-text">二、HOT 模板结构 📄</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E6%A8%A1%E6%9D%BF%E7%89%88%E6%9C%AC"><span class="toc-number">1.0.2.1.</span> <span class="toc-text">1. 模板版本</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%8F%82%E6%95%B0%E5%AE%9A%E4%B9%89"><span class="toc-number">1.0.2.2.</span> <span class="toc-text">2. 参数定义</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E8%B5%84%E6%BA%90%E5%AE%9A%E4%B9%89-%F0%9F%A7%B1"><span class="toc-number">1.0.2.3.</span> <span class="toc-text">3. 资源定义 🧱</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E8%BE%93%E5%87%BA%E5%AE%9A%E4%B9%89"><span class="toc-number">1.0.2.4.</span> <span class="toc-text">4. 输出定义</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%86%85%E7%BD%AE%E5%87%BD%E6%95%B0-%F0%9F%94%A7"><span class="toc-number">1.0.3.</span> <span class="toc-text">三、内置函数 🔧</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81AWS-CloudFormation-%E5%85%BC%E5%AE%B9%E6%80%A7-%F0%9F%94%84"><span class="toc-number">1.0.4.</span> <span class="toc-text">四、AWS CloudFormation 兼容性 🔄</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81Stack-%E6%93%8D%E4%BD%9C%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F-%F0%9F%94%84"><span class="toc-number">1.0.5.</span> <span class="toc-text">五、Stack 操作生命周期 🔄</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%8E%AF%E5%A2%83%E6%96%87%E4%BB%B6%EF%BC%88Environment-File%EF%BC%89%F0%9F%93%81"><span class="toc-number">1.0.6.</span> <span class="toc-text">六、环境文件（Environment File）📁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E6%A8%A1%E6%9D%BF%E7%BB%84%E5%90%88%EF%BC%88Template-Composition%EF%BC%89%F0%9F%A7%A9"><span class="toc-number">1.0.7.</span> <span class="toc-text">七、模板组合（Template Composition）🧩</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E5%AE%8C%E6%95%B4%E7%BC%96%E6%8E%92%E6%B5%81%E7%A8%8B%E5%9B%BE-%F0%9F%8E%AF"><span class="toc-number">1.0.8.</span> <span class="toc-text">八、完整编排流程图 🎯</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%AE%8C%E6%95%B4%E6%A8%A1%E6%9D%BF%E7%A4%BA%E4%BE%8B-%F0%9F%93%9D"><span class="toc-number">1.0.9.</span> <span class="toc-text">九、完整模板示例 📝</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5-%F0%9F%92%A1"><span class="toc-number">1.0.10.</span> <span class="toc-text">十、最佳实践 💡</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&text=OpenStack Heat（编排）详解"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&title=OpenStack Heat（编排）详解"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&is_video=false&description=OpenStack Heat（编排）详解"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Heat（编排）详解&body=Check out this article: http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&title=OpenStack Heat（编排）详解"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&title=OpenStack Heat（编排）详解"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&title=OpenStack Heat（编排）详解"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&title=OpenStack Heat（编排）详解"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&name=OpenStack Heat（编排）详解&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/OpenStack-Heat(%E7%BC%96%E6%8E%92)%E8%AF%A6%E8%A7%A3/&t=OpenStack Heat（编排）详解"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2026
+    John Doe
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

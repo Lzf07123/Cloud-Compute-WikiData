@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="全面介绍OpenStack Horizon Web界面服务的核心概念、界面架构、功能模块及管理操作">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack Horizon Web界面概念">
+<meta property="og:url" content="http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/index.html">
+<meta property="og:site_name" content="“我的学习之路”">
+<meta property="og:description" content="全面介绍OpenStack Horizon Web界面服务的核心概念、界面架构、功能模块及管理操作">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-19T17:44:50.630Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="OpenStack">
+<meta property="article:tag" content="Horizon">
+<meta property="article:tag" content="Dashboard">
+<meta property="article:tag" content="Web界面">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>OpenStack Horizon Web界面概念</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2026/05/16/Heat%E7%BC%96%E6%8E%92%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/05/16/Keystone%E8%AE%A4%E8%AF%81%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&text=OpenStack Horizon Web界面概念"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&title=OpenStack Horizon Web界面概念"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&is_video=false&description=OpenStack Horizon Web界面概念"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Horizon Web界面概念&body=Check out this article: http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&title=OpenStack Horizon Web界面概念"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&title=OpenStack Horizon Web界面概念"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&title=OpenStack Horizon Web界面概念"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&title=OpenStack Horizon Web界面概念"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&name=OpenStack Horizon Web界面概念&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&t=OpenStack Horizon Web界面概念"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Horizon-Web%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5-%F0%9F%96%A5%EF%B8%8F"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Horizon Web界面概念 🖥️</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A0%B8%E5%BF%83%E6%9E%B6%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">一、核心架构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E4%BF%A1%E6%9E%B6%E6%9E%84"><span class="toc-number">1.1.1.</span> <span class="toc-text">通信架构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E7%95%8C%E9%9D%A2%E7%BB%93%E6%9E%84"><span class="toc-number">1.2.</span> <span class="toc-text">二、界面结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Dashboard%EF%BC%88%E4%BB%AA%E8%A1%A8%E6%9D%BF%EF%BC%89%E4%B8%8E-Panel%EF%BC%88%E9%9D%A2%E6%9D%BF%EF%BC%89"><span class="toc-number">1.2.1.</span> <span class="toc-text">1. Dashboard（仪表板）与 Panel（面板）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-UI-%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6"><span class="toc-number">1.2.2.</span> <span class="toc-text">2. UI 核心组件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E7%94%A8%E6%88%B7%E8%AE%BE%E7%BD%AE"><span class="toc-number">1.2.3.</span> <span class="toc-text">3. 用户设置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD"><span class="toc-number">1.3.</span> <span class="toc-text">三、核心功能</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E8%AE%A1%E7%AE%97%E7%AE%A1%E7%90%86%EF%BC%88Nova%EF%BC%89%F0%9F%92%BB"><span class="toc-number">1.3.1.</span> <span class="toc-text">1. 计算管理（Nova）💻</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%BD%91%E7%BB%9C%E7%AE%A1%E7%90%86%EF%BC%88Neutron%EF%BC%89%F0%9F%8C%90"><span class="toc-number">1.3.2.</span> <span class="toc-text">2. 网络管理（Neutron）🌐</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86%EF%BC%88Cinder-Glance-Swift%EF%BC%89%F0%9F%92%BE"><span class="toc-number">1.3.3.</span> <span class="toc-text">3. 存储管理（Cinder&#x2F;Glance&#x2F;Swift）💾</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E9%A1%B9%E7%9B%AE%E4%B8%8E%E7%94%A8%E6%88%B7%E7%AE%A1%E7%90%86%EF%BC%88Keystone%EF%BC%89%F0%9F%91%A5"><span class="toc-number">1.3.4.</span> <span class="toc-text">4. 项目与用户管理（Keystone）👥</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%89%A9%E5%B1%95%E4%B8%8E%E5%AE%9A%E5%88%B6-%F0%9F%94%A7"><span class="toc-number">1.4.</span> <span class="toc-text">四、扩展与定制 🔧</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Dashboard-%E6%B3%A8%E5%86%8C%E6%9C%BA%E5%88%B6"><span class="toc-number">1.4.1.</span> <span class="toc-text">1. Dashboard 注册机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%B8%BB%E9%A2%98%E4%B8%8E%E5%93%81%E7%89%8C%E5%AE%9A%E5%88%B6"><span class="toc-number">1.4.2.</span> <span class="toc-text">2. 主题与品牌定制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%8A%9F%E8%83%BD%E6%A8%A1%E5%9D%97%E6%89%A9%E5%B1%95"><span class="toc-number">1.4.3.</span> <span class="toc-text">3. 功能模块扩展</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%B8%B8%E8%A7%81%E6%89%A9%E5%B1%95%E6%96%B9%E5%BC%8F"><span class="toc-number">1.4.4.</span> <span class="toc-text">4. 常见扩展方式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E9%83%A8%E7%BD%B2%E6%A8%A1%E5%BC%8F"><span class="toc-number">1.5.</span> <span class="toc-text">五、部署模式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E9%83%A8%E7%BD%B2%E5%BB%BA%E8%AE%AE%E2%9A%A0%EF%B8%8F"><span class="toc-number">1.5.1.</span> <span class="toc-text">生产环境部署建议⚠️</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%9B%91%E6%8E%A7%E4%B8%8E%E6%8E%92%E6%9F%A5"><span class="toc-number">1.6.</span> <span class="toc-text">六、监控与排查</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81Horizon-SDN-%E7%AE%A1%E7%90%86%E6%80%9D%E6%83%B3"><span class="toc-number">1.7.</span> <span class="toc-text">七、Horizon SDN 管理思想</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E6%8A%80%E6%9C%AF%E6%B3%A8%E8%A7%A3-%F0%9F%92%A1"><span class="toc-number">1.7.1.</span> <span class="toc-text">关键技术注解 💡</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        OpenStack Horizon Web界面概念
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">John Doe</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-05-15T16:00:00.000Z" class="dt-published" itemprop="datePublished">2026-05-16</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/">技术文档</a> › <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/%E4%BA%91%E8%AE%A1%E7%AE%97/">云计算</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/Dashboard/" rel="tag">Dashboard</a>, <a class="p-category" href="/tags/Horizon/" rel="tag">Horizon</a>, <a class="p-category" href="/tags/OpenStack/" rel="tag">OpenStack</a>, <a class="p-category" href="/tags/Web%E7%95%8C%E9%9D%A2/" rel="tag">Web界面</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="OpenStack-Horizon-Web界面概念-🖥️"><a href="#OpenStack-Horizon-Web界面概念-🖥️" class="headerlink" title="OpenStack Horizon Web界面概念 🖥️"></a>OpenStack Horizon Web界面概念 🖥️</h1><p>Horizon 是 OpenStack 平台的<strong>官方 Web 管理界面组件</strong>（Dashboard），基于 Django 框架构建，为管理员和租户用户提供图形化的云资源管理入口，无需记忆命令行即可完成绝大部分日常操作🚀。</p>
+<p>核心设计理念：将底层各 OpenStack 组件的 API 调用封装为<strong>直观的 Web 操作界面</strong>，降低使用门槛，提升运维效率。</p>
+<hr>
+<h2 id="一、核心架构"><a href="#一、核心架构" class="headerlink" title="一、核心架构"></a>一、核心架构</h2><p>Horizon 采用 Django MTV（Model-Template-View）架构模式🏗️：</p>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>组件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>API 层</strong></td>
+<td><code>openstack_dashboard/api/</code></td>
+<td>封装对各 OpenStack 组件的 REST 调用</td>
+</tr>
+<tr>
+<td><strong>视图层</strong></td>
+<td><code>openstack_dashboard/views</code></td>
+<td>处理请求逻辑与数据上下文</td>
+</tr>
+<tr>
+<td><strong>模板层</strong></td>
+<td><code>openstack_dashboard/templates/</code></td>
+<td>Django 模板引擎，渲染 Web 页面</td>
+</tr>
+<tr>
+<td><strong>静态资源层</strong></td>
+<td><code>openstack_dashboard/static/</code></td>
+<td>CSS &#x2F; JS &#x2F; 图片等前端资源</td>
+</tr>
+<tr>
+<td><strong>配置层</strong></td>
+<td><code>openstack_dashboard/settings.py</code></td>
+<td>全局配置、功能开关、后端对接</td>
+</tr>
+</tbody></table>
+<h3 id="通信架构"><a href="#通信架构" class="headerlink" title="通信架构"></a>通信架构</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">浏览器（用户） ➔ Apache/nginx（WSGI） ➔ Horizon（Django App）</span><br><span class="line">    ➔ REST API ➔ Keystone（认证） / Nova（计算） / Neutron（网络）</span><br><span class="line">    ➔ Cinder（存储） / Glance（镜像） / Swift（对象存储）</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="二、界面结构"><a href="#二、界面结构" class="headerlink" title="二、界面结构"></a>二、界面结构</h2><h3 id="1-Dashboard（仪表板）与-Panel（面板）"><a href="#1-Dashboard（仪表板）与-Panel（面板）" class="headerlink" title="1. Dashboard（仪表板）与 Panel（面板）"></a>1. Dashboard（仪表板）与 Panel（面板）</h3><p>Horizon 的界面按<strong>用户角色</strong>划分为两大 Dashboard📊：</p>
+<table>
+<thead>
+<tr>
+<th>Dashboard</th>
+<th>适用对象</th>
+<th>主要面板</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Admin</strong></td>
+<td>云管理员</td>
+<td>项目&#x2F;用户&#x2F;镜像&#x2F;网络&#x2F;卷&#x2F;实例&#x2F;服务&#x2F;配额管理</td>
+</tr>
+<tr>
+<td><strong>Project</strong></td>
+<td>普通租户</td>
+<td>实例&#x2F;卷&#x2F;网络&#x2F;安全组&#x2F;密钥对&#x2F;镜像&#x2F;负载均衡</td>
+</tr>
+</tbody></table>
+<h3 id="2-UI-核心组件"><a href="#2-UI-核心组件" class="headerlink" title="2. UI 核心组件"></a>2. UI 核心组件</h3><p>Horizon 提供多种标准 UI 组件，确保界面一致性与可扩展性🎨：</p>
+<ul>
+<li><strong>DataTables（数据表）</strong>：展示资源列表，支持排序、过滤、分页、批量操作</li>
+<li><strong>Tabs &amp; TabGroups（标签页）</strong>：将关联数据分组展示（如实例详情&#x2F;控制台&#x2F;日志）</li>
+<li><strong>Workflows（工作流）</strong>：多步骤导向型操作，如创建实例（选择镜像 ➔ 选择规格 ➔ 网络配置 ➔ 确认）</li>
+<li><strong>Forms（表单）</strong>：参数填写与配置提交</li>
+<li><strong>Wizards（向导）</strong>：复杂操作的引导式流程</li>
+</ul>
+<h3 id="3-用户设置"><a href="#3-用户设置" class="headerlink" title="3. 用户设置"></a>3. 用户设置</h3><p>用户可在设置面板中个性化配置⚙️：</p>
+<ul>
+<li><strong>时区选择</strong>（Timezone）：控制时间显示</li>
+<li><strong>语言偏好</strong>（Language）：支持多语言切换</li>
+<li><strong>页面大小</strong>（Items Per Page）：列表每页显示条目数</li>
+<li><strong>HTTP 日志</strong>（Logs）：查看 API 调用历史</li>
+</ul>
+<hr>
+<h2 id="三、核心功能"><a href="#三、核心功能" class="headerlink" title="三、核心功能"></a>三、核心功能</h2><h3 id="1-计算管理（Nova）💻"><a href="#1-计算管理（Nova）💻" class="headerlink" title="1. 计算管理（Nova）💻"></a>1. 计算管理（Nova）💻</h3><table>
+<thead>
+<tr>
+<th>功能</th>
+<th>操作说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>实例生命周期</td>
+<td>创建&#x2F;启动&#x2F;停止&#x2F;软硬重启&#x2F;删除实例</td>
+</tr>
+<tr>
+<td>实例控制台</td>
+<td>通过 VNC&#x2F;SPICE 在浏览器内访问</td>
+</tr>
+<tr>
+<td>实例快照</td>
+<td>基于运行中实例创建镜像</td>
+</tr>
+<tr>
+<td>规格管理</td>
+<td>查看和管理 Flavor 配置</td>
+</tr>
+<tr>
+<td>密钥对管理</td>
+<td>SSH 密钥对的导入&#x2F;创建&#x2F;删除</td>
+</tr>
+</tbody></table>
+<h3 id="2-网络管理（Neutron）🌐"><a href="#2-网络管理（Neutron）🌐" class="headerlink" title="2. 网络管理（Neutron）🌐"></a>2. 网络管理（Neutron）🌐</h3><table>
+<thead>
+<tr>
+<th>功能</th>
+<th>操作说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>网络创建</td>
+<td>创建 Provider &#x2F; Self-Service 网络</td>
+</tr>
+<tr>
+<td>子网管理</td>
+<td>配置 CIDR &#x2F; DHCP 启用&#x2F;网关设置</td>
+</tr>
+<tr>
+<td>路由器管理</td>
+<td>创建路由器、添加接口、设置外部网关</td>
+</tr>
+<tr>
+<td>浮动 IP 管理</td>
+<td>绑定&#x2F;解绑浮动 IP</td>
+</tr>
+<tr>
+<td>安全组规则</td>
+<td>自定义入站&#x2F;出站规则</td>
+</tr>
+<tr>
+<td>负载均衡</td>
+<td>创建监听器、后端池、健康检查</td>
+</tr>
+</tbody></table>
+<h3 id="3-存储管理（Cinder-Glance-Swift）💾"><a href="#3-存储管理（Cinder-Glance-Swift）💾" class="headerlink" title="3. 存储管理（Cinder&#x2F;Glance&#x2F;Swift）💾"></a>3. 存储管理（Cinder&#x2F;Glance&#x2F;Swift）💾</h3><table>
+<thead>
+<tr>
+<th>功能</th>
+<th>操作说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>卷管理</td>
+<td>创建&#x2F;挂载&#x2F;卸载&#x2F;扩展&#x2F;删除卷</td>
+</tr>
+<tr>
+<td>卷快照</td>
+<td>创建&#x2F;删除快照，从快照创建新卷</td>
+</tr>
+<tr>
+<td>镜像管理</td>
+<td>上传&#x2F;下载&#x2F;编辑&#x2F;删除&#x2F;共享镜像</td>
+</tr>
+<tr>
+<td>对象存储</td>
+<td>容器创建、对象上传&#x2F;下载（Swift）</td>
+</tr>
+</tbody></table>
+<h3 id="4-项目与用户管理（Keystone）👥"><a href="#4-项目与用户管理（Keystone）👥" class="headerlink" title="4. 项目与用户管理（Keystone）👥"></a>4. 项目与用户管理（Keystone）👥</h3><table>
+<thead>
+<tr>
+<th>功能</th>
+<th>操作说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>项目管理</td>
+<td>创建&#x2F;编辑&#x2F;禁用&#x2F;删除项目</td>
+</tr>
+<tr>
+<td>用户管理</td>
+<td>创建&#x2F;编辑&#x2F;启用&#x2F;禁用&#x2F;删除用户</td>
+</tr>
+<tr>
+<td>角色分配</td>
+<td>为用户分配项目角色</td>
+</tr>
+<tr>
+<td>配额管理</td>
+<td>设置项目级别计算&#x2F;存储&#x2F;网络资源配额</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、扩展与定制-🔧"><a href="#四、扩展与定制-🔧" class="headerlink" title="四、扩展与定制 🔧"></a>四、扩展与定制 🔧</h2><p>Horizon 支持丰富的定制与扩展能力：</p>
+<h3 id="1-Dashboard-注册机制"><a href="#1-Dashboard-注册机制" class="headerlink" title="1. Dashboard 注册机制"></a>1. Dashboard 注册机制</h3><p>开发者的自定义功能通过 Django <code>dashboard.py</code> 文件注册到 Horizon：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 将自定义面板注册到 Dashboard</span></span><br><span class="line">dashboard.default_panels.append(<span class="string">&#x27;MyCustomPanel&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-主题与品牌定制"><a href="#2-主题与品牌定制" class="headerlink" title="2. 主题与品牌定制"></a>2. 主题与品牌定制</h3><ul>
+<li>修改 <code>openstack_dashboard/settings.py</code> 中的 <code>AVAILABLE_THEMES</code> 切换主题</li>
+<li>支持自定义 Logo、品牌色、页脚、样式表</li>
+<li>内置 Bootstrap 主题引擎，支持响应式布局</li>
+</ul>
+<h3 id="3-功能模块扩展"><a href="#3-功能模块扩展" class="headerlink" title="3. 功能模块扩展"></a>3. 功能模块扩展</h3><ul>
+<li>采用 Django App 机制，各功能独立模块化</li>
+<li>Panel（面板）是基本功能单元，可自由增删</li>
+<li>支持第三方插件（如 Heat &#x2F; Mistral &#x2F; Sahara 等扩展组件）</li>
+</ul>
+<h3 id="4-常见扩展方式"><a href="#4-常见扩展方式" class="headerlink" title="4. 常见扩展方式"></a>4. 常见扩展方式</h3><table>
+<thead>
+<tr>
+<th>扩展方式</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>继承重写</strong></td>
+<td>继承 Horizon 基类，覆盖默认视图&#x2F;模板</td>
+</tr>
+<tr>
+<td><strong>插件注册</strong></td>
+<td>通过 horizon.py 注册自定义 Dashboard&#x2F;Panel</td>
+</tr>
+<tr>
+<td><strong>模板覆写</strong></td>
+<td>利用 Django 模板继承机制替换默认模板</td>
+</tr>
+<tr>
+<td><strong>静态资源</strong></td>
+<td>在 static&#x2F; 目录添加自定义 JS&#x2F;CSS&#x2F;图片</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="五、部署模式"><a href="#五、部署模式" class="headerlink" title="五、部署模式"></a>五、部署模式</h2><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>单节点</strong></td>
+<td>Horizon 与控制节点部署在一起，测试&#x2F;POCC</td>
+</tr>
+<tr>
+<td><strong>多节点 + HA</strong></td>
+<td>Horizon 独立部署，前端 + Apache 集群</td>
+</tr>
+<tr>
+<td><strong>容器化部署</strong></td>
+<td>通过 Kolla-Ansible 以容器方式运行</td>
+</tr>
+<tr>
+<td><strong>HTTPS + SSO</strong></td>
+<td>配置 SSL 证书 + LDAP &#x2F; SAML 认证集成</td>
+</tr>
+</tbody></table>
+<h3 id="生产环境部署建议⚠️"><a href="#生产环境部署建议⚠️" class="headerlink" title="生产环境部署建议⚠️"></a>生产环境部署建议⚠️</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 安装 Horizon</span></span><br><span class="line">apt install openstack-dashboard</span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置 Apache</span></span><br><span class="line">a2ensite 000-default</span><br><span class="line">systemctl restart apache2</span><br><span class="line"></span><br><span class="line"><span class="comment"># HTTPS 配置（签发有效期检查）</span></span><br><span class="line">openstack-config --<span class="built_in">set</span> /etc/openstack-dashboard/local_settings.py DEFAULT_ENABLE_HTTPS True</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="六、监控与排查"><a href="#六、监控与排查" class="headerlink" title="六、监控与排查"></a>六、监控与排查</h2><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>排查方法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>页面加载失败</td>
+<td>检查 Apache&#x2F;nginx 状态：<code>systemctl status apache2</code></td>
+</tr>
+<tr>
+<td>API 调用报错</td>
+<td>查看 <code>/var/log/horizon/horizon.log</code></td>
+</tr>
+<tr>
+<td>登录失败</td>
+<td>检查 Keystone 服务状态及网络连通性</td>
+</tr>
+<tr>
+<td>界面显示异常</td>
+<td>浏览器 F12 查看 Console&#x2F;Network 错误</td>
+</tr>
+<tr>
+<td>静态资源加载失败</td>
+<td><code>python manage.py collectstatic</code> 重新收集静态文件</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="七、Horizon-SDN-管理思想"><a href="#七、Horizon-SDN-管理思想" class="headerlink" title="七、Horizon SDN 管理思想"></a>七、Horizon SDN 管理思想</h2><p>Horizon 的核心设计哲学：<strong>通过抽象化资源视图，屏蔽底层组件差异</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>传统操作方式</th>
+<th>Horizon 实现</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>命令行管理各组件</td>
+<td>统一 Web 界面，跨组件集成</td>
+</tr>
+<tr>
+<td>手动记录资源信息</td>
+<td>DataTables 实时展示资源状态</td>
+</tr>
+<tr>
+<td>手工处理多步骤操作</td>
+<td>Workflows 引导式流程</td>
+</tr>
+<tr>
+<td>逐组件排查问题</td>
+<td>集成式资源拓扑与日志视图</td>
+</tr>
+</tbody></table>
+<h3 id="关键技术注解-💡"><a href="#关键技术注解-💡" class="headerlink" title="关键技术注解 💡"></a>关键技术注解 💡</h3><ul>
+<li><strong>Django MTV 架构</strong>: Horizon 的基础框架，Model（数据模型）→ Template（模板渲染）→ View（业务逻辑处理）</li>
+<li><strong>REST API 封装</strong>: Horizon 内部通过 <code>python-openstackclient</code> 和各组件 SDK 与后端服务通信，用户操作最终转化为 API 调用</li>
+<li><strong>Workflows 工作流</strong>: Horizon 独创的多步骤操作模式，将创建实例等复杂操作分解为有引导的步骤，每步可独立验证</li>
+<li><strong>Panel 面板机制</strong>: 最细粒度的功能单元，支持按角色&#x2F;权限动态加载显示，实现功能级 RBAC 控制</li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Horizon-Web%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5-%F0%9F%96%A5%EF%B8%8F"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Horizon Web界面概念 🖥️</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A0%B8%E5%BF%83%E6%9E%B6%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">一、核心架构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E4%BF%A1%E6%9E%B6%E6%9E%84"><span class="toc-number">1.1.1.</span> <span class="toc-text">通信架构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E7%95%8C%E9%9D%A2%E7%BB%93%E6%9E%84"><span class="toc-number">1.2.</span> <span class="toc-text">二、界面结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Dashboard%EF%BC%88%E4%BB%AA%E8%A1%A8%E6%9D%BF%EF%BC%89%E4%B8%8E-Panel%EF%BC%88%E9%9D%A2%E6%9D%BF%EF%BC%89"><span class="toc-number">1.2.1.</span> <span class="toc-text">1. Dashboard（仪表板）与 Panel（面板）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-UI-%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6"><span class="toc-number">1.2.2.</span> <span class="toc-text">2. UI 核心组件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E7%94%A8%E6%88%B7%E8%AE%BE%E7%BD%AE"><span class="toc-number">1.2.3.</span> <span class="toc-text">3. 用户设置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD"><span class="toc-number">1.3.</span> <span class="toc-text">三、核心功能</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E8%AE%A1%E7%AE%97%E7%AE%A1%E7%90%86%EF%BC%88Nova%EF%BC%89%F0%9F%92%BB"><span class="toc-number">1.3.1.</span> <span class="toc-text">1. 计算管理（Nova）💻</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%BD%91%E7%BB%9C%E7%AE%A1%E7%90%86%EF%BC%88Neutron%EF%BC%89%F0%9F%8C%90"><span class="toc-number">1.3.2.</span> <span class="toc-text">2. 网络管理（Neutron）🌐</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86%EF%BC%88Cinder-Glance-Swift%EF%BC%89%F0%9F%92%BE"><span class="toc-number">1.3.3.</span> <span class="toc-text">3. 存储管理（Cinder&#x2F;Glance&#x2F;Swift）💾</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E9%A1%B9%E7%9B%AE%E4%B8%8E%E7%94%A8%E6%88%B7%E7%AE%A1%E7%90%86%EF%BC%88Keystone%EF%BC%89%F0%9F%91%A5"><span class="toc-number">1.3.4.</span> <span class="toc-text">4. 项目与用户管理（Keystone）👥</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%89%A9%E5%B1%95%E4%B8%8E%E5%AE%9A%E5%88%B6-%F0%9F%94%A7"><span class="toc-number">1.4.</span> <span class="toc-text">四、扩展与定制 🔧</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Dashboard-%E6%B3%A8%E5%86%8C%E6%9C%BA%E5%88%B6"><span class="toc-number">1.4.1.</span> <span class="toc-text">1. Dashboard 注册机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%B8%BB%E9%A2%98%E4%B8%8E%E5%93%81%E7%89%8C%E5%AE%9A%E5%88%B6"><span class="toc-number">1.4.2.</span> <span class="toc-text">2. 主题与品牌定制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%8A%9F%E8%83%BD%E6%A8%A1%E5%9D%97%E6%89%A9%E5%B1%95"><span class="toc-number">1.4.3.</span> <span class="toc-text">3. 功能模块扩展</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%B8%B8%E8%A7%81%E6%89%A9%E5%B1%95%E6%96%B9%E5%BC%8F"><span class="toc-number">1.4.4.</span> <span class="toc-text">4. 常见扩展方式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E9%83%A8%E7%BD%B2%E6%A8%A1%E5%BC%8F"><span class="toc-number">1.5.</span> <span class="toc-text">五、部署模式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E9%83%A8%E7%BD%B2%E5%BB%BA%E8%AE%AE%E2%9A%A0%EF%B8%8F"><span class="toc-number">1.5.1.</span> <span class="toc-text">生产环境部署建议⚠️</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E7%9B%91%E6%8E%A7%E4%B8%8E%E6%8E%92%E6%9F%A5"><span class="toc-number">1.6.</span> <span class="toc-text">六、监控与排查</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81Horizon-SDN-%E7%AE%A1%E7%90%86%E6%80%9D%E6%83%B3"><span class="toc-number">1.7.</span> <span class="toc-text">七、Horizon SDN 管理思想</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E6%8A%80%E6%9C%AF%E6%B3%A8%E8%A7%A3-%F0%9F%92%A1"><span class="toc-number">1.7.1.</span> <span class="toc-text">关键技术注解 💡</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&text=OpenStack Horizon Web界面概念"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&title=OpenStack Horizon Web界面概念"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&is_video=false&description=OpenStack Horizon Web界面概念"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Horizon Web界面概念&body=Check out this article: http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&title=OpenStack Horizon Web界面概念"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&title=OpenStack Horizon Web界面概念"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&title=OpenStack Horizon Web界面概念"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&title=OpenStack Horizon Web界面概念"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&name=OpenStack Horizon Web界面概念&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/HorizonWeb%E7%95%8C%E9%9D%A2%E6%A6%82%E5%BF%B5/&t=OpenStack Horizon Web界面概念"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2026
+    John Doe
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

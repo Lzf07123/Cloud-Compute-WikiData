@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="全面介绍OpenStack Glance镜像服务的镜像格式、上传下载共享操作、后端存储方案及镜像与存储解耦架构">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack Glance 镜像服务概念">
+<meta property="og:url" content="http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/index.html">
+<meta property="og:site_name" content="“我的学习之路”">
+<meta property="og:description" content="全面介绍OpenStack Glance镜像服务的镜像格式、上传下载共享操作、后端存储方案及镜像与存储解耦架构">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-19T17:44:50.622Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="OpenStack">
+<meta property="article:tag" content="Glance">
+<meta property="article:tag" content="镜像服务">
+<meta property="article:tag" content="云平台">
+<meta property="article:tag" content="IaaS">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>OpenStack Glance 镜像服务概念</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2026/05/16/Cinder%E5%9D%97%E5%AD%98%E5%82%A8%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/05/16/Heat%E7%BC%96%E6%8E%92%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&text=OpenStack Glance 镜像服务概念"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Glance 镜像服务概念"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&is_video=false&description=OpenStack Glance 镜像服务概念"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Glance 镜像服务概念&body=Check out this article: http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Glance 镜像服务概念"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Glance 镜像服务概念"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Glance 镜像服务概念"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Glance 镜像服务概念"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&name=OpenStack Glance 镜像服务概念&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&t=OpenStack Glance 镜像服务概念"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Glance-%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Glance 镜像服务概念</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E9%95%9C%E5%83%8F%E6%A0%BC%E5%BC%8F"><span class="toc-number">1.1.</span> <span class="toc-text">一、镜像格式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E7%A3%81%E7%9B%98%E6%A0%BC%E5%BC%8F%EF%BC%88Disk-Format%EF%BC%89"><span class="toc-number">1.1.1.</span> <span class="toc-text">1. 磁盘格式（Disk Format）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AE%B9%E5%99%A8%E6%A0%BC%E5%BC%8F%EF%BC%88Container-Format%EF%BC%89"><span class="toc-number">1.1.2.</span> <span class="toc-text">2. 容器格式（Container Format）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%95%9C%E5%83%8F%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%8A%B6%E6%80%81"><span class="toc-number">1.2.</span> <span class="toc-text">二、镜像生命周期状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%95%9C%E5%83%8F%E6%93%8D%E4%BD%9C%E5%91%BD%E4%BB%A4"><span class="toc-number">1.3.</span> <span class="toc-text">三、镜像操作命令</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E4%B8%8A%E4%BC%A0%E9%95%9C%E5%83%8F"><span class="toc-number">1.3.1.</span> <span class="toc-text">1. 上传镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%B8%8B%E8%BD%BD%E9%95%9C%E5%83%8F"><span class="toc-number">1.3.2.</span> <span class="toc-text">2. 下载镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%88%97%E5%87%BA%E4%B8%8E%E6%9F%A5%E8%AF%A2%E9%95%9C%E5%83%8F"><span class="toc-number">1.3.3.</span> <span class="toc-text">3. 列出与查询镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%88%A0%E9%99%A4%E9%95%9C%E5%83%8F"><span class="toc-number">1.3.4.</span> <span class="toc-text">4. 删除镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E5%85%B1%E4%BA%AB%E9%95%9C%E5%83%8F"><span class="toc-number">1.3.5.</span> <span class="toc-text">5. 共享镜像</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E9%95%9C%E5%83%8F%E5%AF%BC%E5%85%A5%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7"><span class="toc-number">1.4.</span> <span class="toc-text">四、镜像导入高级特性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%90%8E%E7%AB%AF%E5%AD%98%E5%82%A8"><span class="toc-number">1.5.</span> <span class="toc-text">五、后端存储</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%95%9C%E5%83%8F%E4%B8%8E%E5%90%8E%E7%AB%AF%E5%AD%98%E5%82%A8%E8%A7%A3%E8%80%A6"><span class="toc-number">1.5.1.</span> <span class="toc-text">镜像与后端存储解耦</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%9E%B6%E6%9E%84%E7%BB%84%E4%BB%B6"><span class="toc-number">1.6.</span> <span class="toc-text">六、架构组件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%9F%E4%BA%A7%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-number">1.7.</span> <span class="toc-text">生产最佳实践</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        OpenStack Glance 镜像服务概念
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">John Doe</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-05-15T16:00:00.000Z" class="dt-published" itemprop="datePublished">2026-05-16</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/">技术文档</a> › <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/%E4%BA%91%E8%AE%A1%E7%AE%97/">云计算</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/Glance/" rel="tag">Glance</a>, <a class="p-category" href="/tags/IaaS/" rel="tag">IaaS</a>, <a class="p-category" href="/tags/OpenStack/" rel="tag">OpenStack</a>, <a class="p-category" href="/tags/%E4%BA%91%E5%B9%B3%E5%8F%B0/" rel="tag">云平台</a>, <a class="p-category" href="/tags/%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1/" rel="tag">镜像服务</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="OpenStack-Glance-镜像服务概念"><a href="#OpenStack-Glance-镜像服务概念" class="headerlink" title="OpenStack Glance 镜像服务概念"></a>OpenStack Glance 镜像服务概念</h1><p>Glance 是 OpenStack 的核心组件之一，提供虚拟机镜像的<strong>发现、注册、存储和分发</strong>能力，为 Nova 计算服务提供启动镜像资源。</p>
+<h2 id="一、镜像格式"><a href="#一、镜像格式" class="headerlink" title="一、镜像格式"></a>一、镜像格式</h2><h3 id="1-磁盘格式（Disk-Format）"><a href="#1-磁盘格式（Disk-Format）" class="headerlink" title="1. 磁盘格式（Disk Format）"></a>1. 磁盘格式（Disk Format）</h3><p>Glance 支持多种磁盘格式，以适应不同的虚拟化平台和使用场景：</p>
+<table>
+<thead>
+<tr>
+<th>格式</th>
+<th>说明</th>
+<th>典型场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>QCOW2</strong></td>
+<td>QEMU 写时复制格式，支持动态分配、快照、压缩</td>
+<td>生产环境最常用</td>
+</tr>
+<tr>
+<td><strong>RAW</strong></td>
+<td>裸磁盘镜像，无压缩、无封装，性能最高</td>
+<td>高性能场景</td>
+</tr>
+<tr>
+<td><strong>VMDK</strong></td>
+<td>VMware 虚拟机磁盘格式</td>
+<td>VMware 迁移集成</td>
+</tr>
+<tr>
+<td><strong>VHD&#x2F;VHDX</strong></td>
+<td>Microsoft Hyper-V 磁盘格式</td>
+<td>Hyper‑V 环境</td>
+</tr>
+<tr>
+<td><strong>ISO</strong></td>
+<td>光盘镜像，包含可引导文件系统</td>
+<td>OS 安装盘</td>
+</tr>
+<tr>
+<td><strong>VDI</strong></td>
+<td>Oracle VirtualBox 格式</td>
+<td>VirtualBox 用户</td>
+</tr>
+<tr>
+<td><strong>PLOOP</strong></td>
+<td>Virtuozzo 容器格式</td>
+<td>OS 容器运行</td>
+</tr>
+<tr>
+<td><strong>AKI&#x2F;AMI&#x2F;ARI</strong></td>
+<td>Amazon 内核&#x2F;机器&#x2F;RAMDisk 镜像</td>
+<td>AWS 相关服务</td>
+</tr>
+</tbody></table>
+<h3 id="2-容器格式（Container-Format）"><a href="#2-容器格式（Container-Format）" class="headerlink" title="2. 容器格式（Container Format）"></a>2. 容器格式（Container Format）</h3><p>与磁盘格式配合使用，描述镜像是否封装：</p>
+<table>
+<thead>
+<tr>
+<th>容器格式</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bare</code></td>
+<td>无容器封装，最常用</td>
+</tr>
+<tr>
+<td><code>ovf</code></td>
+<td>OVF 封装，含虚拟机描述</td>
+</tr>
+<tr>
+<td><code>ova</code></td>
+<td>OVF 打包为单个文件</td>
+</tr>
+<tr>
+<td><code>docker</code></td>
+<td>Docker 容器格式</td>
+</tr>
+</tbody></table>
+<h2 id="二、镜像生命周期状态"><a href="#二、镜像生命周期状态" class="headerlink" title="二、镜像生命周期状态"></a>二、镜像生命周期状态</h2><table>
+<thead>
+<tr>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>queued</code></td>
+<td>镜像元数据已创建，数据尚未上传</td>
+</tr>
+<tr>
+<td><code>saving</code></td>
+<td>镜像数据正在上传中</td>
+</tr>
+<tr>
+<td><code>active</code></td>
+<td>镜像上传成功，可用状态</td>
+</tr>
+<tr>
+<td><code>killed</code></td>
+<td>上传失败或镜像文件不可读</td>
+</tr>
+<tr>
+<td><code>deleted</code></td>
+<td>镜像标记删除，数据仍保留</td>
+</tr>
+<tr>
+<td><code>pending_delete</code></td>
+<td>镜像即将删除，不可恢复</td>
+</tr>
+</tbody></table>
+<h2 id="三、镜像操作命令"><a href="#三、镜像操作命令" class="headerlink" title="三、镜像操作命令"></a>三、镜像操作命令</h2><h3 id="1-上传镜像"><a href="#1-上传镜像" class="headerlink" title="1. 上传镜像"></a>1. 上传镜像</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">openstack image create --disk-format QCOW2 --container-format BARE --file ./IMAGE.QCOW2 镜像名</span><br><span class="line">glance image-create --disk-format QCOW2 --container-format BARE --file ./IMAGE.QCOW2 --name 镜像名</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>--disk-format</code>：指定磁盘格式（QCOW2 &#x2F; RAW &#x2F; VMDK &#x2F; ISO）</li>
+<li><code>--container-format</code>：指定容器格式（常用 <code>bare</code>）</li>
+<li><code>--file</code>：指定本地镜像文件路径</li>
+<li><code>--public</code> &#x2F; <code>--private</code>：设置镜像可见性</li>
+</ul>
+<h3 id="2-下载镜像"><a href="#2-下载镜像" class="headerlink" title="2. 下载镜像"></a>2. 下载镜像</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">openstack image save --file ./OUTPUT.QCOW2 镜像ID</span><br><span class="line">glance image-download --file ./OUTPUT.QCOW2 镜像ID</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-列出与查询镜像"><a href="#3-列出与查询镜像" class="headerlink" title="3. 列出与查询镜像"></a>3. 列出与查询镜像</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">openstack image list</span><br><span class="line">openstack image show 镜像ID</span><br><span class="line">glance image-list</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>--status ACTIVE</code>：筛选状态</li>
+<li><code>--disk-format QCOW2</code>：按格式筛选</li>
+</ul>
+<h3 id="4-删除镜像"><a href="#4-删除镜像" class="headerlink" title="4. 删除镜像"></a>4. 删除镜像</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">openstack image delete 镜像ID</span><br><span class="line">glance image-delete 镜像ID</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-共享镜像"><a href="#5-共享镜像" class="headerlink" title="5. 共享镜像"></a>5. 共享镜像</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">openstack image <span class="built_in">set</span> --shared 镜像ID</span><br><span class="line">openstack image add project 镜像ID 租户ID</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>通过 RBAC 策略控制租户间共享，支持 <code>member</code> 角色授权</li>
+<li>镜像所有者可将镜像共享给指定租户</li>
+</ul>
+<h2 id="四、镜像导入高级特性"><a href="#四、镜像导入高级特性" class="headerlink" title="四、镜像导入高级特性"></a>四、镜像导入高级特性</h2><p>Glance 支持多种导入方式以满足不同场景：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Web-Download 导入（从URL直接下载到后端存储）</span></span><br><span class="line">openstack image create --disk-format QCOW2 --container-format BARE --import --uri HTTPS://EXAMPLE.COM/IMAGE.QCOW2 镜像名</span><br><span class="line"></span><br><span class="line"><span class="comment"># Glance-Direct 导入（任务方式导入）</span></span><br><span class="line">glance md-namespace-list</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>Web-Download</strong>：直接从 URL 拉取镜像到后端，不经过客户端，适合大文件</li>
+<li><strong>Glance-Direct</strong>：基于任务的任务型导入，支持进度追踪</li>
+<li><strong>Copy-Image</strong>：在不同存储后端间复制镜像（multi‑store 场景）</li>
+</ul>
+<h2 id="五、后端存储"><a href="#五、后端存储" class="headerlink" title="五、后端存储"></a>五、后端存储</h2><p>Glance 架构将<strong>镜像元数据</strong>与<strong>镜像实际数据</strong>分离，支持动态切换后端：</p>
+<table>
+<thead>
+<tr>
+<th>后端</th>
+<th>说明</th>
+<th>生产推荐度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>本地文件系统</strong></td>
+<td>默认简单存储，适合测试环境</td>
+<td>⭐</td>
+</tr>
+<tr>
+<td><strong>Swift</strong></td>
+<td>OpenStack 原生对象存储，Glance 默认后端之一</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>Ceph RBD</strong></td>
+<td>分布式块存储，性能与可靠性兼备</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>Cinder</strong></td>
+<td>OpenStack 块存储服务</td>
+<td>⭐⭐</td>
+</tr>
+<tr>
+<td><strong>S3</strong></td>
+<td>Amazon 对象存储，兼容 S3 API</td>
+<td>⭐⭐</td>
+</tr>
+<tr>
+<td><strong>NFS</strong></td>
+<td>网络文件系统（Red Hat 不推荐生产使用）</td>
+<td>⭐</td>
+</tr>
+</tbody></table>
+<h3 id="镜像与后端存储解耦"><a href="#镜像与后端存储解耦" class="headerlink" title="镜像与后端存储解耦"></a>镜像与后端存储解耦</h3><p>Glance 的核心设计理念是将镜像的<strong>元数据</strong>（存于 MySQL&#x2F;PostgreSQL）与<strong>实际数据</strong>（存于后端存储）彻底分离，带来以下优势：</p>
+<ul>
+<li><strong>后端可切换</strong>：无需修改镜像元数据即可更换存储后端</li>
+<li><strong>Multi‑Store 多后端</strong>：可同时挂载多个存储后端，实现异构存储管理</li>
+<li><strong>存储扩展灵活</strong>：从本地文件到 Ceph&#x2F;Swift 可平滑迁移</li>
+</ul>
+<h2 id="六、架构组件"><a href="#六、架构组件" class="headerlink" title="六、架构组件"></a>六、架构组件</h2><table>
+<thead>
+<tr>
+<th>组件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>glance-api</code></td>
+<td>提供 RESTful API，处理上传&#x2F;下载&#x2F;查询请求</td>
+</tr>
+<tr>
+<td><code>glance-registry</code></td>
+<td>旧版元数据服务（新版已合并至 API）</td>
+</tr>
+<tr>
+<td><strong>Database</strong></td>
+<td>MySQL&#x2F;PostgreSQL，存储镜像元数据</td>
+</tr>
+<tr>
+<td><strong>Image Store</strong></td>
+<td>后端存储驱动层，对接各类存储系统</td>
+</tr>
+</tbody></table>
+<h2 id="生产最佳实践"><a href="#生产最佳实践" class="headerlink" title="生产最佳实践"></a>生产最佳实践</h2><ul>
+<li>生产环境推荐 <strong>QCOW2 + Ceph RBD</strong> 组合</li>
+<li>使用 <code>--public</code> 或 <code>--shared</code> 管理跨租户共享权限，避免镜像重复上传</li>
+<li>大镜像导入优先使用 <strong>Web-Download</strong> 模式，避免客户端网络瓶颈</li>
+<li>定期清理 <code>killed</code> &#x2F; <code>deleted</code> 状态的镜像以释放后端存储空间</li>
+<li>多存储场景下可通过 <strong>Copy-Image</strong> 实现镜像在不同后端间的迁移</li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Glance-%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Glance 镜像服务概念</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E9%95%9C%E5%83%8F%E6%A0%BC%E5%BC%8F"><span class="toc-number">1.1.</span> <span class="toc-text">一、镜像格式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E7%A3%81%E7%9B%98%E6%A0%BC%E5%BC%8F%EF%BC%88Disk-Format%EF%BC%89"><span class="toc-number">1.1.1.</span> <span class="toc-text">1. 磁盘格式（Disk Format）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AE%B9%E5%99%A8%E6%A0%BC%E5%BC%8F%EF%BC%88Container-Format%EF%BC%89"><span class="toc-number">1.1.2.</span> <span class="toc-text">2. 容器格式（Container Format）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%95%9C%E5%83%8F%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%8A%B6%E6%80%81"><span class="toc-number">1.2.</span> <span class="toc-text">二、镜像生命周期状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%95%9C%E5%83%8F%E6%93%8D%E4%BD%9C%E5%91%BD%E4%BB%A4"><span class="toc-number">1.3.</span> <span class="toc-text">三、镜像操作命令</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E4%B8%8A%E4%BC%A0%E9%95%9C%E5%83%8F"><span class="toc-number">1.3.1.</span> <span class="toc-text">1. 上传镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%B8%8B%E8%BD%BD%E9%95%9C%E5%83%8F"><span class="toc-number">1.3.2.</span> <span class="toc-text">2. 下载镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%88%97%E5%87%BA%E4%B8%8E%E6%9F%A5%E8%AF%A2%E9%95%9C%E5%83%8F"><span class="toc-number">1.3.3.</span> <span class="toc-text">3. 列出与查询镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%88%A0%E9%99%A4%E9%95%9C%E5%83%8F"><span class="toc-number">1.3.4.</span> <span class="toc-text">4. 删除镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E5%85%B1%E4%BA%AB%E9%95%9C%E5%83%8F"><span class="toc-number">1.3.5.</span> <span class="toc-text">5. 共享镜像</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E9%95%9C%E5%83%8F%E5%AF%BC%E5%85%A5%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7"><span class="toc-number">1.4.</span> <span class="toc-text">四、镜像导入高级特性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%90%8E%E7%AB%AF%E5%AD%98%E5%82%A8"><span class="toc-number">1.5.</span> <span class="toc-text">五、后端存储</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%95%9C%E5%83%8F%E4%B8%8E%E5%90%8E%E7%AB%AF%E5%AD%98%E5%82%A8%E8%A7%A3%E8%80%A6"><span class="toc-number">1.5.1.</span> <span class="toc-text">镜像与后端存储解耦</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%9E%B6%E6%9E%84%E7%BB%84%E4%BB%B6"><span class="toc-number">1.6.</span> <span class="toc-text">六、架构组件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%9F%E4%BA%A7%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-number">1.7.</span> <span class="toc-text">生产最佳实践</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&text=OpenStack Glance 镜像服务概念"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Glance 镜像服务概念"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&is_video=false&description=OpenStack Glance 镜像服务概念"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Glance 镜像服务概念&body=Check out this article: http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Glance 镜像服务概念"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Glance 镜像服务概念"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Glance 镜像服务概念"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Glance 镜像服务概念"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&name=OpenStack Glance 镜像服务概念&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/Glance%E9%95%9C%E5%83%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&t=OpenStack Glance 镜像服务概念"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2026
+    John Doe
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

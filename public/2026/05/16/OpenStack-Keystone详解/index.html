@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="深入解析OpenStack Keystone身份认证服务的核心概念（User&#x2F;Project&#x2F;Role&#x2F;Domain&#x2F;Endpoint&#x2F;Token）、认证流程与最佳实践">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack Keystone详解">
+<meta property="og:url" content="http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="“我的学习之路”">
+<meta property="og:description" content="深入解析OpenStack Keystone身份认证服务的核心概念（User&#x2F;Project&#x2F;Role&#x2F;Domain&#x2F;Endpoint&#x2F;Token）、认证流程与最佳实践">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-19T17:44:50.662Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="OpenStack">
+<meta property="article:tag" content="云平台">
+<meta property="article:tag" content="Keystone">
+<meta property="article:tag" content="认证服务">
+<meta property="article:tag" content="身份管理">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>OpenStack Keystone详解</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2026/05/16/OpenStack-Horizon%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&text=OpenStack Keystone详解"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&title=OpenStack Keystone详解"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&is_video=false&description=OpenStack Keystone详解"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Keystone详解&body=Check out this article: http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&title=OpenStack Keystone详解"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&title=OpenStack Keystone详解"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&title=OpenStack Keystone详解"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&title=OpenStack Keystone详解"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&name=OpenStack Keystone详解&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&t=OpenStack Keystone详解"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Keystone%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Keystone详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Keystone%E8%A7%92%E8%89%B2%E5%AE%9A%E4%BD%8D"><span class="toc-number">1.0.1.</span> <span class="toc-text">Keystone角色定位</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AD%E5%A4%A7%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="toc-number">1.0.2.</span> <span class="toc-text">六大核心概念</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%A4%E8%AF%81%E6%B5%81%E7%A8%8B%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.0.3.</span> <span class="toc-text">认证流程详解</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E5%87%86V3%E8%AE%A4%E8%AF%81%E6%B5%81%E7%A8%8B%EF%BC%88%E4%B8%83%E6%AD%A5%EF%BC%89"><span class="toc-number">1.0.3.1.</span> <span class="toc-text">标准V3认证流程（七步）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Token%E7%B1%BB%E5%9E%8B%E6%BC%94%E8%BF%9B-%F0%9F%9A%80"><span class="toc-number">1.0.3.2.</span> <span class="toc-text">Token类型演进 🚀</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Token%E4%BD%9C%E7%94%A8%E5%9F%9F%E5%AF%B9%E6%AF%94"><span class="toc-number">1.0.3.3.</span> <span class="toc-text">Token作用域对比</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Keystone%E5%86%85%E9%83%A8%E6%9E%B6%E6%9E%84"><span class="toc-number">1.0.4.</span> <span class="toc-text">Keystone内部架构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%AD%E5%A4%A7%E5%86%85%E9%83%A8%E6%9C%8D%E5%8A%A1"><span class="toc-number">1.0.4.1.</span> <span class="toc-text">六大内部服务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AE%A4%E8%AF%81%E5%90%8E%E7%AB%AF%E9%80%89%E9%A1%B9"><span class="toc-number">1.0.4.2.</span> <span class="toc-text">认证后端选项</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CLI%E6%93%8D%E4%BD%9C%E9%80%9F%E6%9F%A5-%F0%9F%9B%A0%EF%B8%8F"><span class="toc-number">1.0.5.</span> <span class="toc-text">CLI操作速查 🛠️</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E4%BA%A7%E5%AE%89%E5%85%A8%E9%85%8D%E7%BD%AE-%F0%9F%94%92"><span class="toc-number">1.0.6.</span> <span class="toc-text">生产安全配置 🔒</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%94%9F%E4%BA%A7%E9%83%A8%E7%BD%B2%E5%BB%BA%E8%AE%AE-%E2%9C%85"><span class="toc-number">1.0.6.1.</span> <span class="toc-text">生产部署建议 ✅</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%80%BB%E7%BB%93"><span class="toc-number">1.0.7.</span> <span class="toc-text">一句话总结</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        OpenStack Keystone详解
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">John Doe</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-05-15T16:00:00.000Z" class="dt-published" itemprop="datePublished">2026-05-16</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E4%BA%91%E8%AE%A1%E7%AE%97/">云计算</a> › <a class="category-link" href="/categories/%E4%BA%91%E8%AE%A1%E7%AE%97/%E6%8A%80%E6%9C%AF%E6%95%99%E7%A8%8B/">技术教程</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/Keystone/" rel="tag">Keystone</a>, <a class="p-category" href="/tags/OpenStack/" rel="tag">OpenStack</a>, <a class="p-category" href="/tags/%E4%BA%91%E5%B9%B3%E5%8F%B0/" rel="tag">云平台</a>, <a class="p-category" href="/tags/%E8%AE%A4%E8%AF%81%E6%9C%8D%E5%8A%A1/" rel="tag">认证服务</a>, <a class="p-category" href="/tags/%E8%BA%AB%E4%BB%BD%E7%AE%A1%E7%90%86/" rel="tag">身份管理</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="OpenStack-Keystone详解"><a href="#OpenStack-Keystone详解" class="headerlink" title="OpenStack Keystone详解"></a>OpenStack Keystone详解</h1><h3 id="Keystone角色定位"><a href="#Keystone角色定位" class="headerlink" title="Keystone角色定位"></a>Keystone角色定位</h3><p>Keystone是OpenStack云平台的<strong>身份认证核心组件</strong>，作为整个平台的”统一门卫”🔐。用户访问任何服务（Nova计算、Glance镜像、Cinder块存储等）都必须先通过Keystone认证。Keystone一旦宕机，所有服务都将瘫痪。</p>
+<hr>
+<h3 id="六大核心概念"><a href="#六大核心概念" class="headerlink" title="六大核心概念"></a>六大核心概念</h3><table>
+<thead>
+<tr>
+<th align="center">概念</th>
+<th>说明</th>
+<th>关键约束</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><strong>User</strong></td>
+<td>访问OpenStack的个人或服务账户</td>
+<td>用户名在所属Domain内唯一</td>
+</tr>
+<tr>
+<td align="center"><strong>Project</strong></td>
+<td>资源（计算&#x2F;存储&#x2F;网络）的容器（V2时代称Tenant）</td>
+<td>项目名在所属Domain内唯一</td>
+</tr>
+<tr>
+<td align="center"><strong>Role</strong></td>
+<td>权限集合，决定User对Project资源的操作级别</td>
+<td>全局唯一名称</td>
+</tr>
+<tr>
+<td align="center"><strong>Domain</strong></td>
+<td>顶层虚拟容器，包含Users&#x2F;Groups&#x2F;Projects</td>
+<td>Domain Name全局唯一</td>
+</tr>
+<tr>
+<td align="center"><strong>Endpoint</strong></td>
+<td>服务可访问的网络地址（URL）</td>
+<td>三类接口：Public &#x2F; Internal &#x2F; Admin</td>
+</tr>
+<tr>
+<td align="center"><strong>Token</strong></td>
+<td>认证通过后签发的身份凭证字符串</td>
+<td>有时效性（默认1h），可撤销</td>
+</tr>
+</tbody></table>
+<p><strong>关键解读</strong> 📌：</p>
+<ul>
+<li><strong>User权限</strong>通过”User + Project + Role”三元组定义，缺一不可</li>
+<li><strong>Domain</strong>提供多租户隔离边界，不同部门可划分独立Domain</li>
+<li><strong>三类Endpoint</strong>：Public面向外部用户 &#x2F; Internal服务间通信 &#x2F; Admin管理员专用</li>
+</ul>
+<hr>
+<h3 id="认证流程详解"><a href="#认证流程详解" class="headerlink" title="认证流程详解"></a>认证流程详解</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">                ┌─────────────────────────────────────────────┐</span><br><span class="line">                │               OpenStack 云平台               │</span><br><span class="line">                │                                             │</span><br><span class="line">┌───────┐     ① POST /v3/auth/tokens     ┌──────────┐     ⑥ Token     ┌─────────┐</span><br><span class="line">│       │ ──────────────────────────────→ │          │ ←──验证请求──→ │         │</span><br><span class="line">│       │     ② ← 返回 Unscoped Token     │ Keystone │                │  Nova   │</span><br><span class="line">│ 用户  │                                 │  (认证)  │     ⑦ ← 返回   │ (计算)  │</span><br><span class="line">│       │     ③ POST /v3/auth/tokens      │          │    用户信息    │         │</span><br><span class="line">│       │ ─────────── (带 Scope) ────────→ │          │ ─────────────→ │         │</span><br><span class="line">│       │                                 └──────────┘                └─────────┘</span><br><span class="line">│       │     ④ ← 返回 Scoped Token +                              ┌─────────┐</span><br><span class="line">│       │        Service Catalog + Roles                            │ Glance  │</span><br><span class="line">│       │                                                           │ (镜像)  │</span><br><span class="line">│       │     ⑤ Nova API 调用                                       │         │</span><br><span class="line">│       │ ──────── X-Auth-Token: &lt;SCOPED_TOKEN&gt; ─────────────────→ │         │</span><br><span class="line">└───────┘                                                           └─────────┘</span><br></pre></td></tr></table></figure>
+
+<h4 id="标准V3认证流程（七步）"><a href="#标准V3认证流程（七步）" class="headerlink" title="标准V3认证流程（七步）"></a>标准V3认证流程（七步）</h4><table>
+<thead>
+<tr>
+<th align="center">步骤</th>
+<th>动作</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><strong>①</strong></td>
+<td>用户提交凭证</td>
+<td><code>POST /v3/auth/tokens</code> — 携带 <code>username + password</code> 或 <code>API Key</code></td>
+</tr>
+<tr>
+<td align="center"><strong>②</strong></td>
+<td>返回Unscoped Token</td>
+<td>仅证明身份，不含Service Catalog和Role，不可直接访问服务</td>
+</tr>
+<tr>
+<td align="center"><strong>③</strong></td>
+<td>请求Scoped Token</td>
+<td>指定Scope（<code>project</code>或<code>domain</code>），绑定到具体Project&#x2F;Domain</td>
+</tr>
+<tr>
+<td align="center"><strong>④</strong></td>
+<td>返回Scoped Token</td>
+<td>附带完整Service Catalog（所有服务地址）+ Roles（当前Project权限）</td>
+</tr>
+<tr>
+<td align="center"><strong>⑤</strong></td>
+<td>访问目标服务</td>
+<td>Scoped Token放入HTTP头 <code>X-Auth-Token</code> 请求Nova&#x2F;Glance等服务</td>
+</tr>
+<tr>
+<td align="center"><strong>⑥</strong></td>
+<td>服务验证Token</td>
+<td>通过<code>keystonemiddleware</code>中间件向Keystone校验Token有效性</td>
+</tr>
+<tr>
+<td align="center"><strong>⑦</strong></td>
+<td>返回用户上下文</td>
+<td>Keystone返回User ID、Project ID、Roles，服务据此执行策略鉴权</td>
+</tr>
+</tbody></table>
+<h4 id="Token类型演进-🚀"><a href="#Token类型演进-🚀" class="headerlink" title="Token类型演进 🚀"></a>Token类型演进 🚀</h4><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>存储方式</th>
+<th>验证方式</th>
+<th align="center">状态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>UUID</strong></td>
+<td>持久化到数据库</td>
+<td>每次查询数据库</td>
+<td align="center">❌ 已弃用</td>
+</tr>
+<tr>
+<td><strong>Fernet</strong></td>
+<td>不持久化</td>
+<td>本地加密验证（需Keystone在线）</td>
+<td align="center">✅ <strong>生产默认</strong></td>
+</tr>
+<tr>
+<td><strong>PKI &#x2F; PKIZ</strong></td>
+<td>不持久化</td>
+<td>本地证书签名验证</td>
+<td align="center">❌ 已弃用</td>
+</tr>
+<tr>
+<td><strong>JWS</strong></td>
+<td>不持久化</td>
+<td>非对称签名验证</td>
+<td align="center">⚠️ 可选</td>
+</tr>
+</tbody></table>
+<h4 id="Token作用域对比"><a href="#Token作用域对比" class="headerlink" title="Token作用域对比"></a>Token作用域对比</h4><table>
+<thead>
+<tr>
+<th>作用域</th>
+<th align="center">含Service Catalog?</th>
+<th align="center">含Roles?</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Unscoped</strong></td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td>仅证明身份，获取Scoped Token的前置步骤</td>
+</tr>
+<tr>
+<td><strong>Project-scoped</strong></td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td><strong>日常操作（最常用）</strong></td>
+</tr>
+<tr>
+<td><strong>Domain-scoped</strong></td>
+<td align="center">部分</td>
+<td align="center">✅</td>
+<td>Domain级别管理操作</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="Keystone内部架构"><a href="#Keystone内部架构" class="headerlink" title="Keystone内部架构"></a>Keystone内部架构</h3><h4 id="六大内部服务"><a href="#六大内部服务" class="headerlink" title="六大内部服务"></a>六大内部服务</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────────────────────────┐</span><br><span class="line">│                      Keystone 服务架构                       │</span><br><span class="line">│                                                             │</span><br><span class="line">│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │</span><br><span class="line">│  │ Identity │  │ Resource │  │Assigment │  │  Token   │   │</span><br><span class="line">│  │ Service  │  │ Service  │  │ Service  │  │ Service  │   │</span><br><span class="line">│  │ (用户/组) │  │ (项目/域) │  │ (角色分配)│  │ (Token)  │   │</span><br><span class="line">│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │</span><br><span class="line">│                                                             │</span><br><span class="line">│  ┌──────────┐  ┌──────────┐                                 │</span><br><span class="line">│  │ Catalog  │  │  Policy  │                                 │</span><br><span class="line">│  │ Service  │  │ Service  │                                 │</span><br><span class="line">│  │(端点注册)│  │(授权引擎)│                                 │</span><br><span class="line">│  └──────────┘  └──────────┘                                 │</span><br><span class="line">└─────────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>内部服务</th>
+<th>管理实体</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Identity</strong></td>
+<td>Users、Groups</td>
+<td>身份凭据验证（支持SQL &#x2F; LDAP &#x2F; AD &#x2F; 联合认证）</td>
+</tr>
+<tr>
+<td><strong>Resource</strong></td>
+<td>Projects、Domains</td>
+<td>资源容器管理</td>
+</tr>
+<tr>
+<td><strong>Assignment</strong></td>
+<td>Roles、Role Assignments</td>
+<td>角色CRUD及User-Project-Role映射</td>
+</tr>
+<tr>
+<td><strong>Token</strong></td>
+<td>Tokens</td>
+<td>Token签发、验证、撤销</td>
+</tr>
+<tr>
+<td><strong>Catalog</strong></td>
+<td>Services、Endpoints</td>
+<td>服务注册与端点发现</td>
+</tr>
+<tr>
+<td><strong>Policy</strong></td>
+<td>Policies、Rules</td>
+<td>基于规则的授权引擎</td>
+</tr>
+</tbody></table>
+<h4 id="认证后端选项"><a href="#认证后端选项" class="headerlink" title="认证后端选项"></a>认证后端选项</h4><table>
+<thead>
+<tr>
+<th>后端</th>
+<th align="center">模式</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>SQL</strong></td>
+<td align="center">读写</td>
+<td>默认，Keystone管理全部身份</td>
+</tr>
+<tr>
+<td><strong>LDAP &#x2F; AD</strong></td>
+<td align="center">只读（推荐）</td>
+<td>对接企业已有目录服务</td>
+</tr>
+<tr>
+<td><strong>SAML 2.0 &#x2F; OpenID Connect</strong></td>
+<td align="center">联合</td>
+<td>与外部IdP（Okta、Azure AD、ADFS）集成</td>
+</tr>
+<tr>
+<td><strong>Keystone-to-Keystone</strong></td>
+<td align="center">联合</td>
+<td>多OpenStack云联邦信任</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="CLI操作速查-🛠️"><a href="#CLI操作速查-🛠️" class="headerlink" title="CLI操作速查 🛠️"></a>CLI操作速查 🛠️</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 🔹 认证测试</span></span><br><span class="line">openstack token issue</span><br><span class="line"><span class="comment">#                      └─ 请求并签发一个新的 Scoped Token，验证当前认证凭据是否有效</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 🔹 服务发现</span></span><br><span class="line">openstack catalog list</span><br><span class="line"><span class="comment">#                      └─ 列出所有已注册服务的 Endpoint（Public / Internal / Admin）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 🔹 用户管理</span></span><br><span class="line">openstack user create --domain DEFAULT --password &lt;PASSWORD&gt; &lt;USERNAME&gt;</span><br><span class="line"><span class="comment">#                      ├─ --domain 指定用户所属的域（若不指定则使用 default 域）</span></span><br><span class="line"><span class="comment">#                      ├─ --password 设置用户登录密码</span></span><br><span class="line"><span class="comment">#                      └─ &lt;USERNAME&gt; 用户名，在所属域内唯一</span></span><br><span class="line">openstack user list</span><br><span class="line"><span class="comment">#                      └─ 列出当前域下所有用户（可加 --domain 指定目标域）</span></span><br><span class="line">openstack user show &lt;USER_ID&gt;</span><br><span class="line"><span class="comment">#                      └─ 查看指定用户的完整信息（含 ID、Domain、启用状态等）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 🔹 项目管理</span></span><br><span class="line">openstack project create --domain DEFAULT &lt;PROJECT&gt;</span><br><span class="line"><span class="comment">#                      ├─ --domain 指定项目所属的域</span></span><br><span class="line"><span class="comment">#                      └─ &lt;PROJECT&gt; 项目名称，在所属域内唯一</span></span><br><span class="line">openstack project list</span><br><span class="line"><span class="comment">#                      └─ 列出所有项目及其所属域</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 🔹 角色分配（核心：User + Project + Role）</span></span><br><span class="line">openstack role add --user &lt;USER&gt; --project &lt;PROJECT&gt; &lt;ROLE&gt;</span><br><span class="line"><span class="comment">#                      ├─ --user 指定目标用户</span></span><br><span class="line"><span class="comment">#                      ├─ --project 指定目标项目</span></span><br><span class="line"><span class="comment">#                      └─ &lt;ROLE&gt; 要分配的角色名（如 admin、member、reader）</span></span><br><span class="line">openstack role assignment list --names --user &lt;USER&gt;</span><br><span class="line"><span class="comment">#                      ├─ --names 以名称而非 ID 形式显示（更易读）</span></span><br><span class="line"><span class="comment">#                      └─ --user 筛选指定用户的角色分配列表</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 🔹 域管理</span></span><br><span class="line">openstack domain list</span><br><span class="line"><span class="comment">#                      └─ 列出所有域及其启用/禁用状态</span></span><br><span class="line">openstack domain create &lt;DOMAIN&gt;</span><br><span class="line"><span class="comment">#                      └─ 创建一个新域（Domain Name 全局唯一）</span></span><br><span class="line">openstack domain <span class="built_in">set</span> --<span class="built_in">disable</span> &lt;DOMAIN&gt;</span><br><span class="line"><span class="comment">#                      ├─ --disable 将域设为禁用状态（删除域的前置条件）</span></span><br><span class="line"><span class="comment">#                      └─ 域被禁用后，其下的 User 和 Project 也将无法使用</span></span><br><span class="line">openstack domain delete &lt;DOMAIN&gt;</span><br><span class="line"><span class="comment">#                      └─ 删除指定域（必须先禁用）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 🔹 端点管理</span></span><br><span class="line">openstack endpoint list</span><br><span class="line"><span class="comment">#                      └─ 列出所有服务的 Endpoint（含服务类型、区域、URL）</span></span><br><span class="line">openstack endpoint create --region &lt;REGION&gt; &lt;SERVICE&gt; &lt;TYPE&gt; &lt;URL&gt;</span><br><span class="line"><span class="comment">#                      ├─ --region 指定区域（如 RegionOne）</span></span><br><span class="line"><span class="comment">#                      ├─ &lt;SERVICE&gt;  服务名称（如 nova、glance）</span></span><br><span class="line"><span class="comment">#                      ├─ &lt;TYPE&gt;     端点类型（public / internal / admin）</span></span><br><span class="line"><span class="comment">#                      └─ &lt;URL&gt;      端点访问地址（如 https://controller:8774/v2.1）</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="生产安全配置-🔒"><a href="#生产安全配置-🔒" class="headerlink" title="生产安全配置 🔒"></a>生产安全配置 🔒</h3><table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>KeystonePasswordRegex</code></td>
+<td>密码强度正则表达式</td>
+</tr>
+<tr>
+<td><code>KeystonePasswordExpiresDays</code></td>
+<td>密码有效期天数</td>
+</tr>
+<tr>
+<td><code>KeystoneLockoutFailureAttempts</code></td>
+<td>锁定前允许的失败认证次数</td>
+</tr>
+<tr>
+<td><code>KeystoneDisableUserAccountDaysInactive</code></td>
+<td>不活跃自动禁用天数</td>
+</tr>
+<tr>
+<td><code>KeystoneUniqueLastPasswordCount</code></td>
+<td>防止重用旧密码</td>
+</tr>
+<tr>
+<td><code>KeystoneChangePasswordUponFirstUse</code></td>
+<td>首次登录强制改密</td>
+</tr>
+</tbody></table>
+<h4 id="生产部署建议-✅"><a href="#生产部署建议-✅" class="headerlink" title="生产部署建议 ✅"></a>生产部署建议 ✅</h4><ul>
+<li>Fernet密钥<strong>至少每月轮换一次</strong>（<code>keystone-manage fernet_rotate</code>— 重新生成 Fernet 密钥库，旧 Token 在缓存失效前仍可用）</li>
+<li>部署<strong>多控制器节点 + 负载均衡</strong>实现Keystone高可用</li>
+<li>禁用<code>admin_token</code>（避免无需认证的管理入口）</li>
+<li>监控日志：<code>/var/log/keystone/keystone.log</code></li>
+<li>所有服务间通信建议使用<strong>Internal Endpoint</strong>，避免暴露Public API</li>
+</ul>
+<hr>
+<h3 id="一句话总结"><a href="#一句话总结" class="headerlink" title="一句话总结"></a>一句话总结</h3><p>Keystone是OpenStack的<strong>统一身份验证 + 服务发现中心</strong>，核心工作流为：<strong>凭据 → Token → Service Catalog → 服务访问</strong>。用户的Token就是云平台的”通行证”，服务间信任通过Keystone的Token校验来保障。🛡️</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Keystone%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Keystone详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Keystone%E8%A7%92%E8%89%B2%E5%AE%9A%E4%BD%8D"><span class="toc-number">1.0.1.</span> <span class="toc-text">Keystone角色定位</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AD%E5%A4%A7%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="toc-number">1.0.2.</span> <span class="toc-text">六大核心概念</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%A4%E8%AF%81%E6%B5%81%E7%A8%8B%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.0.3.</span> <span class="toc-text">认证流程详解</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E5%87%86V3%E8%AE%A4%E8%AF%81%E6%B5%81%E7%A8%8B%EF%BC%88%E4%B8%83%E6%AD%A5%EF%BC%89"><span class="toc-number">1.0.3.1.</span> <span class="toc-text">标准V3认证流程（七步）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Token%E7%B1%BB%E5%9E%8B%E6%BC%94%E8%BF%9B-%F0%9F%9A%80"><span class="toc-number">1.0.3.2.</span> <span class="toc-text">Token类型演进 🚀</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Token%E4%BD%9C%E7%94%A8%E5%9F%9F%E5%AF%B9%E6%AF%94"><span class="toc-number">1.0.3.3.</span> <span class="toc-text">Token作用域对比</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Keystone%E5%86%85%E9%83%A8%E6%9E%B6%E6%9E%84"><span class="toc-number">1.0.4.</span> <span class="toc-text">Keystone内部架构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%AD%E5%A4%A7%E5%86%85%E9%83%A8%E6%9C%8D%E5%8A%A1"><span class="toc-number">1.0.4.1.</span> <span class="toc-text">六大内部服务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AE%A4%E8%AF%81%E5%90%8E%E7%AB%AF%E9%80%89%E9%A1%B9"><span class="toc-number">1.0.4.2.</span> <span class="toc-text">认证后端选项</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CLI%E6%93%8D%E4%BD%9C%E9%80%9F%E6%9F%A5-%F0%9F%9B%A0%EF%B8%8F"><span class="toc-number">1.0.5.</span> <span class="toc-text">CLI操作速查 🛠️</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E4%BA%A7%E5%AE%89%E5%85%A8%E9%85%8D%E7%BD%AE-%F0%9F%94%92"><span class="toc-number">1.0.6.</span> <span class="toc-text">生产安全配置 🔒</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%94%9F%E4%BA%A7%E9%83%A8%E7%BD%B2%E5%BB%BA%E8%AE%AE-%E2%9C%85"><span class="toc-number">1.0.6.1.</span> <span class="toc-text">生产部署建议 ✅</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%80%BB%E7%BB%93"><span class="toc-number">1.0.7.</span> <span class="toc-text">一句话总结</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&text=OpenStack Keystone详解"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&title=OpenStack Keystone详解"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&is_video=false&description=OpenStack Keystone详解"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Keystone详解&body=Check out this article: http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&title=OpenStack Keystone详解"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&title=OpenStack Keystone详解"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&title=OpenStack Keystone详解"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&title=OpenStack Keystone详解"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&name=OpenStack Keystone详解&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/&t=OpenStack Keystone详解"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2026
+    John Doe
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

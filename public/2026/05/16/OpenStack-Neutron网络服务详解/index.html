@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="深入解析OpenStack核心网络服务Neutron的网络模型（Provider&#x2F;Self-Service）、路由与安全组、ML2插件架构及SDN虚拟网络实现">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack Neutron网络服务详解">
+<meta property="og:url" content="http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="“我的学习之路”">
+<meta property="og:description" content="深入解析OpenStack核心网络服务Neutron的网络模型（Provider&#x2F;Self-Service）、路由与安全组、ML2插件架构及SDN虚拟网络实现">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-19T17:44:50.666Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="OpenStack">
+<meta property="article:tag" content="Neutron">
+<meta property="article:tag" content="ML2">
+<meta property="article:tag" content="OVS">
+<meta property="article:tag" content="SDN">
+<meta property="article:tag" content="网络服务">
+<meta property="article:tag" content="虚拟网络">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>OpenStack Neutron网络服务详解</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2026/05/16/OpenStack-Keystone%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/05/16/OpenStack-Nova%E8%AE%A1%E7%AE%97%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&text=OpenStack Neutron网络服务详解"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&title=OpenStack Neutron网络服务详解"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&is_video=false&description=OpenStack Neutron网络服务详解"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Neutron网络服务详解&body=Check out this article: http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&title=OpenStack Neutron网络服务详解"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&title=OpenStack Neutron网络服务详解"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&title=OpenStack Neutron网络服务详解"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&title=OpenStack Neutron网络服务详解"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&name=OpenStack Neutron网络服务详解&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&t=OpenStack Neutron网络服务详解"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Neutron网络服务详解</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E7%BD%91%E7%BB%9C%E6%A0%B8%E5%BF%83%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.1.</span> <span class="toc-text">一、网络核心模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B5%84%E6%BA%90%E5%85%B3%E7%B3%BB"><span class="toc-number">1.1.1.</span> <span class="toc-text">资源关系</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E6%A6%82%E5%BF%B5%E5%AF%B9%E6%AF%94"><span class="toc-number">1.1.2.</span> <span class="toc-text">关键概念对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Provider-Network"><span class="toc-number">1.2.</span> <span class="toc-text">二、Provider Network</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CLI%E6%93%8D%E4%BD%9C"><span class="toc-number">1.2.1.</span> <span class="toc-text">CLI操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Self-Service-Network"><span class="toc-number">1.3.</span> <span class="toc-text">三、Self-Service Network</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CLI%E6%93%8D%E4%BD%9C-1"><span class="toc-number">1.3.1.</span> <span class="toc-text">CLI操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%B7%AF%E7%94%B1%E5%99%A8-%E2%80%94-L3%E8%BD%AC%E5%8F%91%E4%B8%8ENAT"><span class="toc-number">1.4.</span> <span class="toc-text">三、路由器 — L3转发与NAT</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD"><span class="toc-number">1.4.1.</span> <span class="toc-text">核心功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%AB%98%E7%BA%A7%E9%83%A8%E7%BD%B2%E6%A8%A1%E5%BC%8F"><span class="toc-number">1.4.2.</span> <span class="toc-text">高级部署模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CLI%E6%93%8D%E4%BD%9C-2"><span class="toc-number">1.4.3.</span> <span class="toc-text">CLI操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%AE%89%E5%85%A8%E7%BB%84-%E2%80%94-%E6%9C%89%E7%8A%B6%E6%80%81%E8%99%9A%E6%8B%9F%E6%9C%BA%E9%98%B2%E7%81%AB%E5%A2%99"><span class="toc-number">1.5.</span> <span class="toc-text">四、安全组 — 有状态虚拟机防火墙</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%BB%98%E8%AE%A4%E7%AD%96%E7%95%A5"><span class="toc-number">1.5.1.</span> <span class="toc-text">默认策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%8E%E7%AB%AF%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.5.2.</span> <span class="toc-text">后端实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CLI%E6%93%8D%E4%BD%9C-3"><span class="toc-number">1.5.3.</span> <span class="toc-text">CLI操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81ML2%E6%8F%92%E4%BB%B6%E6%9E%B6%E6%9E%84"><span class="toc-number">1.6.</span> <span class="toc-text">五、ML2插件架构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Type-Drivers%E5%AF%B9%E6%AF%94"><span class="toc-number">1.6.1.</span> <span class="toc-text">Type Drivers对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Mechanism-Drivers%E5%AF%B9%E6%AF%94"><span class="toc-number">1.6.2.</span> <span class="toc-text">Mechanism Drivers对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E7%A4%BA%E4%BE%8B"><span class="toc-number">1.6.3.</span> <span class="toc-text">配置示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81Open-vSwitch-%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90"><span class="toc-number">1.7.</span> <span class="toc-text">六、Open vSwitch 深度解析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E7%A7%8D%E6%A0%B8%E5%BF%83OVS%E6%A1%A5%E6%8E%A5"><span class="toc-number">1.7.1.</span> <span class="toc-text">三种核心OVS桥接</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E6%B5%81%E8%BD%AC%E5%8F%91%E8%B7%AF%E5%BE%84"><span class="toc-number">1.7.2.</span> <span class="toc-text">数据流转发路径</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OVS-Agent%E9%85%8D%E7%BD%AE"><span class="toc-number">1.7.3.</span> <span class="toc-text">OVS Agent配置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81Linux-Bridge-%E6%9E%B6%E6%9E%84"><span class="toc-number">1.8.</span> <span class="toc-text">七、Linux Bridge 架构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#LB-Agent%E9%85%8D%E7%BD%AE"><span class="toc-number">1.8.1.</span> <span class="toc-text">LB Agent配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OVS-vs-Linux-Bridge-%E9%80%89%E5%9E%8B"><span class="toc-number">1.8.2.</span> <span class="toc-text">OVS vs Linux Bridge 选型</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81SDN%E6%80%9D%E6%83%B3%E4%B8%8E%E8%99%9A%E6%8B%9F%E7%BD%91%E7%BB%9C%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.9.</span> <span class="toc-text">八、SDN思想与虚拟网络实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E7%BD%91%E7%BB%9C%E6%8A%80%E6%9C%AF%E6%A0%88"><span class="toc-number">1.9.1.</span> <span class="toc-text">虚拟网络技术栈</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%8C%E6%95%B4%E5%B7%A5%E4%BD%9C%E6%B5%81%EF%BC%9A%E5%88%9B%E5%BB%BAVM%E6%8E%A5%E5%85%A5%E7%BD%91%E7%BB%9C"><span class="toc-number">1.9.2.</span> <span class="toc-text">完整工作流：创建VM接入网络</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E7%89%88%E6%9C%AC%E6%BC%94%E8%BF%9B%E8%B6%8B%E5%8A%BF-%F0%9F%9A%80"><span class="toc-number">1.10.</span> <span class="toc-text">九、版本演进趋势 🚀</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%F0%9F%92%A1-%E6%8A%80%E6%9C%AF%E8%A7%A3%E6%9E%90"><span class="toc-number">1.11.</span> <span class="toc-text">💡 技术解析</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        OpenStack Neutron网络服务详解
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">John Doe</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-05-15T16:00:00.000Z" class="dt-published" itemprop="datePublished">2026-05-16</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E4%BA%91%E8%AE%A1%E7%AE%97/">云计算</a> › <a class="category-link" href="/categories/%E4%BA%91%E8%AE%A1%E7%AE%97/OpenStack/">OpenStack</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/ML2/" rel="tag">ML2</a>, <a class="p-category" href="/tags/Neutron/" rel="tag">Neutron</a>, <a class="p-category" href="/tags/OVS/" rel="tag">OVS</a>, <a class="p-category" href="/tags/OpenStack/" rel="tag">OpenStack</a>, <a class="p-category" href="/tags/SDN/" rel="tag">SDN</a>, <a class="p-category" href="/tags/%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1/" rel="tag">网络服务</a>, <a class="p-category" href="/tags/%E8%99%9A%E6%8B%9F%E7%BD%91%E7%BB%9C/" rel="tag">虚拟网络</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="OpenStack-Neutron网络服务详解"><a href="#OpenStack-Neutron网络服务详解" class="headerlink" title="OpenStack Neutron网络服务详解"></a>OpenStack Neutron网络服务详解</h1><p>Neutron是OpenStack的<strong>网络服务核心组件</strong>，采用<strong>插件化、驱动化、分布式</strong>架构设计，为虚拟机提供L2隔离网络、L3路由转发、NAT网关与安全组等虚拟网络功能。✨</p>
+<h2 id="一、网络核心模型"><a href="#一、网络核心模型" class="headerlink" title="一、网络核心模型"></a>一、网络核心模型</h2><p>Neutron抽象了五种核心网络资源：</p>
+<ul>
+<li><strong>Network</strong>: L2隔离广播域，类似物理交换机+VLAN</li>
+<li><strong>Subnet</strong>: IPv4&#x2F;IPv6地址段，定义IP池与网关</li>
+<li><strong>Port</strong>: 虚拟交换机端口，VM网卡的挂载点</li>
+<li><strong>Router</strong>: L3路由转发，连接不同子网与外部网络</li>
+<li><strong>Security Group</strong>: 有状态防火墙规则集</li>
+</ul>
+<h3 id="资源关系"><a href="#资源关系" class="headerlink" title="资源关系"></a>资源关系</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">NETWORK ──┬── SUBNET (10.0.0.0/24) ── PORT (10.0.0.2) ── VM-1</span><br><span class="line">          │</span><br><span class="line">          └── SUBNET (172.16.1.0/24) ── PORT (172.16.1.2) ── VM-2</span><br><span class="line">                      │</span><br><span class="line">                  ROUTER ── 连接外网PROVIDER NETWORK</span><br></pre></td></tr></table></figure>
+
+<h3 id="关键概念对比"><a href="#关键概念对比" class="headerlink" title="关键概念对比"></a>关键概念对比</h3><ul>
+<li><strong>Network与Subnet</strong>: 一对多关系，一个Network可包含多个Subnet（如IPv4+IPv6）</li>
+<li><strong>Port与VM</strong>: 一对一绑定，创建VM时Neutron自动分配Port</li>
+<li><strong>Router与Network</strong>: 连接Provider Network后实现内网↔外网互通</li>
+</ul>
+<hr>
+<h2 id="二、Provider-Network"><a href="#二、Provider-Network" class="headerlink" title="二、Provider Network"></a>二、Provider Network</h2><p><strong>特性</strong>: 直接映射到物理网络的L2网络段，VM直接获得物理网络IP。</p>
+<ul>
+<li><strong>创建者</strong>: 仅管理员</li>
+<li><strong>网络类型</strong>: Flat（无标签）或 VLAN（802.1Q）</li>
+<li><strong>外部访问</strong>: L2桥接直连物理网络，无需路由</li>
+<li><strong>性能</strong>: 原生硬件转发，无封装开销</li>
+<li><strong>VLAN上限</strong>: 4096</li>
+</ul>
+<h3 id="CLI操作"><a href="#CLI操作" class="headerlink" title="CLI操作"></a>CLI操作</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建FLAT类型提供者网络</span></span><br><span class="line">openstack network create --provider-network-type FLAT \</span><br><span class="line">  --provider-physical-network PROVIDER \</span><br><span class="line">  --EXTERNAL provider-net</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建VLAN类型提供者网络</span></span><br><span class="line">openstack network create --provider-network-type VLAN \</span><br><span class="line">  --provider-physical-network PROVIDER \</span><br><span class="line">  --provider-segment 100 \</span><br><span class="line">  provider-vlan-100</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建子网</span></span><br><span class="line">openstack subnet create --network provider-vlan-100 \</span><br><span class="line">  --subnet-range 192.168.100.0/24 \</span><br><span class="line">  --gateway 192.168.100.1 \</span><br><span class="line">  --allocation-pool START=192.168.100.10,END=192.168.100.200 \</span><br><span class="line">  provider-vlan-100-subnet</span><br></pre></td></tr></table></figure>
+
+<p><strong>适用场景</strong>: 数据中心扁平网络、高性能计算、裸金属与虚拟化混布。</p>
+<hr>
+<h2 id="三、Self-Service-Network"><a href="#三、Self-Service-Network" class="headerlink" title="三、Self-Service Network"></a>三、Self-Service Network</h2><p><strong>特性</strong>: 基于Overlay隧道技术的多租户隔离虚拟网络（VPC）。</p>
+<ul>
+<li><strong>创建者</strong>: 任意租户&#x2F;用户</li>
+<li><strong>网络类型</strong>: VXLAN &#x2F; GRE &#x2F; Geneve（默认VXLAN）</li>
+<li><strong>外部访问</strong>: 需虚拟Router + NAT（浮动IP）</li>
+<li><strong>隔离上限</strong>: VXLAN支持约1600万VNI（远超VLAN的4096）</li>
+<li><strong>性能</strong>: 有封装解封装开销（VXLAN增加50B头部）</li>
+</ul>
+<h3 id="CLI操作-1"><a href="#CLI操作-1" class="headerlink" title="CLI操作"></a>CLI操作</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建自服务网络（默认为VXLAN）</span></span><br><span class="line">openstack network create selfservice-net</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建子网</span></span><br><span class="line">openstack subnet create --network selfservice-net \</span><br><span class="line">  --subnet-range 10.0.0.0/24 \</span><br><span class="line">  --gateway 10.0.0.1 \</span><br><span class="line">  --dns-nameserver 8.8.8.8 \</span><br><span class="line">  selfservice-subnet</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建路由器并连接外网</span></span><br><span class="line">openstack router create demo-router</span><br><span class="line">openstack router <span class="built_in">set</span> --external-gateway provider-net demo-router</span><br><span class="line">openstack router add subnet demo-router selfservice-subnet</span><br><span class="line"></span><br><span class="line"><span class="comment"># 分配浮动IP实现外网访问</span></span><br><span class="line">openstack floating ip create provider-net</span><br><span class="line">openstack server add floating ip &lt;SERVER_NAME&gt; &lt;FLOATING_IP&gt;</span><br></pre></td></tr></table></figure>
+
+<p><strong>适用场景</strong>: 多租户VPC、弹性虚拟网络环境。</p>
+<hr>
+<h2 id="三、路由器-—-L3转发与NAT"><a href="#三、路由器-—-L3转发与NAT" class="headerlink" title="三、路由器 — L3转发与NAT"></a>三、路由器 — L3转发与NAT</h2><p>路由器由 <code>neutron-l3-agent</code> 实现，运行在<strong>网络命名空间</strong>中，每个租户路由器独立隔离。</p>
+<h3 id="核心功能"><a href="#核心功能" class="headerlink" title="核心功能"></a>核心功能</h3><ul>
+<li><strong>SNAT</strong>: 内网→外网出站流量自动源地址转换（VM私有IP→浮动IP）</li>
+<li><strong>DNAT</strong>: 外网→内网入站流量目的地址转换（浮动IP→VM私有IP）</li>
+<li><strong>子网路由</strong>: 路由器自动转发同一路由器下不同子网间的流量</li>
+</ul>
+<h3 id="高级部署模式"><a href="#高级部署模式" class="headerlink" title="高级部署模式"></a>高级部署模式</h3><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>说明</th>
+<th>优势</th>
+<th>劣势</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Legacy L3</td>
+<td>集中式路由器在网络节点</td>
+<td>管理简单</td>
+<td>单点瓶颈、东西流量绕行</td>
+</tr>
+<tr>
+<td>DVR</td>
+<td>分布式虚拟路由</td>
+<td>东西流量本地转发</td>
+<td>配置复杂</td>
+</tr>
+<tr>
+<td>L3 HA</td>
+<td>多副本Keepalived</td>
+<td>高可用</td>
+<td>资源消耗翻倍</td>
+</tr>
+</tbody></table>
+<h3 id="CLI操作-2"><a href="#CLI操作-2" class="headerlink" title="CLI操作"></a>CLI操作</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建路由器</span></span><br><span class="line">openstack router create demo-router</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置外部网关</span></span><br><span class="line">openstack router <span class="built_in">set</span> --external-gateway provider-net demo-router</span><br><span class="line"></span><br><span class="line"><span class="comment"># 添加子网接口</span></span><br><span class="line">openstack router add subnet demo-router selfservice-subnet</span><br><span class="line"></span><br><span class="line"><span class="comment"># 移除子网接口</span></span><br><span class="line">openstack router remove subnet demo-router selfservice-subnet</span><br><span class="line"></span><br><span class="line"><span class="comment"># 删除路由器</span></span><br><span class="line">openstack router delete demo-router</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="四、安全组-—-有状态虚拟机防火墙"><a href="#四、安全组-—-有状态虚拟机防火墙" class="headerlink" title="四、安全组 — 有状态虚拟机防火墙"></a>四、安全组 — 有状态虚拟机防火墙</h2><p>安全组提供<strong>Port级别的状态化L2-L4防火墙</strong>，作用于虚拟机每个虚拟网卡。</p>
+<h3 id="默认策略"><a href="#默认策略" class="headerlink" title="默认策略"></a>默认策略</h3><ul>
+<li><strong>入站</strong>: 全部拒绝（必须显式允许）</li>
+<li><strong>出站</strong>: 全部允许（可配置）</li>
+<li><strong>状态化</strong>: 允许入站响应已建立连接的流量</li>
+</ul>
+<h3 id="后端实现"><a href="#后端实现" class="headerlink" title="后端实现"></a>后端实现</h3><table>
+<thead>
+<tr>
+<th>实现方式</th>
+<th>机制</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>iptables_hybrid</td>
+<td>每个VM Port插入iptables规则链</td>
+<td>小规模、兼容性优先</td>
+</tr>
+<tr>
+<td>openvswitch</td>
+<td>OVS流表实现防火墙规则</td>
+<td>大规模、高吞吐</td>
+</tr>
+<tr>
+<td>OVN ACL</td>
+<td>OVN南向流表，Port Group管理</td>
+<td>超大规模、分布式</td>
+</tr>
+</tbody></table>
+<h3 id="CLI操作-3"><a href="#CLI操作-3" class="headerlink" title="CLI操作"></a>CLI操作</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 列出安全组</span></span><br><span class="line">openstack security group list</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建安全组</span></span><br><span class="line">openstack security group create web-sg \</span><br><span class="line">  --description <span class="string">&quot;Web服务器安全组&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 添加规则：允许HTTP</span></span><br><span class="line">openstack security group rule create --proto TCP \</span><br><span class="line">  --dst-port 80 --src-ip 0.0.0.0/0 web-sg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 添加规则：允许SSH（指定远程安全组—微隔离）</span></span><br><span class="line">openstack security group rule create --proto TCP \</span><br><span class="line">  --dst-port 22 --remote-group bastion-sg web-sg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 为服务器绑定安全组</span></span><br><span class="line">openstack server create --security-group web-sg \</span><br><span class="line">  --security-group default VM_NAME</span><br></pre></td></tr></table></figure>
+
+<p><strong>最佳实践</strong>:</p>
+<ul>
+<li>最小权限原则，仅开放必要端口</li>
+<li>使用 <code>--remote-group</code> 实现微隔离（Microsegmentation），IP变化不影响规则</li>
+<li>安全组规则上限（<code>quota_security_group_rule</code>）按需调整</li>
+</ul>
+<hr>
+<h2 id="五、ML2插件架构"><a href="#五、ML2插件架构" class="headerlink" title="五、ML2插件架构"></a>五、ML2插件架构</h2><p>ML2（Modular Layer 2）是Neutron的<strong>核心插件框架</strong>，采用双驱动模型：</p>
+<ul>
+<li><strong>Type Drivers（类型驱动）</strong>: 定义网络技术的物理实现方式</li>
+<li><strong>Mechanism Drivers（机制驱动）</strong>: 定义网络访问的具体实现机制</li>
+</ul>
+<h3 id="Type-Drivers对比"><a href="#Type-Drivers对比" class="headerlink" title="Type Drivers对比"></a>Type Drivers对比</h3><table>
+<thead>
+<tr>
+<th align="center">驱动</th>
+<th>隔离方式</th>
+<th>报文格式</th>
+<th align="center">VLAN支持</th>
+<th align="center">最大网络数</th>
+<th align="center">MTU开销</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Flat</td>
+<td>无标签</td>
+<td>原始以太帧</td>
+<td align="center">❌</td>
+<td align="center">1</td>
+<td align="center">0</td>
+</tr>
+<tr>
+<td align="center">VLAN</td>
+<td>802.1Q</td>
+<td>以太帧+4B Tag</td>
+<td align="center">✅</td>
+<td align="center">4094</td>
+<td align="center">4B</td>
+</tr>
+<tr>
+<td align="center">VXLAN</td>
+<td>VXLAN封装</td>
+<td>MAC-in-UDP</td>
+<td align="center">❌</td>
+<td align="center">~16M</td>
+<td align="center">50B</td>
+</tr>
+<tr>
+<td align="center">GRE</td>
+<td>GRE封装</td>
+<td>MAC-in-GRE</td>
+<td align="center">❌</td>
+<td align="center">~4G</td>
+<td align="center">42B</td>
+</tr>
+<tr>
+<td align="center">Geneve</td>
+<td>Geneve可变封装</td>
+<td>MAC-in-UDP+TLV</td>
+<td align="center">❌</td>
+<td align="center">理论上无限</td>
+<td align="center">50B+</td>
+</tr>
+</tbody></table>
+<h3 id="Mechanism-Drivers对比"><a href="#Mechanism-Drivers对比" class="headerlink" title="Mechanism Drivers对比"></a>Mechanism Drivers对比</h3><table>
+<thead>
+<tr>
+<th align="center">驱动</th>
+<th>组件</th>
+<th align="center">隧道支持</th>
+<th align="center">DPDK</th>
+<th align="center">复杂度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Open vSwitch</td>
+<td>OVS Agent + ovsdb</td>
+<td align="center">VXLAN&#x2F;GRE&#x2F;Geneve</td>
+<td align="center">✅</td>
+<td align="center">中</td>
+</tr>
+<tr>
+<td align="center">Linux Bridge</td>
+<td>LB Agent + bridge-utils</td>
+<td align="center">VXLAN</td>
+<td align="center">❌</td>
+<td align="center">低</td>
+</tr>
+<tr>
+<td align="center">SR-IOV</td>
+<td>SR-IOV Agent</td>
+<td align="center">❌（硬件VF直通）</td>
+<td align="center">✅</td>
+<td align="center">中</td>
+</tr>
+<tr>
+<td align="center">MacVTap</td>
+<td>MacVTap Agent</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+<td align="center">低</td>
+</tr>
+<tr>
+<td align="center">L2 Population</td>
+<td>辅助驱动</td>
+<td align="center">优化广播</td>
+<td align="center">N&#x2F;A</td>
+<td align="center">辅助</td>
+</tr>
+</tbody></table>
+<h3 id="配置示例"><a href="#配置示例" class="headerlink" title="配置示例"></a>配置示例</h3><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/neutron/plugins/ml2/ml2_conf.ini</span></span><br><span class="line"><span class="section">[ml2]</span></span><br><span class="line"><span class="attr">type_drivers</span> = FLAT,VLAN,VXLAN</span><br><span class="line"><span class="attr">mechanism_drivers</span> = openvswitch,l2population</span><br><span class="line"><span class="attr">tenant_network_types</span> = VXLAN</span><br><span class="line"><span class="attr">extension_drivers</span> = port_security</span><br><span class="line"></span><br><span class="line"><span class="section">[ml2_type_flat]</span></span><br><span class="line"><span class="attr">flat_networks</span> = provider</span><br><span class="line"></span><br><span class="line"><span class="section">[ml2_type_vlan]</span></span><br><span class="line"><span class="attr">network_vlan_ranges</span> = provider:<span class="number">100</span>:<span class="number">200</span></span><br><span class="line"></span><br><span class="line"><span class="section">[ml2_type_vxlan]</span></span><br><span class="line"><span class="attr">vni_ranges</span> = <span class="number">1</span>:<span class="number">1000000</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="六、Open-vSwitch-深度解析"><a href="#六、Open-vSwitch-深度解析" class="headerlink" title="六、Open vSwitch 深度解析"></a>六、Open vSwitch 深度解析</h2><p>OVS是Neutron最广泛使用的虚拟交换机，提供<strong>内核态高速转发 + 用户态灵活控制</strong>的双层架构。</p>
+<h3 id="三种核心OVS桥接"><a href="#三种核心OVS桥接" class="headerlink" title="三种核心OVS桥接"></a>三种核心OVS桥接</h3><ul>
+<li><strong>br-int（集成桥）</strong>: VM虚拟机的统一接入点，连接所有VM的tap设备</li>
+<li><strong>br-tun（隧道桥）</strong>: Overlay隧道（VXLAN&#x2F;GRE）封装与解封装</li>
+<li><strong>br-ex（外部桥）</strong>: 连接物理网络的进出口</li>
+</ul>
+<h3 id="数据流转发路径"><a href="#数据流转发路径" class="headerlink" title="数据流转发路径"></a>数据流转发路径</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">同节点VM通信: VM-1 tap → br-int流表匹配 → 直接转发 → VM-2 tap</span><br><span class="line"></span><br><span class="line">跨节点VM通信（VXLAN）:</span><br><span class="line">VM-1 tap → br-int → br-tun封装VXLAN → 物理网卡 → 物理网络</span><br><span class="line">→ 目标节点物理网卡 → br-tun解封装 → br-int → VM-2 tap</span><br></pre></td></tr></table></figure>
+
+<h3 id="OVS-Agent配置"><a href="#OVS-Agent配置" class="headerlink" title="OVS Agent配置"></a>OVS Agent配置</h3><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/neutron/plugins/ml2/openvswitch_agent.ini</span></span><br><span class="line"><span class="section">[ovs]</span></span><br><span class="line"><span class="attr">bridge_mappings</span> = provider:br-ex</span><br><span class="line"><span class="attr">local_ip</span> = <span class="number">10.0</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">tunnel_types</span> = VXLAN</span><br><span class="line"><span class="attr">l2_population</span> = <span class="literal">True</span></span><br><span class="line"></span><br><span class="line"><span class="section">[securitygroup]</span></span><br><span class="line"><span class="attr">firewall_driver</span> = openvswitch</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="七、Linux-Bridge-架构"><a href="#七、Linux-Bridge-架构" class="headerlink" title="七、Linux Bridge 架构"></a>七、Linux Bridge 架构</h2><p>Linux Bridge是内核原生网桥方案，架构更简单：</p>
+<ul>
+<li><strong>实现</strong>: 内核桥接模块，无需用户态守护进程</li>
+<li><strong>隧道</strong>: 支持VXLAN，不支持GRE</li>
+<li><strong>安全组</strong>: 仅支持 <code>iptables_hybrid</code></li>
+<li><strong>管理工具</strong>: <code>brctl</code> &#x2F; <code>ip link</code></li>
+<li><strong>复杂度</strong>: 低</li>
+</ul>
+<h3 id="LB-Agent配置"><a href="#LB-Agent配置" class="headerlink" title="LB Agent配置"></a>LB Agent配置</h3><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/neutron/plugins/ml2/linuxbridge_agent.ini</span></span><br><span class="line"><span class="section">[linux_bridge]</span></span><br><span class="line"><span class="attr">physical_interface_mappings</span> = provider:ETH1</span><br><span class="line"></span><br><span class="line"><span class="section">[vxlan]</span></span><br><span class="line"><span class="attr">enable_vxlan</span> = <span class="literal">True</span></span><br><span class="line"><span class="attr">local_ip</span> = <span class="number">10.0</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">l2_population</span> = <span class="literal">True</span></span><br><span class="line"></span><br><span class="line"><span class="section">[securitygroup]</span></span><br><span class="line"><span class="attr">firewall_driver</span> = iptables_hybrid</span><br><span class="line"><span class="attr">enable_security_group</span> = <span class="literal">True</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="OVS-vs-Linux-Bridge-选型"><a href="#OVS-vs-Linux-Bridge-选型" class="headerlink" title="OVS vs Linux Bridge 选型"></a>OVS vs Linux Bridge 选型</h3><ul>
+<li><strong>OVS</strong>: 功能丰富（OpenFlow&#x2F;QoS&#x2F;DPDK&#x2F;GRE），适合复杂SDN场景</li>
+<li><strong>Linux Bridge</strong>: 简单稳定，适合小规模部署或对复杂度敏感的环境</li>
+<li><strong>趋势</strong>: OVN（基于OVS的SDN控制器）正逐步取代传统OVS Agent方案</li>
+</ul>
+<hr>
+<h2 id="八、SDN思想与虚拟网络实现"><a href="#八、SDN思想与虚拟网络实现" class="headerlink" title="八、SDN思想与虚拟网络实现"></a>八、SDN思想与虚拟网络实现</h2><p>Neutron架构深刻体现了SDN的<strong>转控分离</strong>思想：</p>
+<table>
+<thead>
+<tr>
+<th align="center">SDN原则</th>
+<th>Neutron实现</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">控制与转发分离</td>
+<td>Neutron Server ↔ Agent RPC通信，Server下发配置不参与数据转发</td>
+</tr>
+<tr>
+<td align="center">逻辑集中控制</td>
+<td>统一API + ML2插件框架，全局网络视图统一策略</td>
+</tr>
+<tr>
+<td align="center">网络可编程</td>
+<td>REST API创建&#x2F;修改网络资源，OpenFlow流表动态下发</td>
+</tr>
+</tbody></table>
+<h3 id="虚拟网络技术栈"><a href="#虚拟网络技术栈" class="headerlink" title="虚拟网络技术栈"></a>虚拟网络技术栈</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">物理层: 交换机 ── 路由器 ── 网卡</span><br><span class="line">  │</span><br><span class="line">隔离层: VLAN (硬件) / VXLAN (软件Overlay)</span><br><span class="line">  │</span><br><span class="line">虚拟交换: Open vSwitch (流表) / Linux Bridge (MAC学习)</span><br><span class="line">  │</span><br><span class="line">虚拟路由: L3 Agent (命名空间+NAT) / DVR (分布式路由)</span><br><span class="line">  │</span><br><span class="line">安全策略: Security Group (iptables / OVS流表 / OVN ACL)</span><br><span class="line">  │</span><br><span class="line">附加服务: DHCP (dnsmasq) / Metadata Agent / Octavia (LBaaS)</span><br></pre></td></tr></table></figure>
+
+<h3 id="完整工作流：创建VM接入网络"><a href="#完整工作流：创建VM接入网络" class="headerlink" title="完整工作流：创建VM接入网络"></a>完整工作流：创建VM接入网络</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">用户 → NOVA-API →① NEUTRON PORT-CREATE →② 分配MAC+IP</span><br><span class="line">  →③ NOVA-SCHEDULER选择计算节点 →④ RPC通知OVS AGENT</span><br><span class="line">  →⑤ OVS-VSCTL ADD-PORT创建tap设备接入br-int</span><br><span class="line">  →⑥ LIBVIRT启动VM插入网卡 →⑦ VM获取IP → ACTIVE</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="九、版本演进趋势-🚀"><a href="#九、版本演进趋势-🚀" class="headerlink" title="九、版本演进趋势 🚀"></a>九、版本演进趋势 🚀</h2><table>
+<thead>
+<tr>
+<th align="center">版本</th>
+<th>核心变化</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">2025.1 Epoxy</td>
+<td>OVN成为默认ML2驱动，传统OVS Agent进入维护模式</td>
+</tr>
+<tr>
+<td align="center">2025.2 Flamingo</td>
+<td>OVN安全组性能增强，Port Group批量管理优化</td>
+</tr>
+<tr>
+<td align="center">2026.1 Gazpacho</td>
+<td>OVN稳定版，DSD-LB功能完善，8+新特性</td>
+</tr>
+</tbody></table>
+<p><strong>主要趋势</strong>:</p>
+<ul>
+<li><strong>OVN取代传统OVS Agent</strong>: 原生分布式路由、分布式DHCP、OVN ACL安全组</li>
+<li><strong>OVN ACL取代iptables</strong>: OVS流表实现，支持万级规则规模（传统iptables约1000条即瓶颈）</li>
+<li><strong>DVR + OVN原生分布式</strong>: 东西流量完全本地转发</li>
+<li><strong>硬件Offload</strong>: SR-IOV + OVS-DPDK加速VM网络性能逼近裸机</li>
+</ul>
+<hr>
+<h2 id="💡-技术解析"><a href="#💡-技术解析" class="headerlink" title="💡 技术解析"></a>💡 技术解析</h2><ul>
+<li><strong>术语</strong>: <strong>ML2 (Modular Layer 2)</strong> — Neutron核心插件框架，Type Driver定义网络技术类型，Mechanism Driver定义实现机制，双驱动支持多种L2网络技术共存。</li>
+<li><strong>术语</strong>: <strong>VXLAN (Virtual Extensible LAN)</strong> — MAC-in-UDP隧道封装，24bit VNI支持1600万+虚拟网络，解决VLAN 4096上限问题，增加50B头部开销。</li>
+<li><strong>术语</strong>: <strong>Network Namespace</strong> — Linux内核级隔离机制，独立网络栈。Neutron为每个路由器和DHCP服务创建独立namespace（qrouter-xxx &#x2F; qdhcp-xxx），实现租户间L3隔离。</li>
+<li><strong>术语</strong>: <strong>DVR (Distributed Virtual Router)</strong> — 分布式虚拟路由器，将L3路由分散到每个计算节点，东西流量本地转发避免绕行网络节点。</li>
+<li><strong>术语</strong>: <strong>L2 Population</strong> — ARP&#x2F;FDB表项预填充机制，替代广播泛滥，减少VXLAN&#x2F;GRE网络中的BUM流量，提升大规模部署性能。</li>
+<li><strong>术语</strong>: <strong>SNAT&#x2F;DNAT</strong> — 源地址转换（SNAT）使内网VM可访问外网；目的地址转换（DNAT）使外网流量通过浮动IP到达内网VM。</li>
+<li><strong>命令</strong>: <code>openstack network create</code> — 创建虚拟网络，<code>--PROVIDER-NETWORK-TYPE</code> 指定FLAT&#x2F;VLAN&#x2F;VXLAN，<code>--PROVIDER-PHYSICAL-NETWORK</code> 指定物理映射，<code>--PROVIDER-SEGMENT</code> 指定VLAN ID。</li>
+<li><strong>命令</strong>: <code>openstack security group rule create</code> — 创建安全组规则，<code>--PROTO</code> 指定TCP&#x2F;UDP&#x2F;ICMP，<code>--DST-PORT</code> 指定端口范围，<code>--REMOTE-GROUP</code> 以安全组而非IP作为规则源，实现应用级微隔离。</li>
+<li><strong>命令</strong>: <code>openstack router set --external-gateway</code> — 为路由器设置外部网关，结合 <code>openstack router add subnet</code> 将租户子网连接到路由器，实现内网与外网互通。</li>
+<li><strong>命令</strong>: <code>openstack floating ip create</code> — 从外部网络分配浮动IP，<code>openstack server add floating ip</code> 将浮动IP绑定到VM实例，实现外网访问内网VM。</li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Neutron网络服务详解</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E7%BD%91%E7%BB%9C%E6%A0%B8%E5%BF%83%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.1.</span> <span class="toc-text">一、网络核心模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B5%84%E6%BA%90%E5%85%B3%E7%B3%BB"><span class="toc-number">1.1.1.</span> <span class="toc-text">资源关系</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E6%A6%82%E5%BF%B5%E5%AF%B9%E6%AF%94"><span class="toc-number">1.1.2.</span> <span class="toc-text">关键概念对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Provider-Network"><span class="toc-number">1.2.</span> <span class="toc-text">二、Provider Network</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CLI%E6%93%8D%E4%BD%9C"><span class="toc-number">1.2.1.</span> <span class="toc-text">CLI操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Self-Service-Network"><span class="toc-number">1.3.</span> <span class="toc-text">三、Self-Service Network</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CLI%E6%93%8D%E4%BD%9C-1"><span class="toc-number">1.3.1.</span> <span class="toc-text">CLI操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%B7%AF%E7%94%B1%E5%99%A8-%E2%80%94-L3%E8%BD%AC%E5%8F%91%E4%B8%8ENAT"><span class="toc-number">1.4.</span> <span class="toc-text">三、路由器 — L3转发与NAT</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%8A%9F%E8%83%BD"><span class="toc-number">1.4.1.</span> <span class="toc-text">核心功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%AB%98%E7%BA%A7%E9%83%A8%E7%BD%B2%E6%A8%A1%E5%BC%8F"><span class="toc-number">1.4.2.</span> <span class="toc-text">高级部署模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CLI%E6%93%8D%E4%BD%9C-2"><span class="toc-number">1.4.3.</span> <span class="toc-text">CLI操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%AE%89%E5%85%A8%E7%BB%84-%E2%80%94-%E6%9C%89%E7%8A%B6%E6%80%81%E8%99%9A%E6%8B%9F%E6%9C%BA%E9%98%B2%E7%81%AB%E5%A2%99"><span class="toc-number">1.5.</span> <span class="toc-text">四、安全组 — 有状态虚拟机防火墙</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%BB%98%E8%AE%A4%E7%AD%96%E7%95%A5"><span class="toc-number">1.5.1.</span> <span class="toc-text">默认策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%8E%E7%AB%AF%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.5.2.</span> <span class="toc-text">后端实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CLI%E6%93%8D%E4%BD%9C-3"><span class="toc-number">1.5.3.</span> <span class="toc-text">CLI操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81ML2%E6%8F%92%E4%BB%B6%E6%9E%B6%E6%9E%84"><span class="toc-number">1.6.</span> <span class="toc-text">五、ML2插件架构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Type-Drivers%E5%AF%B9%E6%AF%94"><span class="toc-number">1.6.1.</span> <span class="toc-text">Type Drivers对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Mechanism-Drivers%E5%AF%B9%E6%AF%94"><span class="toc-number">1.6.2.</span> <span class="toc-text">Mechanism Drivers对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E7%A4%BA%E4%BE%8B"><span class="toc-number">1.6.3.</span> <span class="toc-text">配置示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81Open-vSwitch-%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90"><span class="toc-number">1.7.</span> <span class="toc-text">六、Open vSwitch 深度解析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E7%A7%8D%E6%A0%B8%E5%BF%83OVS%E6%A1%A5%E6%8E%A5"><span class="toc-number">1.7.1.</span> <span class="toc-text">三种核心OVS桥接</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E6%B5%81%E8%BD%AC%E5%8F%91%E8%B7%AF%E5%BE%84"><span class="toc-number">1.7.2.</span> <span class="toc-text">数据流转发路径</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OVS-Agent%E9%85%8D%E7%BD%AE"><span class="toc-number">1.7.3.</span> <span class="toc-text">OVS Agent配置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81Linux-Bridge-%E6%9E%B6%E6%9E%84"><span class="toc-number">1.8.</span> <span class="toc-text">七、Linux Bridge 架构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#LB-Agent%E9%85%8D%E7%BD%AE"><span class="toc-number">1.8.1.</span> <span class="toc-text">LB Agent配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OVS-vs-Linux-Bridge-%E9%80%89%E5%9E%8B"><span class="toc-number">1.8.2.</span> <span class="toc-text">OVS vs Linux Bridge 选型</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81SDN%E6%80%9D%E6%83%B3%E4%B8%8E%E8%99%9A%E6%8B%9F%E7%BD%91%E7%BB%9C%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.9.</span> <span class="toc-text">八、SDN思想与虚拟网络实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E7%BD%91%E7%BB%9C%E6%8A%80%E6%9C%AF%E6%A0%88"><span class="toc-number">1.9.1.</span> <span class="toc-text">虚拟网络技术栈</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%8C%E6%95%B4%E5%B7%A5%E4%BD%9C%E6%B5%81%EF%BC%9A%E5%88%9B%E5%BB%BAVM%E6%8E%A5%E5%85%A5%E7%BD%91%E7%BB%9C"><span class="toc-number">1.9.2.</span> <span class="toc-text">完整工作流：创建VM接入网络</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E7%89%88%E6%9C%AC%E6%BC%94%E8%BF%9B%E8%B6%8B%E5%8A%BF-%F0%9F%9A%80"><span class="toc-number">1.10.</span> <span class="toc-text">九、版本演进趋势 🚀</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%F0%9F%92%A1-%E6%8A%80%E6%9C%AF%E8%A7%A3%E6%9E%90"><span class="toc-number">1.11.</span> <span class="toc-text">💡 技术解析</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&text=OpenStack Neutron网络服务详解"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&title=OpenStack Neutron网络服务详解"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&is_video=false&description=OpenStack Neutron网络服务详解"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Neutron网络服务详解&body=Check out this article: http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&title=OpenStack Neutron网络服务详解"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&title=OpenStack Neutron网络服务详解"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&title=OpenStack Neutron网络服务详解"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&title=OpenStack Neutron网络服务详解"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&name=OpenStack Neutron网络服务详解&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/OpenStack-Neutron%E7%BD%91%E7%BB%9C%E6%9C%8D%E5%8A%A1%E8%AF%A6%E8%A7%A3/&t=OpenStack Neutron网络服务详解"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2026
+    John Doe
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

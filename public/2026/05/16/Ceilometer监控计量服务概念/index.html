@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="全面介绍OpenStack Ceilometer监控计量服务的核心概念、双采集机制（轮询与通知）、Pipeline数据处理管道及与告警计费系统的集成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack Ceilometer 监控计量服务概念">
+<meta property="og:url" content="http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/index.html">
+<meta property="og:site_name" content="“我的学习之路”">
+<meta property="og:description" content="全面介绍OpenStack Ceilometer监控计量服务的核心概念、双采集机制（轮询与通知）、Pipeline数据处理管道及与告警计费系统的集成">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-19T17:44:50.626Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="OpenStack">
+<meta property="article:tag" content="Ceilometer">
+<meta property="article:tag" content="监控">
+<meta property="article:tag" content="计量">
+<meta property="article:tag" content="Telemetry">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>OpenStack Ceilometer 监控计量服务概念</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2026/05/16/Cinder%E5%9D%97%E5%AD%98%E5%82%A8%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&text=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&is_video=false&description=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Ceilometer 监控计量服务概念&body=Check out this article: http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&name=OpenStack Ceilometer 监控计量服务概念&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&t=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Ceilometer-%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Ceilometer 监控计量服务概念</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E4%B8%A4%E7%A7%8D%E6%95%B0%E6%8D%AE%E9%87%87%E9%9B%86%E6%96%B9%E5%BC%8F"><span class="toc-number">1.1.</span> <span class="toc-text">一、两种数据采集方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Polling-Agent-%E4%B8%89%E7%A7%8D%E8%A7%92%E8%89%B2"><span class="toc-number">1.1.1.</span> <span class="toc-text">Polling Agent 三种角色</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Pipeline-%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E7%AE%A1%E9%81%93"><span class="toc-number">1.2.</span> <span class="toc-text">二、Pipeline 数据处理管道</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Gathering%EF%BC%88%E6%95%B0%E6%8D%AE%E6%B1%87%E9%9B%86%EF%BC%89"><span class="toc-number">1.2.1.</span> <span class="toc-text">1. Gathering（数据汇集）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Transforming%EF%BC%88%E8%BD%AC%E6%8D%A2%E8%AE%A1%E7%AE%97%EF%BC%89"><span class="toc-number">1.2.2.</span> <span class="toc-text">2. Transforming（转换计算）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Publishing%EF%BC%88%E5%8F%91%E5%B8%83%E8%BE%93%E5%87%BA%EF%BC%89"><span class="toc-number">1.2.3.</span> <span class="toc-text">3. Publishing（发布输出）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%9E%B6%E6%9E%84%E7%BB%84%E4%BB%B6%E4%B8%80%E8%A7%88%F0%9F%8F%97%EF%B8%8F"><span class="toc-number">1.3.</span> <span class="toc-text">三、架构组件一览🏗️</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E6%B5%81%E6%A6%82%E8%A7%88"><span class="toc-number">1.3.1.</span> <span class="toc-text">数据流概览</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B%F0%9F%94%A7"><span class="toc-number">1.4.</span> <span class="toc-text">四、架构演进🔧</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E7%94%9F%E4%BA%A7%E5%BB%BA%E8%AE%AE%E2%9A%A0%EF%B8%8F"><span class="toc-number">1.5.</span> <span class="toc-text">五、生产建议⚠️</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%8A%80%E6%9C%AF%E6%9C%AF%E8%AF%AD%F0%9F%92%A1"><span class="toc-number">1.6.</span> <span class="toc-text">六、技术术语💡</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        OpenStack Ceilometer 监控计量服务概念
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">John Doe</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2026-05-15T16:00:00.000Z" class="dt-published" itemprop="datePublished">2026-05-16</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/">技术文档</a> › <a class="category-link" href="/categories/%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/%E4%BA%91%E8%AE%A1%E7%AE%97/">云计算</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/Ceilometer/" rel="tag">Ceilometer</a>, <a class="p-category" href="/tags/OpenStack/" rel="tag">OpenStack</a>, <a class="p-category" href="/tags/Telemetry/" rel="tag">Telemetry</a>, <a class="p-category" href="/tags/%E7%9B%91%E6%8E%A7/" rel="tag">监控</a>, <a class="p-category" href="/tags/%E8%AE%A1%E9%87%8F/" rel="tag">计量</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h1 id="OpenStack-Ceilometer-监控计量服务概念"><a href="#OpenStack-Ceilometer-监控计量服务概念" class="headerlink" title="OpenStack Ceilometer 监控计量服务概念"></a>OpenStack Ceilometer 监控计量服务概念</h1><p>Ceilometer 是 OpenStack Telemetry 项目的<strong>数据收集层</strong>，负责采集云平台中各类资源的计量（Meter）和事件（Event）数据，输出给下游的 Gnocchi（时间序列存储）、Aodh（告警）、CloudKitty（计费）等组件，为性能调优和成本分析提供数据基础📊。</p>
+<hr>
+<h2 id="一、两种数据采集方式"><a href="#一、两种数据采集方式" class="headerlink" title="一、两种数据采集方式"></a>一、两种数据采集方式</h2><table>
+<thead>
+<tr>
+<th>方式</th>
+<th>组件</th>
+<th>原理</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Notification（通知）</strong></td>
+<td><code>ceilometer-agent-notification</code></td>
+<td>监听消息队列（AMQP），消费 Nova&#x2F;Cinder&#x2F;Neutron 等服务发出的通知</td>
+<td>✅ <strong>推荐方式</strong>，被动接收，对 API 无额外负载</td>
+</tr>
+<tr>
+<td><strong>Polling（轮询）</strong></td>
+<td><code>ceilometer-polling</code></td>
+<td>主动通过 API 或 Hypervisor 定期拉取数据</td>
+<td>适用于通知无法覆盖的指标（如 VM CPU 利用率）</td>
+</tr>
+</tbody></table>
+<h3 id="Polling-Agent-三种角色"><a href="#Polling-Agent-三种角色" class="headerlink" title="Polling Agent 三种角色"></a>Polling Agent 三种角色</h3><table>
+<thead>
+<tr>
+<th>代理类型</th>
+<th>部署位置</th>
+<th>采集方式</th>
+<th>功能说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Compute Agent</strong></td>
+<td>每个计算节点</td>
+<td>通过 Hypervisor API（libvirt）</td>
+<td>收集 VM 实例资源使用数据（CPU、内存、磁盘 I&#x2F;O 等）</td>
+</tr>
+<tr>
+<td><strong>Central Agent</strong></td>
+<td>控制节点</td>
+<td>通过 OpenStack 服务 REST API</td>
+<td>轮询 Neutron、Cinder、Swift 等服务，采集非实例级别资源数据</td>
+</tr>
+<tr>
+<td><strong>IPMI Agent</strong></td>
+<td>计算节点（需 IPMI 支持）</td>
+<td>通过 IPMI 协议 &#x2F; ipmitool</td>
+<td>采集物理服务器传感器数据（温度、电压、风扇转速等）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>📝 <strong>等价关系</strong>：<code>ceilometer-agent-compute</code> ≡ <code>ceilometer-polling --polling-namespaces COMPUTE</code>，Central 和 IPMI 同理。</p>
+</blockquote>
+<hr>
+<h2 id="二、Pipeline-数据处理管道"><a href="#二、Pipeline-数据处理管道" class="headerlink" title="二、Pipeline 数据处理管道"></a>二、Pipeline 数据处理管道</h2><p>采集的原始数据经过 Pipeline 三阶段处理⚙️：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Gathering（汇集） ➔ Transforming（转换） ➔ Publishing（发布）</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-Gathering（数据汇集）"><a href="#1-Gathering（数据汇集）" class="headerlink" title="1. Gathering（数据汇集）"></a>1. Gathering（数据汇集）</h3><p>从 Notification Agent 或 Polling Agent 接收原始计量数据与事件。</p>
+<h3 id="2-Transforming（转换计算）"><a href="#2-Transforming（转换计算）" class="headerlink" title="2. Transforming（转换计算）"></a>2. Transforming（转换计算）</h3><p>支持多种转换器处理原始数据，例如：</p>
+<ul>
+<li><strong>rate-of-change</strong>：将累计值转换为速率</li>
+<li><strong>arithmetic</strong>：数学计算（CPU Time → CPU 利用率百分比）</li>
+<li><strong>aggregation</strong>：聚合计算（平均值、最大值、最小值）</li>
+</ul>
+<h3 id="3-Publishing（发布输出）"><a href="#3-Publishing（发布输出）" class="headerlink" title="3. Publishing（发布输出）"></a>3. Publishing（发布输出）</h3><p>处理后的数据可发布至以下目标端：</p>
+<table>
+<thead>
+<tr>
+<th>发布目标</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Gnocchi</strong></td>
+<td>时间序列数据库（推荐存储后端）</td>
+</tr>
+<tr>
+<td><strong>Aodh</strong></td>
+<td>告警服务</td>
+</tr>
+<tr>
+<td><strong>Kafka</strong></td>
+<td>消息队列</td>
+</tr>
+<tr>
+<td><strong>HTTP</strong></td>
+<td>REST 端点</td>
+</tr>
+<tr>
+<td><strong>UDP</strong></td>
+<td>UDP 数据包</td>
+</tr>
+<tr>
+<td><strong>File</strong></td>
+<td>本地文件</td>
+</tr>
+<tr>
+<td><strong>Notifier</strong></td>
+<td>消息队列重新投递</td>
+</tr>
+</tbody></table>
+<p>所有 Pipeleine 规则通过 <code>pipeline.yaml</code> 配置文件定义，支持灵活的过滤、转换和多重发布策略。</p>
+<hr>
+<h2 id="三、架构组件一览🏗️"><a href="#三、架构组件一览🏗️" class="headerlink" title="三、架构组件一览🏗️"></a>三、架构组件一览🏗️</h2><table>
+<thead>
+<tr>
+<th>组件</th>
+<th>功能说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>ceilometer-polling</strong></td>
+<td>统一轮询代理，负责主动采集数据</td>
+</tr>
+<tr>
+<td><strong>ceilometer-agent-notification</strong></td>
+<td>通知代理，监听消息队列消费通知</td>
+</tr>
+<tr>
+<td><strong>Gnocchi</strong></td>
+<td>时间序列数据存储（替代传统数据库）</td>
+</tr>
+<tr>
+<td><strong>Aodh</strong></td>
+<td>基于计量数据的告警服务</td>
+</tr>
+<tr>
+<td><strong>Panko</strong></td>
+<td>事件存储（文档型数据）</td>
+</tr>
+</tbody></table>
+<h3 id="数据流概览"><a href="#数据流概览" class="headerlink" title="数据流概览"></a>数据流概览</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">OpenStack Services（Nova / Cinder / Neutron / Glance / Swift / Keystone / Heat）</span><br><span class="line">        │</span><br><span class="line">        ├─── Notification bus（AMQP）──► Notification Agent ──┐</span><br><span class="line">        │                                                     │</span><br><span class="line">        ├─── REST APIs ◄── Central Agent ─────────────────────┤</span><br><span class="line">        │                                                     │</span><br><span class="line">        └─── Hypervisor ◄── Compute Agent ────────────────────┤</span><br><span class="line">                        ◄── IPMI Agent  ──────────────────────┤</span><br><span class="line">                                                              │</span><br><span class="line">                                                              ▼</span><br><span class="line">                                                     Pipeline Manager</span><br><span class="line">                                                              │</span><br><span class="line">                                              ┌───────────────┴───────────────┐</span><br><span class="line">                                              ▼                               ▼</span><br><span class="line">                                          Gnocchi（存储）              Aodh（告警）</span><br><span class="line">                                      CloudKitty（计费）          HTTP/Kafka/文件</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="四、架构演进🔧"><a href="#四、架构演进🔧" class="headerlink" title="四、架构演进🔧"></a>四、架构演进🔧</h2><p>早期 Ceilometer 集采集、存储、告警于一体，单体架构导致性能瓶颈。自 Ocata 版本起完成<strong>解耦</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">旧版：Ceilometer（采集 + 存储 + 告警）</span><br><span class="line">新版：Ceilometer（采集） ➔ Gnocchi（存储） + Aodh（告警）</span><br></pre></td></tr></table></figure>
+
+<p><strong>关键变化</strong>：</p>
+<ul>
+<li><code>ceilometer-api</code> 和 <code>ceilometer-collector</code> 不再使用</li>
+<li>存储委托给 <strong>Gnocchi</strong>（时间序列数据库）</li>
+<li>告警委托给 <strong>Aodh</strong>（独立告警服务）</li>
+<li>事件存储委托给 <strong>Panko</strong></li>
+</ul>
+<hr>
+<h2 id="五、生产建议⚠️"><a href="#五、生产建议⚠️" class="headerlink" title="五、生产建议⚠️"></a>五、生产建议⚠️</h2><ul>
+<li><strong>通知优先</strong>：Notification 机制对 API 服务无额外负载，优先使用</li>
+<li><strong>轮询间隔</strong>：通过 <code>pipeline.yaml</code> 配置合理的 polling 间隔，避免过度请求 API</li>
+<li><strong>存储后端</strong>：生产环境推荐 <strong>Gnocchi</strong> 替代传统数据库，性能显著提升</li>
+<li><strong>横向扩展</strong>：Ceilometer 各 Agent 支持多实例部署，按需增加 Worker 节点</li>
+<li><strong>Jitter 配置</strong>：<code>shuffle_time_before_polling_task</code> 参数添加随机抖动，避免惊群效应</li>
+</ul>
+<hr>
+<h2 id="六、技术术语💡"><a href="#六、技术术语💡" class="headerlink" title="六、技术术语💡"></a>六、技术术语💡</h2><ul>
+<li><strong>Telemetry</strong> — OpenStack 遥测项目组，包含 Ceilometer、Gnocchi、Aodh、Panko 四个子项目</li>
+<li><strong>Meter</strong> — 计量样本，如 <code>cpu_util</code>、<code>disk.read.bytes</code>、<code>network.incoming.bytes</code></li>
+<li><strong>Event</strong> — 事件记录，如虚拟机创建&#x2F;删除&#x2F;迁移等操作</li>
+<li><strong>Pipeline</strong> — 可配置的 YAML 管道，定义数据如何被转换和发布</li>
+<li><strong>Gnocchi</strong> — 时间序列数据库，Ceilometer 的推荐存储后端</li>
+<li><strong>Aodh</strong> — 基于 Ceilometer 数据的告警服务，支持阈值、组合等告警规则</li>
+<li><strong>AMQP</strong> — 高级消息队列协议，Ceilometer 各组件间通过 RabbitMQ 实现异步通信</li>
+<li><strong>Hypervisor</strong> — 虚拟机监视器（如 KVM&#x2F;libvirt），Compute Agent 通过其采集 VM 数据</li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenStack-Ceilometer-%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">OpenStack Ceilometer 监控计量服务概念</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E4%B8%A4%E7%A7%8D%E6%95%B0%E6%8D%AE%E9%87%87%E9%9B%86%E6%96%B9%E5%BC%8F"><span class="toc-number">1.1.</span> <span class="toc-text">一、两种数据采集方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Polling-Agent-%E4%B8%89%E7%A7%8D%E8%A7%92%E8%89%B2"><span class="toc-number">1.1.1.</span> <span class="toc-text">Polling Agent 三种角色</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Pipeline-%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E7%AE%A1%E9%81%93"><span class="toc-number">1.2.</span> <span class="toc-text">二、Pipeline 数据处理管道</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Gathering%EF%BC%88%E6%95%B0%E6%8D%AE%E6%B1%87%E9%9B%86%EF%BC%89"><span class="toc-number">1.2.1.</span> <span class="toc-text">1. Gathering（数据汇集）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Transforming%EF%BC%88%E8%BD%AC%E6%8D%A2%E8%AE%A1%E7%AE%97%EF%BC%89"><span class="toc-number">1.2.2.</span> <span class="toc-text">2. Transforming（转换计算）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Publishing%EF%BC%88%E5%8F%91%E5%B8%83%E8%BE%93%E5%87%BA%EF%BC%89"><span class="toc-number">1.2.3.</span> <span class="toc-text">3. Publishing（发布输出）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%9E%B6%E6%9E%84%E7%BB%84%E4%BB%B6%E4%B8%80%E8%A7%88%F0%9F%8F%97%EF%B8%8F"><span class="toc-number">1.3.</span> <span class="toc-text">三、架构组件一览🏗️</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E6%B5%81%E6%A6%82%E8%A7%88"><span class="toc-number">1.3.1.</span> <span class="toc-text">数据流概览</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B%F0%9F%94%A7"><span class="toc-number">1.4.</span> <span class="toc-text">四、架构演进🔧</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E7%94%9F%E4%BA%A7%E5%BB%BA%E8%AE%AE%E2%9A%A0%EF%B8%8F"><span class="toc-number">1.5.</span> <span class="toc-text">五、生产建议⚠️</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%8A%80%E6%9C%AF%E6%9C%AF%E8%AF%AD%F0%9F%92%A1"><span class="toc-number">1.6.</span> <span class="toc-text">六、技术术语💡</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&text=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&is_video=false&description=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=OpenStack Ceilometer 监控计量服务概念&body=Check out this article: http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&title=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&name=OpenStack Ceilometer 监控计量服务概念&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2026/05/16/Ceilometer%E7%9B%91%E6%8E%A7%E8%AE%A1%E9%87%8F%E6%9C%8D%E5%8A%A1%E6%A6%82%E5%BF%B5/&t=OpenStack Ceilometer 监控计量服务概念"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2026
+    John Doe
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
