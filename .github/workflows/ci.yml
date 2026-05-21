@@ -1,0 +1,11 @@
+name: Deploy Hexo Blog
+on: push
+
+jobs:
+  test:
+    name: Test Hexo Blog
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: hello hexo
+        run: echo "hello hexo"
