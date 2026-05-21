@@ -55,10 +55,10 @@ lightdark:
 # ---------------------------------------------------------------
 
 favicon:
-  small: /images/IMG_3713.jpg
-  medium: /images/IMG_3713.jpg
-  apple_touch_icon: /images/IMG_3713.jpg
-  safari_pinned_tab: /images/IMG_3713.jpg
+  small: https://img-reg-ab.imagency.cn/e/8bdc56b891d8e42fa76357c5ce48cd1c.jpg
+  medium: https://img-reg-ab.imagency.cn/e/8bdc56b891d8e42fa76357c5ce48cd1c.jpg
+  apple_touch_icon: https://img-reg-ab.imagency.cn/e/8bdc56b891d8e42fa76357c5ce48cd1c.jpg
+  safari_pinned_tab: https://img-reg-ab.imagency.cn/e/8bdc56b891d8e42fa76357c5ce48cd1c.jpg
   #android_manifest: /manifest.json
 
 # Custom Logo (Warning: Do not support scheme Mist)
