@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Update Hexo Blog To Master
+      - name: Update Hexo Blog To Dev
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.GZ_DEV_SERVER_HOST }}
