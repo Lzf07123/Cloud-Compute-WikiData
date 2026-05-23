@@ -20,3 +20,4 @@ jobs:
             cd /opt/Cloud-Compute-WikiData
             git pull origin dev
             ls -la
+            systemctl restart hexo.service
