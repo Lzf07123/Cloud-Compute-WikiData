@@ -1,4 +1,4 @@
-name: Deploy Hexo Blog
+name: Deploy Hexo Blog To Master
 on: 
   push:
     branches:
@@ -6,11 +6,11 @@ on:
 
 jobs:
   GZ-server:
-    name: Test Hexo Blog
+    name: Deploy Hexo Blog
     runs-on: ubuntu-latest
 
     steps:
-      - name: 更新Blog内容
+      - name: Update Hexo Blog To Master
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.GZ_SERVER_HOST }}
