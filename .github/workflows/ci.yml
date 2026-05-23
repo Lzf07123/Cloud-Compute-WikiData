@@ -12,5 +12,12 @@ jobs:
     steps:
       - name: hello hexo
         run: echo "hello hexo"
+        
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+      
       - name: 查看目录
-        run: pwd
+        run: ls -lha
+
+
+        
