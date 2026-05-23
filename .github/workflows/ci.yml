@@ -20,8 +20,9 @@ jobs:
           username: ${{ secrets.GZ_SERVER_USERNAME }}
           key: ${{ secrets.GZ_SERVER_KEY }}
           script: |
-            cd /opt
+            cd /opt/Cloud-Compute-WikiData
             ls -la
+            git pull
 
 
         
