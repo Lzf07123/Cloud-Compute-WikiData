@@ -18,5 +18,5 @@ jobs:
           key: ${{ secrets.GZ_SERVER_KEY }}
           script: |
             cd /opt/Cloud-Compute-WikiData
-            git pull
+            git pull origin dev
             ls -la
