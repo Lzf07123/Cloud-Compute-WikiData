@@ -17,7 +17,7 @@ jobs:
           username: ${{ secrets.GZ_SERVER_USERNAME }}
           key: ${{ secrets.GZ_SERVER_KEY }}
           script: |
-            cd /opt/Cloud-Compute-WikiData
+            cd /opt/cloud-compute-wiki-data
             ls -la
             git pull origin main
             systemctl restart hexo.service
