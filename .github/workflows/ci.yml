@@ -5,15 +5,12 @@ on:
       - main
 
 jobs:
-  test:
+  GZ-server:
     name: Test Hexo Blog
     runs-on: ubuntu-latest
 
     steps:
-      - name: hello hexo
-        run: echo "hello hexo"
-        
-      - name: Checkout
+      - name: 检出仓库
         uses: actions/checkout@v6.0.2
       
       - name: 查看目录
