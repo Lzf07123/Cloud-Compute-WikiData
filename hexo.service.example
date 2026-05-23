@@ -1,0 +1,2 @@
+[Service]
+ExecStart=/usr/bin/bash /opt/Cloud-Compute-WikiData/run.sh
