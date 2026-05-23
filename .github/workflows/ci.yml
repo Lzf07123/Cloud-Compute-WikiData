@@ -21,7 +21,7 @@ jobs:
           key: ${{ secrets.GZ_SERVER_KEY }}
           script: |
             cd /opt
-            ll
+            ls -la
 
 
         
