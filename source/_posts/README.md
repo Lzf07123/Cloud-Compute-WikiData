@@ -24,7 +24,7 @@ top: 100
 ### 更新项目:更新类型
 
 - linux基础命令系列
-  - linux-commands
+  - Linux 基础命令大全-索引
   - 权限与用户管理-passwd
   - 文件与目录管理-file
   - 文件查看与文本处理-join
