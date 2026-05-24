@@ -1,5 +1,5 @@
 ---
-title: 更新通知|知识库使用须知
+title: 更新通知 | 知识库使用须知
 description: 职业技能大赛云计算赛项资料共享知识库的使用说明与 FAQ
 keywords:
   - 知识库
