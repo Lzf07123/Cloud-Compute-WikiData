@@ -42,7 +42,7 @@ related:
 
 # 🔴 Ubuntu 系统详情
 
-> 参见: [四大服务器系统对比总览]({% post_link 四大服务器系统对比总览 %}) | [openEuler 详情]({% post_link openEuler系统详情 %}) | [CentOS 详情]({% post_link CentOS系统详情 %}) | [Debian 详情]({% post_link Debian系统详情 %})
+> 参见: {% post_link 四大服务器系统对比总览 %} | {% post_link openEuler系统详情 openEuler 详情 %} | {% post_link CentOS系统详情 CentOS 详情 %} | {% post_link Debian系统详情 Debian 详情 %}
 
 ---
 
