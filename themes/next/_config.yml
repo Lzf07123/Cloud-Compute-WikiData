@@ -62,7 +62,7 @@ favicon:
   #android_manifest: /manifest.json
 
 # Custom Logo (Warning: Do not support scheme Mist)
-custom_logo: /images/IMG_3713.jpg
+custom_logo: /images/IMG_4643-600x600.jpeg
 
 # Creative Commons 4.0 International License.
 # See: https://creativecommons.org/about/cclicenses/
@@ -159,7 +159,7 @@ site_state: true
 # Key is the link label showing to end users.
 # Value before `||` delimiter is the target permalink, value after `||` delimiter is the name of Font Awesome icon.
 social:
-  #GitHub: https://github.com/yourname || fab fa-github
+  GitHub: https://github.com/Lzf07123/ || fab fa-github
   #E-Mail: mailto:yourname@gmail.com || fa fa-envelope
   #Weibo: https://weibo.com/yourname || fab fa-weibo
   #Twitter: https://twitter.com/yourname || fab fa-twitter
@@ -411,7 +411,7 @@ bookmark:
 # `Follow me on GitHub` banner in the top-right corner.
 github_banner:
   enable: true
-  permalink: https://github.com/Lzf07123/
+  permalink: https://github.com/Lzf07123/cloud-compute-wiki-data
 
 # ---------------------------------------------------------------
 # Font Settings
