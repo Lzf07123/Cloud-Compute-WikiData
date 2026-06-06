@@ -55,10 +55,10 @@ lightdark:
 # ---------------------------------------------------------------
 
 favicon:
-  small: /images/IMG_3713_16x16.jpg
-  medium: /images/IMG_3713_32x32.jpg
-  apple_touch_icon: /images/IMG_3713.jpg
-  safari_pinned_tab: /images/IMG_3713.jpg
+  small: /images/IMG_4643-16x16.jpeg
+  medium: /images/IMG_4643-32x32.jpeg
+  apple_touch_icon: /images/IMG_4643-600x600.jpeg
+  safari_pinned_tab: /images/IMG_4643-600x600.jpeg
   #android_manifest: /manifest.json
 
 # Custom Logo (Warning: Do not support scheme Mist)
