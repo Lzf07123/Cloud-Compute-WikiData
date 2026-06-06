@@ -2,3 +2,4 @@
 .env
 public/
 run.sh
+node_modules/
