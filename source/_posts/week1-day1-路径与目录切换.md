@@ -12,6 +12,42 @@ updated: "2026-06-06"
 
 > 今日目标：在任意目录间自由跳转，用 `ls` 看清目录里有什么、多大、什么时候改的 🎯
 
+## 环境准备
+
+> 面向 Windows 用户，推荐 [WindTerm](https://github.com/kingToolbox/WindTerm) 连接云服务器。备选：Windows Terminal + `ssh` 命令。
+
+### SSH 连接到云服务器
+
+```bash
+# 在 WindTerm 中新建会话，填写公网 IP，或终端中执行：
+ssh root@你的服务器公网IP
+```
+
+- 首次连接会提示 `Are you sure you want to continue connecting (yes/no)?`，输入 `yes` 回车
+- 输入密码时光标不会移动，这是正常的，输完回车即可
+
+### tmux 保活会话
+
+云服务器网络波动会导致 SSH 断开，正在编辑的内容会丢失。`tmux` 让会话在服务端保持运行：
+
+```bash
+tmux new -s learn    # 新建名为 learn 的会话
+# ... 在里面正常操作 ...
+# 断线重连后：
+tmux attach -t learn # 恢复会话，所有状态都在
+```
+
+在 tmux 内的快捷键（前缀 `Ctrl+B`，松开后再按下一个键）：
+
+| 操作 | 快捷键 |
+|------|--------|
+| 水平分屏 | `Ctrl+B` → `"` |
+| 垂直分屏 | `Ctrl+B` → `%` |
+| 切换窗格 | `Ctrl+B` → 方向键 |
+| 暂时离开会话 | `Ctrl+B` → `d` |
+
+> 如果不会操作 tmux 也不要紧。先用裸终端完成命令练习，把 tmux 记住一个就够了。 
+
 ## 命令速览
 
 | 命令 | 用途 | 核心参数 |
@@ -43,7 +79,7 @@ updated: "2026-06-06"
 - 🖥️ **上手练**：
   1. `cd /var/log && pwd`，然后 `cd -` 看回到哪里，再 `cd -` 看又去哪了
   2. 从 home 目录开始，用 `cd ..` 一路退到根目录 `/`
-  3. `cd /etc/apt && cd`——有什么区别？（注意：macOS 无 `/etc/apt`，此为 Debian/Ubuntu 特有目录；macOS 用户可改用 `cd /etc/ssh && cd` 练习）
+  3. `cd /etc/apt && cd`——有什么区别？
 - ⚠️ **常见坑**：`cd -` 只能在最近两个目录间来回切，不是历史记录栈
 
 ### ③ ls — 列出目录内容

@@ -50,8 +50,8 @@ updated: "2026-06-06"
   1. `cp /tmp/sed-test.txt /tmp/sed-test.bak`——先备份
   2. `sed -i 's/hello/hi/g' /tmp/sed-test.txt && cat /tmp/sed-test.txt`——直接修改了
   3. 恢复：`cp /tmp/sed-test.bak /tmp/sed-test.txt`
-  4. `sed -i.bak 's/hello/hi/' /tmp/sed-test.txt`——`-i.bak` 生成 .bak 备份文件（Linux/macOS 均适用）
-- ⚠️ **致命坑**：`sed -i` 不可逆！没有 git 时先备份。macOS 上 `sed -i` 语法不同：必须 `sed -i '' 's/x/y/' file`
+  4. `sed -i.bak 's/hello/hi/' /tmp/sed-test.txt`——`-i.bak` 生成 .bak 备份文件
+- ⚠️ **致命坑**：`sed -i` 不可逆！没有 git 时先备份
 
 ### ③ 按行删除 — d
 
@@ -88,5 +88,5 @@ updated: "2026-06-06"
 3. 打印 `/etc/passwd` 的第 1 行和第 10 行（用 sed 实现，不用 head+tail）
 4. 用 sed 批量替换——将 `/tmp/sed-test.txt` 中 `hello` 改为 `hi`、`world` 改为 `earth`（一条命令）
 5. 实际修改：用 `sed -i` 将 `/tmp/sed-num.txt` 中的奇数行注释掉（每行前加 `#`）
-6. **排错题**：macOS 上执行 `sed -i 's/a/b/' file` 报 `invalid command code`——为什么？怎么修正？
+6. **排错题**：执行 `sed -i 's/a/b/' file` 报 `invalid command code`——可能原因是什么？如何排查？
 7. **排错题**：执行 `sed 's/\//-/g' /tmp/path.txt` 发现把所有 `/` 都替换了，但你只想替换行首的 `/`——如何限制替换范围？

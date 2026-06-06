@@ -64,6 +64,18 @@ commands:
 updated: "2026-06-06"
 ---
 
+## 环境公约
+
+| 项目 | 约定 |
+|------|------|
+| 服务器 | **Ubuntu 24.04 LTS**（云厂商最小规格 1C/1G） |
+| SSH 客户端 | **WindTerm**（首选）/ Windows Terminal + ssh（备选） |
+| 编辑器 | `vim` |
+| 终端复用 | `tmux` |
+| 文件传输 | WindTerm 内置 SFTP |
+
+> 面向 Windows 用户为主。不推荐 PuTTY + WinSCP 组合（增加工具切换成本）。
+
 # Linux 1 月速成计划
 
 > 面向有基础经验的学习者，4 周掌握 Linux 日常操作。**纯终端实操，排错驱动。**

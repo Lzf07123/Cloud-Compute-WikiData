@@ -32,7 +32,7 @@ updated: "2026-06-06"
 - 🖥️ **上手练**：
   1. `wc /etc/passwd`——观察三个数字分别是什么（行/词/字节）
   2. `wc -l /etc/passwd`——系统有多少个用户账号？
-  3. `ls -l /etc | wc -l`——/etc 下有多少文件？（注意：macOS 的 `/etc` 是软链接，`ls -l /etc` 只显示链接本身，须用 `ls -l /etc/` 列出目录内容。两种系统 `ls -l` 列目录时首行都有 `total N` 汇总行，结果会比实际文件数多 1，修正方式：`ls -l /etc/ | tail -n +2 | wc -l`）
+  3. `ls -l /etc | wc -l`——/etc 下有多少文件？（`ls -l` 列目录时首行有 `total N` 汇总行，结果比实际文件数多 1，修正：`ls -l /etc | tail -n +2 | wc -l`）
 - ⚠️ **常见坑**：`wc -l` 统计的是换行符个数，最后一行如果没有换行符不会被计入
 
 ### ② sort — 排序
@@ -46,7 +46,7 @@ updated: "2026-06-06"
   1. `sort /etc/passwd`——默认按字典序排列所有行
   2. `sort -r /etc/passwd`——逆序排列
   3. `printf "2\n10\n1\n" | sort` vs `printf "2\n10\n1\n" | sort -n`——观察字典序和数值序的区别
-  4. `ls -l /etc | sort -k5 -n | head`——按文件大小排序列出 /etc 下文件（macOS 用户注意：须用 `ls -l /etc/` 代替 `ls -l /etc`，因为 macOS 的 `/etc` 是软链接）
+  4. `ls -l /etc | sort -k5 -n | head`——按文件大小排序列出 /etc 下文件
 - ⚠️ **常见坑**：不加 `-n` 时 `sort` 按字典序排列数字，`10` 排在 `2` 前面
 
 ### ③ uniq — 去重
@@ -65,6 +65,6 @@ updated: "2026-06-06"
 1. 统计 `/etc/passwd` 有多少行，然后只输出这个行数（不显示文件名）
 2. 将 `/etc/passwd` 按逆序排列，取前 5 行
 3. 统计 `/etc/passwd` 中每种 shell 各被多少人使用（提示：`awk -F: '{print $NF}' /etc/passwd | sort | uniq -c | sort -rn`）
-4. 用 `ls -l /etc | sort -k5 -rn | head -5` 找出 /etc 下最大的 5 个文件（macOS 用户须改用 `ls -l /etc/` 加尾部斜杠，因为 macOS 的 `/etc` 本身是软链接）
+4. 用 `ls -l /etc | sort -k5 -rn | head -5` 找出 /etc 下最大的 5 个文件
 5. **排错题**：执行 `cat /tmp/data.txt | uniq` 后发现大量重复行还在——为什么？正确的去重方式是什么？
 6. **排错题**：`sort -n /tmp/scores.txt` 排序后 `2` 排在 `10` 前面正确，但 `100` 排在 `20` 前面——哪里错了？排查思路：先确认文件内容格式，再确认参数

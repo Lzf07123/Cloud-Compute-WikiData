@@ -65,7 +65,7 @@ updated: "2026-06-06"
 - **参数**：`-r` → 递归复制（复制目录必须加）
 - 🖥️ **上手练**：
   1. `cp /etc/hosts /tmp/hosts.bak`——复制文件到 `/tmp`
-  2. `cp -r /etc/apt /tmp/apt.bak`——复制整个目录（注意：macOS 无 `/etc/apt`，此为 Debian/Ubuntu 特有目录；macOS 用户可改用 `cp -r /etc/ssh /tmp/ssh.bak` 练习）
+  2. `cp -r /etc/apt /tmp/apt.bak`——复制整个目录
   3. `cp /etc/hosts /tmp/hosts.bak`——如果 `/tmp/hosts.bak` 已存在会怎样？被覆盖！
 - ⚠️ **常见坑**：`cp` 默认覆盖同名文件不提示，加 `-i` 可开启确认；复制目录不加 `-r` 会报错
 

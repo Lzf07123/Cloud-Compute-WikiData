@@ -28,9 +28,9 @@ updated: "2026-06-06"
 - **语法**：`cat <FILE>` 或 `cat <FILE1> <FILE2>`（拼接多文件）
 - **参数**：`-n` 给每一行加行号
 - 🖥️ **上手练**：
-  1. `cat /etc/hostname`——查看本机主机名（注意：macOS 无 `/etc/hostname`，可改用 `cat /etc/hosts` 或 `hostname` 命令练习 `cat` 查看任意文件）
+  1. `cat /etc/hostname`——查看本机主机名
   2. `cat -n /etc/hosts`——带行号查看 hosts 文件
-  3. `cat /etc/hosts /etc/hostname`——两个文件内容拼接输出（macOS 无 `/etc/hostname`，可改用 `cat /etc/hosts /etc/shells` 练习多文件拼接）
+  3. `cat /etc/hosts /etc/hostname`——两个文件内容拼接输出
 - ⚠️ **常见坑**：`cat` 大文件（如日志几百MB）会刷屏，应该用 `less` 分页查看
 
 ### ② head — 查看文件开头
@@ -49,8 +49,8 @@ updated: "2026-06-06"
   - `-n N` → 末尾 N 行
   - `-f` → 持续追踪文件新写入的内容（Ctrl+C 退出）
 - 🖥️ **上手练**：
-  1. `tail -n 5 /var/log/syslog` 或 `/var/log/system.log`（macOS）——查看最近 5 条日志
-  2. `tail -f /var/log/syslog`（Linux）或 `/var/log/system.log`（macOS），打开另一个终端做一些操作，观察该终端日志变化
+  1. `tail -n 5 /var/log/syslog`——查看最近 5 条日志
+  2. `tail -f /var/log/syslog`，打开另一个终端做一些操作，观察该终端日志变化
   3. `tail -n 20 /etc/passwd`——查看 passwd 最后 20 行
 - ⚠️ **常见坑**：`tail -f` 会阻塞终端，别忘了 Ctrl+C 退出
 
@@ -63,7 +63,7 @@ updated: "2026-06-06"
   - `/关键词` 回车 → 向下搜索，`n` 跳下一个匹配，`N` 跳上一个
   - `q` → 退出
 - 🖥️ **上手练**：
-  1. `less /var/log/syslog`（或 `/var/log/system.log`），用空格翻页、`b` 回翻、`q` 退出
+  1. `less /var/log/syslog`，用空格翻页、`b` 回翻、`q` 退出
   2. 在 less 中搜索 `error`（输入 `/error` 回车），用 `n` 查看所有匹配
   3. `less /etc/services`——这是个大文件，体验分页浏览比 `cat` 好在哪里
 - ⚠️ **常见坑**：在 less 里按 `q` 退出后终端内容消失（less 不污染终端），想保留内容用 `more` 或用重定向
@@ -71,7 +71,7 @@ updated: "2026-06-06"
 ## 💪 今日必刷（全部终端实操）
 
 1. 查看 `/etc/passwd` 的第 1 行和第 50 行（提示：管道组合 `head` + `tail`）
-2. 用 `less` 打开 `/var/log/syslog`（或 macOS 的 `/var/log/system.log`），搜索 `error`，找到 3 个匹配项后退出
+2. 用 `less` 打开 `/var/log/syslog`，搜索 `error`，找到 3 个匹配项后退出
 3. 用一条命令统计 `/etc/passwd` 的前 10 行（先 `head` 取前 10 行，再用 `wc -l` 确认是 10 行）
 4. 先 `touch /tmp/watch.log` 创建文件（不创建的话 `tail -f` 会立即报错退出），然后打开两个终端窗口：终端A 执行 `tail -f /tmp/watch.log`；终端B 执行 `echo "hello" >> /tmp/watch.log`，观察终端A 的变化
 5. **排错题**：执行 `cat /var/log/syslog` 终端疯狂刷屏看不清内容——如何优雅查看？
