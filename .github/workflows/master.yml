@@ -20,7 +20,7 @@ jobs:
             cd /opt/cloud-compute-wiki-data
             git pull origin main
             ls -la
-            /root/.nvm/versions/node/v26.2.0/bin/node /root/.nvm/versions/node/v26.2.0/bin/npx hexo clean
+            /root/.nvm/versions/node/v26.2.0/bin/node /root/.nvm/versions/node/v26.2.0/bin/hexo clean
             systemctl restart hexo.service
 
 
