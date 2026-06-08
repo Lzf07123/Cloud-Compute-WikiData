@@ -20,4 +20,5 @@ jobs:
             cd /opt/cloud-compute-wiki-data
             git pull origin dev
             ls -la
+            npx hexo clean
             systemctl restart hexo.service

@@ -3,3 +3,4 @@
 public/
 run.sh
 node_modules/
+db.json

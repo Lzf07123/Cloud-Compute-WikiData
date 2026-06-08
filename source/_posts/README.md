@@ -10,7 +10,7 @@ keywords:
 author: 知识库管理员
 version: 1.0
 created: 2025-05-20
-updated: 2025-05-29
+updated: 2025-06-06
 category: 文档说明
 tags:
   - 使用说明
@@ -19,16 +19,15 @@ tags:
 top: 100
 ---
 
-# 📚 知识库更新 2026-05-29
+# 📚 知识库更新 2026-06-06
 
 ### 更新项目:更新类型
 
-- linux系统介绍与横向对比
-  - {% post_link 四大服务器系统对比总览 %}
-  - {% post_link openEuler系统详情 openEuler 详情 %}
-  - {% post_link Ubuntu系统详情 Ubuntu 详情 %}
-  - {% post_link Debian系统详情 %}
-  - {% post_link CentOS系统详情 CentOS 详情 %}
+- {% post_link linux-1月速成计划学习路线图 %}
+  - 第一周：文件系统与文本基础
+  - 第二周：权限、进程与重定向
+  - 第三周：文本三剑客与打包
+  - 第四周：网络、系统与自动化
 
 ---
 
