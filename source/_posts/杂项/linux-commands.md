@@ -22,8 +22,8 @@ sticky: 99
 
 日常操作最频繁的类别，几乎每次终端会话都会用到。
 
-| 命令                                           | 功能说明                  | 常用示例                                       |
-| ---------------------------------------------- | ------------------------- | ---------------------------------------------- |
+| 命令                                                          | 功能说明                  | 常用示例                                       |
+| ------------------------------------------------------------- | ------------------------- | ---------------------------------------------- |
 | {% post_link 文件与目录管理/文件与目录管理-cd 'cd' %}         | 切换工作目录              | `cd ~` 回 HOME；`cd -` 回上一目录              |
 | {% post_link 文件与目录管理/文件与目录管理-ls 'ls' %}         | 列出目录内容              | `ls -lah` 显示所有文件（含隐藏）+ 人类可读大小 |
 | {% post_link 文件与目录管理/文件与目录管理-pwd 'pwd' %}       | 显示当前路径              | `pwd`                                          |
@@ -48,8 +48,8 @@ sticky: 99
 
 日常查阅文件、搜索日志、文本分析的常用工具。
 
-| 命令                                               | 功能说明                     | 常用示例                                 |
-| -------------------------------------------------- | ---------------------------- | ---------------------------------------- |
+| 命令                                                                  | 功能说明                     | 常用示例                                 |
+| --------------------------------------------------------------------- | ---------------------------- | ---------------------------------------- |
 | {% post_link 文件查看与文本处理/文件查看与文本处理-cat 'cat' %}       | 输出文件全部内容             | `cat -n FILE.TXT` 显示行号               |
 | {% post_link 文件查看与文本处理/文件查看与文本处理-less 'less' %}     | 交互式分页（支持 ↑↓ / 搜索） | `less /var/log/syslog`                   |
 | {% post_link 文件查看与文本处理/文件查看与文本处理-grep 'grep' %}     | 正则搜索文本                 | `grep -rn "FIXME" SRC/` 递归 + 行号      |
@@ -84,8 +84,8 @@ sticky: 99
 
 系统安全和日常用户管理的核心命令。
 
-| 命令                                               | 功能说明         | 常用示例                                       |
-| -------------------------------------------------- | ---------------- | ---------------------------------------------- |
+| 命令                                                              | 功能说明         | 常用示例                                       |
+| ----------------------------------------------------------------- | ---------------- | ---------------------------------------------- |
 | {% post_link 权限与用户管理/权限与用户管理-sudo 'sudo' %}         | 提权执行         | `sudo -u POSTGRES PSQL`                        |
 | {% post_link 权限与用户管理/权限与用户管理-chmod 'chmod' %}       | 修改文件权限     | `chmod 755 SCRIPT.SH` 或 `chmod u+x SCRIPT.SH` |
 | {% post_link 权限与用户管理/权限与用户管理-chown 'chown' %}       | 修改所有者       | `chown USER:GROUP FILE.TXT`                    |
@@ -111,24 +111,24 @@ sticky: 99
 
 系统运行中进程的查看、监控和控制。
 
-| 命令                                                                                | 功能说明             | 常用示例                                |
-| ----------------------------------------------------------------------------------- | -------------------- | --------------------------------------- |
-| {% post_link 进程管理/进程管理-ps 'ps' %}                                                    | 进程快照             | `ps aux` \| `grep NGINX`                |
-| {% post_link 进程管理/进程管理-top 'top' %}                                                  | 实时进程监控         | 按 `P` CPU 排序；`M` 内存排序           |
-| {% post_link 进程管理/进程管理-kill 'kill' %}                                                | 按 PID 终止          | `kill -15 PID` 优雅；`kill -9 PID` 强制 |
-| {% post_link 进程管理/进程管理-uptime 'uptime' %}                                            | 运行时长 + 负载      | `uptime`                                |
-| {% post_link 进程管理/进程管理-nohup 'nohup' %}                                              | 忽略 HUP 信号运行    | `nohup ./SERVER.SH &`                   |
+| 命令                                                                                                  | 功能说明             | 常用示例                                |
+| ----------------------------------------------------------------------------------------------------- | -------------------- | --------------------------------------- |
+| {% post_link 进程管理/进程管理-ps 'ps' %}                                                             | 进程快照             | `ps aux` \| `grep NGINX`                |
+| {% post_link 进程管理/进程管理-top 'top' %}                                                           | 实时进程监控         | 按 `P` CPU 排序；`M` 内存排序           |
+| {% post_link 进程管理/进程管理-kill 'kill' %}                                                         | 按 PID 终止          | `kill -15 PID` 优雅；`kill -9 PID` 强制 |
+| {% post_link 进程管理/进程管理-uptime 'uptime' %}                                                     | 运行时长 + 负载      | `uptime`                                |
+| {% post_link 进程管理/进程管理-nohup 'nohup' %}                                                       | 忽略 HUP 信号运行    | `nohup ./SERVER.SH &`                   |
 | {% post_link 进程管理/进程管理-bg-fg-jobs 'bg' %} / {% post_link 进程管理/进程管理-bg-fg-jobs 'fg' %} | 后台 / 前台切换      | `Ctrl+Z` → `bg`                         |
-| {% post_link 进程管理/进程管理-bg-fg-jobs 'jobs' %}                                          | 列出后台任务         | `jobs -l` 含 PID                        |
-| {% post_link 进程管理/进程管理-htop 'htop' %}                                                | TOP 增强版（需安装） | `htop`                                  |
-| {% post_link 进程管理/进程管理-watch 'watch' %}                                              | 周期执行             | `watch -n 2 'free -h'` 每 2 S 刷新      |
-| {% post_link 进程管理/进程管理-killall 'killall' %}                                          | 按名称终止全部       | `killall -9 NGINX`                      |
-| {% post_link 进程管理/进程管理-pkill 'pkill' %}                                              | 按模式匹配终止       | `pkill -f "PYTHON APP.PY"`              |
-| {% post_link 进程管理/进程管理-pidof 'pidof' %}                                              | 查看进程 PID         | `pidof NGINX`                           |
-| {% post_link 进程管理/进程管理-pgrep 'pgrep' %}                                              | 按名称查找 PID       | `pgrep -u ROOT NGINX`                   |
-| {% post_link 进程管理/进程管理-nice 'nice' %}                                                | 以指定优先级启动     | `nice -n 10 ./SLOW-TASK`                |
-| {% post_link 进程管理/进程管理-renice 'renice' %}                                            | 调整运行中进程优先级 | `renice -n 5 -p 1234`                   |
-| {% post_link 进程管理/进程管理-time 'time' %}                                                | 计时                 | `time ./SCRIPT.SH`                      |
+| {% post_link 进程管理/进程管理-bg-fg-jobs 'jobs' %}                                                   | 列出后台任务         | `jobs -l` 含 PID                        |
+| {% post_link 进程管理/进程管理-htop 'htop' %}                                                         | TOP 增强版（需安装） | `htop`                                  |
+| {% post_link 进程管理/进程管理-watch 'watch' %}                                                       | 周期执行             | `watch -n 2 'free -h'` 每 2 S 刷新      |
+| {% post_link 进程管理/进程管理-killall 'killall' %}                                                   | 按名称终止全部       | `killall -9 NGINX`                      |
+| {% post_link 进程管理/进程管理-pkill 'pkill' %}                                                       | 按模式匹配终止       | `pkill -f "PYTHON APP.PY"`              |
+| {% post_link 进程管理/进程管理-pidof 'pidof' %}                                                       | 查看进程 PID         | `pidof NGINX`                           |
+| {% post_link 进程管理/进程管理-pgrep 'pgrep' %}                                                       | 按名称查找 PID       | `pgrep -u ROOT NGINX`                   |
+| {% post_link 进程管理/进程管理-nice 'nice' %}                                                         | 以指定优先级启动     | `nice -n 10 ./SLOW-TASK`                |
+| {% post_link 进程管理/进程管理-renice 'renice' %}                                                     | 调整运行中进程优先级 | `renice -n 5 -p 1234`                   |
+| {% post_link 进程管理/进程管理-time 'time' %}                                                         | 计时                 | `time ./SCRIPT.SH`                      |
 
 ---
 
@@ -136,8 +136,8 @@ sticky: 99
 
 系统信息查看、服务管理、日志分析和环境配置。
 
-| 命令                                               | 功能说明            | 常用示例                                      |
-| -------------------------------------------------- | ------------------- | --------------------------------------------- |
+| 命令                                                        | 功能说明            | 常用示例                                      |
+| ----------------------------------------------------------- | ------------------- | --------------------------------------------- |
 | {% post_link 系统管理/系统管理-man 'man' %}                 | 查看手册            | `man LS`                                      |
 | {% post_link 系统管理/系统管理-systemctl 'systemctl' %}     | SYSTEMD 服务管理    | `systemctl status NGINX`；`enable/start/stop` |
 | {% post_link 系统管理/系统管理-free 'free' %}               | 内存使用            | `free -ht` 人类可读 + 总计                    |
@@ -171,8 +171,8 @@ sticky: 99
 
 网络连通性、连接状态、远程访问和下载工具。
 
-| 命令                                                  | 功能说明           | 常用示例                                     |
-| ----------------------------------------------------- | ------------------ | -------------------------------------------- |
+| 命令                                                           | 功能说明           | 常用示例                                     |
+| -------------------------------------------------------------- | ------------------ | -------------------------------------------- |
 | {% post_link 网络管理/网络管理-ping 'ping' %}                  | 连通性测试         | `ping -c 4 8.8.8.8`                          |
 | {% post_link 网络管理/网络管理-ssh 'ssh' %}                    | 远程登录           | `ssh -i KEY.PEM USER@HOST -p 22`             |
 | {% post_link 网络管理/网络管理-curl 'curl' %}                  | 数据传输工具       | `curl -I HTTP://EXAMPLE.COM` 含请求头        |
@@ -203,23 +203,23 @@ sticky: 99
 
 磁盘分区、格式化、挂载和状态查看。
 
-| 命令                                                                                                             | 功能说明                    | 常用示例                                              |
-| ---------------------------------------------------------------------------------------------------------------- | --------------------------- | ----------------------------------------------------- |
-| {% post_link 磁盘与存储管理/磁盘与存储管理-mount 'mount' %}                                                                     | 挂载                        | `mount /dev/sdb1 /mnt/data`                           |
-| {% post_link 文件与目录管理/文件与目录管理-df 'df' %}                                                                           | 磁盘空间使用率              | `df -hT`                                              |
-| {% post_link 文件与目录管理/文件与目录管理-du 'du' %}                                                                           | 目录/文件磁盘用量           | `du -sh /home/*`                                      |
-| `umount`                                                                                                         | 卸载                        | `umount /mnt/data`                                    |
-| {% post_link 磁盘与存储管理/磁盘与存储管理-blkid 'blkid' %}                                                                     | 查看 UUID / 类型            | `blkid`                                               |
-| {% post_link 磁盘与存储管理/磁盘与存储管理-findmnt 'findmnt' %}                                                                 | 挂载树视图                  | `findmnt -t EXT4`                                     |
-| {% post_link 磁盘与存储管理/磁盘与存储管理-sync 'sync' %}                                                                       | 刷写磁盘缓存                | `sync`                                                |
-| {% post_link 磁盘与存储管理/磁盘与存储管理-fdisk 'fdisk' %}                                                                     | 磁盘分区                    | `sudo fdisk -l /dev/sda`                              |
-| {% post_link 磁盘与存储管理/磁盘与存储管理-mkfs 'mkfs' %}                                                                       | 格式化（创建文件系统）      | `mkfs.ext4 /dev/sdb1`                                 |
-| {% post_link 磁盘与存储管理/磁盘与存储管理-parted 'parted' %}                                                                   | 高级分区                    | `sudo parted /dev/sda print`                          |
-| {% post_link 磁盘与存储管理/磁盘与存储管理-fsck 'fsck' %}                                                                       | 检查/修复文件系统           | `fsck -f /dev/sda1`                                   |
+| 命令                                                                                                                                           | 功能说明                    | 常用示例                                              |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ----------------------------------------------------- |
+| {% post_link 磁盘与存储管理/磁盘与存储管理-mount 'mount' %}                                                                                    | 挂载                        | `mount /dev/sdb1 /mnt/data`                           |
+| {% post_link 文件与目录管理/文件与目录管理-df 'df' %}                                                                                          | 磁盘空间使用率              | `df -hT`                                              |
+| {% post_link 文件与目录管理/文件与目录管理-du 'du' %}                                                                                          | 目录/文件磁盘用量           | `du -sh /home/*`                                      |
+| `umount`                                                                                                                                       | 卸载                        | `umount /mnt/data`                                    |
+| {% post_link 磁盘与存储管理/磁盘与存储管理-blkid 'blkid' %}                                                                                    | 查看 UUID / 类型            | `blkid`                                               |
+| {% post_link 磁盘与存储管理/磁盘与存储管理-findmnt 'findmnt' %}                                                                                | 挂载树视图                  | `findmnt -t EXT4`                                     |
+| {% post_link 磁盘与存储管理/磁盘与存储管理-sync 'sync' %}                                                                                      | 刷写磁盘缓存                | `sync`                                                |
+| {% post_link 磁盘与存储管理/磁盘与存储管理-fdisk 'fdisk' %}                                                                                    | 磁盘分区                    | `sudo fdisk -l /dev/sda`                              |
+| {% post_link 磁盘与存储管理/磁盘与存储管理-mkfs 'mkfs' %}                                                                                      | 格式化（创建文件系统）      | `mkfs.ext4 /dev/sdb1`                                 |
+| {% post_link 磁盘与存储管理/磁盘与存储管理-parted 'parted' %}                                                                                  | 高级分区                    | `sudo parted /dev/sda print`                          |
+| {% post_link 磁盘与存储管理/磁盘与存储管理-fsck 'fsck' %}                                                                                      | 检查/修复文件系统           | `fsck -f /dev/sda1`                                   |
 | {% post_link 磁盘与存储管理/磁盘与存储管理-swapon-swapoff 'swapon' %} / {% post_link 磁盘与存储管理/磁盘与存储管理-swapon-swapoff 'swapoff' %} | 启用/关闭 SWAP              | `swapon --show` 查看                                  |
-| {% post_link 磁盘与存储管理/磁盘与存储管理-dd 'dd' %}                                                                           | 低级数据拷贝                | `dd if=/dev/sda of=/BACKUP.IMG bs=4M status=progress` |
-| {% post_link 磁盘与存储管理/磁盘与存储管理-smartctl 'smartctl' %}                                                               | 硬盘健康/属性（S.M.A.R.T.） | `smartctl -H /dev/sda` 查看健康状态                   |
-| {% post_link 磁盘与存储管理/磁盘与存储管理-eject 'eject' %}                                                                     | 弹出光驱                    | `eject /dev/sr0`                                      |
+| {% post_link 磁盘与存储管理/磁盘与存储管理-dd 'dd' %}                                                                                          | 低级数据拷贝                | `dd if=/dev/sda of=/BACKUP.IMG bs=4M status=progress` |
+| {% post_link 磁盘与存储管理/磁盘与存储管理-smartctl 'smartctl' %}                                                                              | 硬盘健康/属性（S.M.A.R.T.） | `smartctl -H /dev/sda` 查看健康状态                   |
+| {% post_link 磁盘与存储管理/磁盘与存储管理-eject 'eject' %}                                                                                    | 弹出光驱                    | `eject /dev/sr0`                                      |
 
 ---
 
@@ -227,16 +227,16 @@ sticky: 99
 
 文件打包、压缩和解压工具。
 
-| 命令                                                                                              | 功能说明                      | 常用示例                        |
-| ------------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------- |
-| {% post_link 压缩与归档/压缩与归档-tar 'tar' %}                                                              | 打包/压缩                     | `tar -czvf ARCHIVE.TAR.GZ DIR/` |
+| 命令                                                                                                                    | 功能说明                      | 常用示例                        |
+| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------- |
+| {% post_link 压缩与归档/压缩与归档-tar 'tar' %}                                                                         | 打包/压缩                     | `tar -czvf ARCHIVE.TAR.GZ DIR/` |
 | {% post_link 压缩与归档/压缩与归档-gzip 'gzip' %} / {% post_link 压缩与归档/压缩与归档-gzip 'gunzip' %}                 | 压缩/解压 `.GZ`               | `gzip FILE.TXT`                 |
 | {% post_link 压缩与归档/压缩与归档-zip-unzip 'zip' %} / {% post_link 压缩与归档/压缩与归档-zip-unzip 'unzip' %}         | ZIP 格式压缩/解压             | `zip -r ARCHIVE.ZIP DIR/`       |
 | {% post_link 压缩与归档/压缩与归档-bzip2 'bzip2' %} / {% post_link 压缩与归档/压缩与归档-bzip2 'bunzip2' %}             | 压缩/解压 `.BZ2`（高压缩率）  | `bzip2 FILE.TXT`                |
 | {% post_link 压缩与归档/压缩与归档-xz 'xz' %} / {% post_link 压缩与归档/压缩与归档-xz 'unxz' %}                         | 压缩/解压 `.XZ`（极高压缩率） | `xz -k FILE.TXT` 保留原文件     |
-| {% post_link 压缩与归档/压缩与归档-zgrep-zcat-zless 'zcat' %}                                                | 读取 `.GZ` 内容               | `zcat ACCESS.LOG.GZ`            |
-| {% post_link 压缩与归档/压缩与归档-zgrep-zcat-zless 'zgrep' %}                                               | 在 `.GZ` 中搜索               | `zgrep "500" ACCESS.LOG.GZ`     |
-| {% post_link 压缩与归档/压缩与归档-zgrep-zcat-zless 'zless' %}                                               | 分页查看 `.GZ`                | `zless SYSLOG.1.GZ`             |
+| {% post_link 压缩与归档/压缩与归档-zgrep-zcat-zless 'zcat' %}                                                           | 读取 `.GZ` 内容               | `zcat ACCESS.LOG.GZ`            |
+| {% post_link 压缩与归档/压缩与归档-zgrep-zcat-zless 'zgrep' %}                                                          | 在 `.GZ` 中搜索               | `zgrep "500" ACCESS.LOG.GZ`     |
+| {% post_link 压缩与归档/压缩与归档-zgrep-zcat-zless 'zless' %}                                                          | 分页查看 `.GZ`                | `zless SYSLOG.1.GZ`             |
 | {% post_link 压缩与归档/压缩与归档-compress 'compress' %} / {% post_link 压缩与归档/压缩与归档-compress 'uncompress' %} | 旧式 `.Z` 压缩                | `compress FILE.TXT`             |
 
 ### TAR 参数速查
@@ -259,8 +259,8 @@ sticky: 99
 
 各发行版的软件包安装、升级和卸载命令。
 
-| 系统             | 命令                                          | 功能说明           | 常用示例                                   |
-| ---------------- | --------------------------------------------- | ------------------ | ------------------------------------------ |
+| 系统             | 命令                                                 | 功能说明           | 常用示例                                   |
+| ---------------- | ---------------------------------------------------- | ------------------ | ------------------------------------------ |
 | Debian/Ubuntu    | {% post_link 包管理/包管理-apt 'apt' %}              | 高级包管理（推荐） | `apt update && apt install -y NGINX`       |
 | Debian/Ubuntu    | {% post_link 包管理/包管理-apt-get 'apt-get' %}      | 传统包管理         | `apt-get install -y NGINX`                 |
 | Debian/Ubuntu    | {% post_link 包管理/包管理-dpkg 'dpkg' %}            | 底层 `.DEB` 操作   | `dpkg -i PACKAGE.DEB`；`dpkg -l` 列出      |
@@ -277,24 +277,24 @@ sticky: 99
 
 Shell 编程和终端操作的基础指令集。
 
-| 命令                                                                                                               | 功能说明                               | 常用示例                          |
-| ------------------------------------------------------------------------------------------------------------------ | -------------------------------------- | --------------------------------- |
-| {% post_link Shell内置与杂项/Shell内置与杂项-echo 'echo' %}                                                                        | 输出文本                               | `echo "HELLO, $USER"`             |
-| {% post_link Shell内置与杂项/Shell内置与杂项-test 'test' %} / `[ ]`                                                                | 条件测试                               | `test -f FILE.TXT && echo EXISTS` |
-| {% post_link Shell内置与杂项/Shell内置与杂项-read 'read' %}                                                                        | 读取用户输入                           | `read -p "ENTER NAME: " NAME`     |
-| {% post_link Shell内置与杂项/Shell内置与杂项-set-unset 'set' %}                                                                    | 查看/设置 SHELL 选项                   | `set -e` 出错即停                 |
-| {% post_link Shell内置与杂项/Shell内置与杂项-source 'source' %} / `.`                                                              | 在当前 SHELL 加载脚本                  | `source ~/.zshrc`                 |
-| {% post_link Shell内置与杂项/Shell内置与杂项-exit-clear 'exit' %}                                                                  | 退出 SHELL                             | `exit 0`                          |
-| {% post_link Shell内置与杂项/Shell内置与杂项-printf 'printf' %}                                                                    | 格式化输出                             | `printf "%-10s %s\n" NAME VALUE`  |
-| {% post_link Shell内置与杂项/Shell内置与杂项-exit-clear 'clear' %}                                                                 | 清屏                                   | `clear`                           |
-| {% post_link Shell内置与杂项/Shell内置与杂项-true-false-sleep 'sleep' %}                                                           | 暂停指定秒数                           | `sleep 5`                         |
-| {% post_link Shell内置与杂项/Shell内置与杂项-type 'type' %}                                                                        | 判断命令类型（BUILTIN/ALIAS/EXTERNAL） | `type CD`                         |
-| {% post_link Shell内置与杂项/Shell内置与杂项-which-whereis 'which' %}                                                              | 查找可执行文件路径                     | `which PYTHON3`                   |
-| {% post_link Shell内置与杂项/Shell内置与杂项-set-unset 'unset' %}                                                                  | 删除变量或函数                         | `unset DEBUG`                     |
-| {% post_link Shell内置与杂项/Shell内置与杂项-which-whereis 'whereis' %}                                                            | 查找二进制/源码/MAN                    | `whereis LS`                      |
+| 命令                                                                                                                                               | 功能说明                               | 常用示例                          |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | --------------------------------- |
+| {% post_link Shell内置与杂项/Shell内置与杂项-echo 'echo' %}                                                                                        | 输出文本                               | `echo "HELLO, $USER"`             |
+| {% post_link Shell内置与杂项/Shell内置与杂项-test 'test' %} / `[ ]`                                                                                | 条件测试                               | `test -f FILE.TXT && echo EXISTS` |
+| {% post_link Shell内置与杂项/Shell内置与杂项-read 'read' %}                                                                                        | 读取用户输入                           | `read -p "ENTER NAME: " NAME`     |
+| {% post_link Shell内置与杂项/Shell内置与杂项-set-unset 'set' %}                                                                                    | 查看/设置 SHELL 选项                   | `set -e` 出错即停                 |
+| {% post_link Shell内置与杂项/Shell内置与杂项-source 'source' %} / `.`                                                                              | 在当前 SHELL 加载脚本                  | `source ~/.zshrc`                 |
+| {% post_link Shell内置与杂项/Shell内置与杂项-exit-clear 'exit' %}                                                                                  | 退出 SHELL                             | `exit 0`                          |
+| {% post_link Shell内置与杂项/Shell内置与杂项-printf 'printf' %}                                                                                    | 格式化输出                             | `printf "%-10s %s\n" NAME VALUE`  |
+| {% post_link Shell内置与杂项/Shell内置与杂项-exit-clear 'clear' %}                                                                                 | 清屏                                   | `clear`                           |
+| {% post_link Shell内置与杂项/Shell内置与杂项-true-false-sleep 'sleep' %}                                                                           | 暂停指定秒数                           | `sleep 5`                         |
+| {% post_link Shell内置与杂项/Shell内置与杂项-type 'type' %}                                                                                        | 判断命令类型（BUILTIN/ALIAS/EXTERNAL） | `type CD`                         |
+| {% post_link Shell内置与杂项/Shell内置与杂项-which-whereis 'which' %}                                                                              | 查找可执行文件路径                     | `which PYTHON3`                   |
+| {% post_link Shell内置与杂项/Shell内置与杂项-set-unset 'unset' %}                                                                                  | 删除变量或函数                         | `unset DEBUG`                     |
+| {% post_link Shell内置与杂项/Shell内置与杂项-which-whereis 'whereis' %}                                                                            | 查找二进制/源码/MAN                    | `whereis LS`                      |
 | {% post_link Shell内置与杂项/Shell内置与杂项-true-false-sleep 'true' %} / {% post_link Shell内置与杂项/Shell内置与杂项-true-false-sleep 'false' %} | 返回 0 / 非 0 退出码                   | `while true; do ...; done`        |
-| {% post_link Shell内置与杂项/Shell内置与杂项-command-exec 'command' %}                                                             | 忽略别名直接执行                       | `command ls -la`                  |
-| {% post_link Shell内置与杂项/Shell内置与杂项-command-exec 'exec' %}                                                                | 替换当前 SHELL 进程                    | `exec ZSH`                        |
+| {% post_link Shell内置与杂项/Shell内置与杂项-command-exec 'command' %}                                                                             | 忽略别名直接执行                       | `command ls -la`                  |
+| {% post_link Shell内置与杂项/Shell内置与杂项-command-exec 'exec' %}                                                                                | 替换当前 SHELL 进程                    | `exec ZSH`                        |
 
 ---
 
