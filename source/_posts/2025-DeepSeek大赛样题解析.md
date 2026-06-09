@@ -1,3 +1,10 @@
+---
+title: 2025 DeepSeek 大赛样题解析
+date: 2025-06-09
+tags: [DeepSeek, AI, 竞赛, 样题解析]
+categories: [技术竞赛]
+---
+
 # 2025 一带一路暨金砖国家技能发展与技术创新大赛
 
 ## 【首届 DeepSeek 大模型及行业 AI 应用开发赛项】
