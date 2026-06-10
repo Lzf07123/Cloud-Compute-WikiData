@@ -2,6 +2,7 @@
 title: Day 06 - DaemonSet、StatefulSet、Job、CronJob
 module: M2-Pod与核心工作负载
 day: 6
+updated: 2026-06-10
 duration: 240 分钟
 level: 核心
 prerequisites:
@@ -450,3 +451,38 @@ kubectl get jobs --sort-by=.metadata.creationTimestamp
 - PVC 自动创建（15 分）
 - 数据持久性验证（15 分）
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl get ds` | 列出 DaemonSet | 每个节点运行一个 Pod 副本 |
+| `kubectl get ds -o wide` | DaemonSet + 选择器/镜像 | 确认每个节点是否都有 Pod |
+| `kubectl describe ds <name>` | DaemonSet 详情 | 查看更新策略（RollingUpdate/OnDelete） |
+| `kubectl get sts` | 列出 StatefulSet | StatefulSet 常用 short name: sts |
+| `kubectl describe sts <name>` | StatefulSet 详情 | 查看 podManagementPolicy、serviceName、volumeClaimTemplates |
+| `kubectl get pods -l app=mysql` | 按标签筛选 Pod | StatefulSet Pod 命名：`<name>-0, <name>-1, ...` |
+| `kubectl scale sts <name> --replicas=5` | 扩缩 StatefulSet | 按序号递增/递减创建/删除 Pod |
+| `kubectl get pvc` | 列出 PVC | StatefulSet + volumeClaimTemplates 自动为每个 Pod 创建 PVC |
+| `kubectl get job` | 列出 Job | 一次性任务，完成后 Pod 状态为 Completed |
+| `kubectl describe job <name>` | Job 详情 | 查看 completions、parallelism、backoffLimit |
+| `kubectl logs job/<name>` | 查看 Job 日志 | Job Pod 执行完不会自动删除，可事后查看日志 |
+| `kubectl get cronjob` | 列出 CronJob | short name: cj |
+| `kubectl describe cronjob <name>` | CronJob 详情 | 查看 schedule、lastScheduleTime、suspend 状态 |
+| `kubectl get jobs --watch` | 实时监控 Job 创建 | 观察 CronJob 触发时自动创建的 Job |
+| `kubectl create job test-job --image=busybox --dry-run=client -o yaml` | 生成 Job YAML | 快速获取 Job 模板 |
+| `kubectl create cronjob test-cj --image=busybox --schedule="*/5 * * * *" --dry-run=client -o yaml` | 生成 CronJob YAML | 5 字段 cron 表达式（分/时/日/月/周） |
+| `kubectl delete job <name>` | 删除 Job | 级联删除其完成的 Pod |
+| `kubectl delete cronjob <name>` | 删除 CronJob | 不会删除正在运行的 Job 和 Pod |
+| `kubectl patch cronjob <name> -p '{"spec":{"suspend":true}}'` | 暂停 CronJob | 停止后续调度，保留历史 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：DaemonSet | https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/ |
+| Kubernetes 官方：StatefulSet | https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/ |
+| Kubernetes 官方：Job | https://kubernetes.io/docs/concepts/workloads/controllers/job/ |
+| Kubernetes 官方：CronJob | https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/ |
+| Kubernetes 官方：工作负载资源 | https://kubernetes.io/docs/concepts/workloads/controllers/ |
+| Cron 表达式语法 | https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#cron-schedule-syntax |

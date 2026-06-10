@@ -2,6 +2,7 @@
 title: Day 16 - 调度策略与亲和性
 module: M5-调度与资源管理
 day: 16
+updated: 2026-06-10
 duration: 240 分钟
 level: 进阶
 prerequisites:
@@ -381,3 +382,32 @@ kubectl describe node <node-name> | grep -A5 "Allocated resources"
 - topologySpreadConstraints 正确（15 分）
 - 观察分析完整（10 分）
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl label node <node> key=value` | 给节点打标签 | 配合 nodeSelector 使用，Pod 通过 nodeSelector 精确匹配 |
+| `kubectl label node <node> key-` | 删除节点标签 | 标签名后加 `-` |
+| `kubectl get nodes --show-labels` | 查看节点和标签 | 确认标签是否打对 |
+| `kubectl get nodes -l key=value` | 按标签筛选节点 | `-l` = `--selector`，快速找到匹配标签的节点 |
+| `kubectl taint node <node> key=value:NoSchedule` | 添加污点（硬排斥） | 无对应 Toleration 的 Pod 无法调度 |
+| `kubectl taint node <node> key=value:PreferNoSchedule` | 添加软污点 | 尽量不调度，资源不足时仍可调度 |
+| `kubectl taint node <node> key=value:NoExecute` | 添加驱逐级污点 | 已有 Pod 若未容忍也会被驱逐 |
+| `kubectl taint node <node> key=value:NoSchedule-` | 移除污点 | 末尾加 `-` 删除对应 Taint |
+| `kubectl describe node <node> \| grep Taints` | 查看节点污点 | 排错时确认节点是否有预期外的污点 |
+| `kubectl cordon <node>` | 标记节点不可调度 | 等同于添加 node.kubernetes.io/unschedulable:NoSchedule |
+| `kubectl uncordon <node>` | 恢复节点可调度 | 取消 cordon 标记 |
+| `kubectl drain <node> --ignore-daemonsets --delete-emptydir-data` | 安全驱逐节点上所有 Pod | 节点维护必需；DaemonSet Pod 需 --ignore-daemonsets 跳过 |
+| `kubectl top nodes` | 查看节点资源用量 | 调度决策参考；需安装 metrics-server |
+| `kubectl get pods -o wide \| grep <node>` | 查看某节点上的所有 Pod | 替代 `--field-selector=spec.nodeName=<node>` |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：调度与驱逐 | https://kubernetes.io/docs/concepts/scheduling-eviction/ |
+| Kubernetes 官方：节点亲和性 | https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
+| Kubernetes 官方：污点与容忍 | https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
+| Kubernetes 官方：Pod 拓扑分布约束 | https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/ |
+| Kubernetes 官方：安全驱逐节点 | https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/ |

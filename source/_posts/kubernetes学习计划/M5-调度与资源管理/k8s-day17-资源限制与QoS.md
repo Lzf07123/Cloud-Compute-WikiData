@@ -2,6 +2,7 @@
 title: Day 17 - 资源限制、QoS 与 HPA
 module: M5-调度与资源管理
 day: 17
+updated: 2026-06-10
 duration: 240 分钟
 level: 进阶
 prerequisites:
@@ -299,7 +300,7 @@ EOF
 kubectl expose deploy hpa-demo --port=80
 
 # 2. 创建 HPA
-kubectl autoscale deployment hpa-demo --cpu-percent=50 --min=1 --max=5
+kubectl autoscale deployment hpa-demo --cpu=50% --min=1 --max=5
 
 # 3. 查看 HPA
 kubectl get hpa
@@ -407,3 +408,38 @@ kubectl describe pod <evicted-pod>
 - 配额验证（15 分）
 - 整体正确性（15 分）
 ```
+
+---
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl set resources deploy/<name> -c=<container> --limits=cpu=200m,memory=256Mi --requests=cpu=100m,memory=128Mi` | 设置容器资源限制 | 触发滚动更新重建 Pod |
+| `kubectl describe pod <pod> \| grep -A 5 "Requests\|Limits"` | 查看 Pod 资源配置 | 确认 requests/limits 是否生效 |
+| `kubectl describe node <node> \| grep -A 5 "Allocated"` | 查看节点已分配资源 | CPU/Memory 分配比例，判断节点是否过载 |
+| `kubectl top pods -A --sort-by=cpu` | 按 CPU 排序 Pod 用量 | 找出 CPU 消耗最高的 Pod |
+| `kubectl top pods -A --sort-by=memory` | 按内存排序 Pod 用量 | 找出内存消耗最高的 Pod |
+| `kubectl get pod <pod> -o jsonpath='{.status.qosClass}'` | 查看 Pod QoS 等级 | 返回 Guaranteed/Burstable/BestEffort |
+| `kubectl get limitrange -A` | 列出所有 LimitRange | 命名空间级默认资源限制 |
+| `kubectl describe limitrange <name> -n <ns>` | 查看 LimitRange 详情 | 确认默认 requests/limits 和最大/最小限制 |
+| `kubectl get resourcequota -A` | 列出所有 ResourceQuota | 命名空间级资源配额 |
+| `kubectl describe resourcequota <name> -n <ns>` | 查看 ResourceQuota 详情 | 已用 vs 硬限制对比 |
+| `kubectl get hpa` | 列出水平自动扩缩器 | 查看当前/目标 CPU/内存使用率 |
+| `kubectl describe hpa <name>` | HPA 详情 | Metrics 段显示当前值 vs 目标值，Events 显示扩缩事件 |
+| `kubectl autoscale deploy <name> --min=2 --max=10 --cpu=80%` | 创建 HPA | 基于 CPU 使用率自动扩缩副本数 |
+| `kubectl delete hpa <name>` | 删除 HPA | 删除后副本数不再自动调整 |
+| `kubectl get vpa` | 列出垂直自动扩缩器 | 需安装 VPA；自动调整 Pod requests/limits |
+| `kubectl get events --field-selector=reason=FailedScheduling` | 查看调度失败事件 | 资源不足导致 Pending 时的排错入口 |
+| `kubectl describe pod <pod> \| grep -A 10 Events` | 查看 Pod 调度事件 | 确认是否因资源不足 Pending |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：资源管理 | https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ |
+| Kubernetes 官方：QoS 等级 | https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/ |
+| Kubernetes 官方：LimitRange | https://kubernetes.io/docs/concepts/policy/limit-range/ |
+| Kubernetes 官方：ResourceQuota | https://kubernetes.io/docs/concepts/policy/resource-quotas/ |
+| Kubernetes 官方：HPA | https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/ |
+| Kubernetes 官方：VPA | https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler |

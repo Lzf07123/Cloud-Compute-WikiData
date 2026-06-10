@@ -2,6 +2,7 @@
 title: Day 28 - 赛题模拟 8 + 限时挑战
 module: M8-综合实战与赛题模拟
 day: 28
+updated: 2026-06-10
 duration: 240 分钟
 level: 冲刺
 prerequisites:
@@ -131,3 +132,30 @@ Part E: 故障演练与恢复（10 分）
 - 每个任务：命令正确 = 满分，部分正确 = 一半
 - 60 分以上及格，80 分以上优秀
 ```
+
+## 📋 命令速查
+
+该赛题涉及的核心命令速查（含限时挑战高频命令）：
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl create deploy <name> --image=<image> --dry-run=client -o yaml > deploy.yaml` | 生成 Deployment YAML | 限时挑战中不手动写 YAML，用此生成后修改 |
+| `kubectl create cm <name> --from-literal=key=value --dry-run=client -o yaml` | 生成 ConfigMap YAML | 秒出模板，修改即可部署 |
+| `kubectl expose deploy <name> --port=80 --dry-run=client -o yaml` | 生成 Service YAML | 快速生成 Service 模板 |
+| `kubectl apply -f <file>.yaml` | 声明式部署 | 一键部署所有资源 |
+| `kubectl get all -n <ns>` | 查看所有资源 | 快速审计部署结果 |
+| `kubectl describe pod <pod> \| tail -20` | Pod Events 摘要 | 出错时秒看原因 |
+| `kubectl logs <pod> --tail=10` | 快速看日志 | 限时场景只看最后几行 |
+| `kubectl exec <pod> -- <verify-cmd>` | 验证功能 | curl/wget/cat 验证结果 |
+| `kubectl rollout undo deploy/<name>` | 快速回滚 | 出错了不纠结，先回滚再改 |
+| `kubectl delete pod <pod> --force --grace-period=0` | 强制删 Pod | 卡 Terminating 时秒杀 |
+| `kubectl get events --field-selector type=Warning \| tail -10` | 只看 Warning | 限时排错最佳实践 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：kubectl 速查表 | https://kubernetes.io/docs/reference/kubectl/quick-reference/ |
+| Kubernetes 官方：命令参考 | https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands |
+| CKA 模拟题（限时模式） | https://killer.sh |
+| kubectl 最佳实践 | https://kubernetes.io/docs/reference/kubectl/conventions/ |

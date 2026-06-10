@@ -2,6 +2,7 @@
 title: Day 18 - 调度综合实战
 module: M5-调度与资源管理
 day: 18
+updated: 2026-06-10
 duration: 240 分钟
 level: 进阶
 prerequisites:
@@ -253,3 +254,25 @@ kubectl get pod -n team-b -o wide
 - HPA 配置（20 分）
 - 整体隔离验证（10 分）
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl get nodes -o custom-columns=NAME:.metadata.name,TAINTS:.spec.taints[*].key` | 自定义列查看节点污点 | 快速扫描所有节点的污点分布 |
+| `kubectl get pods -o custom-columns=NAME:.metadata.name,NODE:.spec.nodeName,NODE-SELECTOR:.spec.nodeSelector` | 自定义列查看 Pod 调度策略 | 同时显示 Pod 所在节点和 nodeSelector |
+| `kubectl get pods -o wide --field-selector=spec.nodeName=<node>` | 筛选某节点上的 Pod | 迁移 Pod 前确认受影响范围 |
+| `kubectl get pods -o wide --field-selector=status.phase=Pending` | 筛选 Pending Pod | 快速定位未调度的 Pod |
+| `kubectl describe pod <pod> \| grep -A 5 "Node-Selectors\|Tolerations\|Affinity"` | 查看 Pod 调度要求 | 综合排错时快速了解 Pod 的调度偏好 |
+| `kubectl patch deploy <name> -p '{"spec":{"template":{"spec":{"nodeSelector":{"key":"value"}}}}}'` | 给 Deployment 添加 nodeSelector | 触发滚动更新将 Pod 迁移到匹配节点 |
+| `kubectl patch deploy <name> -p '{"spec":{"template":{"spec":{"tolerations":[{"key":"key","operator":"Equal","value":"value","effect":"NoSchedule"}]}}}}'` | 给 Deployment 添加 Toleration | 允许 Pod 调度到有对应污点的节点 |
+| `kubectl get events --sort-by=.metadata.creationTimestamp \| tail -20` | 最近 20 条事件 | 综合实战中快速了解集群正在发生什么 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：调度器 | https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/ |
+| Kubernetes 官方：高级调度 | https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
+| Kubernetes 官方：Pod 优先级与抢占 | https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/ |
+| Kubernetes 官方：资源管理 | https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ |

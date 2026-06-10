@@ -2,6 +2,7 @@
 title: Day 02 - 多节点集群与节点管理
 module: M1-集群架构与搭建
 day: 2
+updated: 2026-06-10
 duration: 240 分钟
 level: 基础
 prerequisites:
@@ -392,6 +393,39 @@ ls /etc/cni/net.d/
 ```
 
 ---
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubeadm token create --print-join-command` | 生成 Worker 节点加入命令 | Token 默认 24h 有效，过期需重新生成 |
+| `kubeadm token list` | 查看现有 Token | 无可用 Token 时 Worker 无法加入集群 |
+| `kubeadm join <master-ip>:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>` | Worker 加入集群 | 在 Worker 节点上执行，自动安装 kubelet 并注册节点 |
+| `kubectl get nodes -o wide` | 节点列表 + 详细信息 | 显示内网 IP、OS、内核版本、容器运行时 |
+| `kubectl describe node <node-name>` | 节点详细信息 | 查看 Conditions（MemoryPressure/DiskPressure/PIDPressure）、Taints、已分配资源 |
+| `kubectl label node <node> key=value` | 给节点打标签 | 配合 nodeSelector/nodeAffinity 控制调度 |
+| `kubectl label node <node> key-` | 删除节点标签 | 标签名后加 `-` 即可删除 |
+| `kubectl taint node <node> key=value:NoSchedule` | 添加污点 | 无对应 Toleration 的 Pod 无法调度到此节点 |
+| `kubectl taint node <node> key=value:NoSchedule-` | 移除污点 | 末尾加 `-` 删除对应 Taint |
+| `kubectl taint node <node> node-role.kubernetes.io/control-plane-` | 去除 Master 污点 | 3 节点以下集群可让 Master 也调度 Pod（学习环境常用） |
+| `kubectl cordon <node>` | 标记节点不可调度 | 不会驱逐已有 Pod，仅阻止新 Pod 调度 |
+| `kubectl uncordon <node>` | 恢复节点可调度 | 取消 cordon 标记 |
+| `kubectl drain <node> --ignore-daemonsets --delete-emptydir-data` | 安全驱逐节点上所有 Pod | 节点维护/下线前必执行；DaemonSet Pod 需 --ignore-daemonsets |
+| `kubectl drain <node> --ignore-daemonsets --delete-emptydir-data --force` | 强制驱逐（含不受控制器管理的 Pod） | 裸 Pod（无 ownerReference）需 --force |
+| `kubectl delete node <node>` | 删除节点对象 | 节点失联后从集群移除；需先 drain |
+| `systemctl status kubelet` | 查看 kubelet 状态 | 节点 NotReady 时首要排查命令 |
+| `journalctl -u kubelet -f` | 实时查看 kubelet 日志 | Pod 启停失败的根因通常在 kubelet 日志 |
+| `journalctl -u kubelet --since "10 min ago"` | 查看最近 10 分钟 kubelet 日志 | 时间范围过滤，定位近期异常 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：节点管理 | https://kubernetes.io/docs/concepts/architecture/nodes/ |
+| Kubernetes 官方：kubeadm join | https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-join/ |
+| Kubernetes 官方：安全驱逐节点 | https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/ |
+| Kubernetes 官方：污点与容忍 | https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
+| Kubernetes 官方：节点标签 | https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 
 ## 📝 今日笔记模板
 

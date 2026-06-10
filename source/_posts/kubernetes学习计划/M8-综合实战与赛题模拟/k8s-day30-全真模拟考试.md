@@ -2,6 +2,7 @@
 title: Day 30 - 全真模拟考试
 module: M8-综合实战与赛题模拟
 day: 30
+updated: 2026-06-10
 duration: 240 分钟
 level: 冲刺
 prerequisites:
@@ -254,3 +255,34 @@ tags:
 2. **赛前 1 天**：回顾速查手册，不再学新内容
 3. **比赛当天**：先通读全部题目，按难度分配时间
 4. **长期**：考取 CKA/CKAD 认证，深入源码和 Operator 开发
+
+---
+
+## 📋 命令速查
+
+全真模拟考试必备命令速查（赛前 5 分钟默背）：
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `k=kubectl` | 设置别名 | 节省 80% 键盘输入量 |
+| `kubectl create deploy <name> --image=<img> --dry-run=client -o yaml > deploy.yaml` | YAML 速成 | 赛题 80% YAML 用此方式生成再修改 |
+| `kubectl expose deploy <name> --port=<p> --target-port=<tp> --dry-run=client -o yaml` | Service YAML 速成 | 不要手写 Service YAML |
+| `kubectl apply -f <file>.yaml` | 部署 | 优先 apply 而非 create |
+| `kubectl get all -n <ns>` | 全面审计 | 确认所有资源已创建 |
+| `kubectl describe pod <pod> \| tail -20` | 秒看 Event | 排错第一步 |
+| `kubectl logs <pod> --tail=20` | 日志速看 | 验证应用输出 |
+| `kubectl exec <pod> -- curl -s http://<svc>:<port>` | 功能验证 | 证明服务可达 |
+| `kubectl create cm <name> --from-literal=k=v --dry-run=client -o yaml` | ConfigMap 速成 | 配置注入 |
+| `kubectl create secret generic <name> --from-literal=k=v --dry-run=client -o yaml` | Secret 速成 | 密钥注入 |
+| `kubectl scale deploy <name> --replicas=<n>` | 副本调整 | 注意赛题要求的具体数量 |
+| `kubectl rollout undo deploy/<name>` | 回滚 | 操作失误首选回滚 |
+| `kubectl get events --field-selector type=Warning` | Warning 事件 | 致命错误秒定位 |
+| `!k` 或 `history \| grep kubectl` | 复用历史命令 | 一条命令多个任务使用 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：kubectl 速查表（打印版） | https://kubernetes.io/docs/reference/kubectl/quick-reference/ |
+| Kubernetes 官方：命令参考 | https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands |
+| kubectl 最佳实践 | https://kubernetes.io/docs/reference/kubectl/conventions/ |

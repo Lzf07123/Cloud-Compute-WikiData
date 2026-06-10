@@ -2,6 +2,7 @@
 title: Day 10 - 网络策略与 CNI 原理
 module: M3-网络与服务发现
 day: 10
+updated: 2026-06-10
 duration: 240 分钟
 level: 核心
 prerequisites:
@@ -363,3 +364,33 @@ kubectl delete networkpolicy <name> -n <ns>
 ```bash
 kubectl delete ns netpol-test netpol-external
 ```
+
+---
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl get networkpolicy` | 列出所有 NetworkPolicy | short name: netpol |
+| `kubectl get networkpolicy -o yaml` | 查看 NetworkPolicy 详细规则 | 查看 podSelector、ingress/egress 规则、policyTypes |
+| `kubectl describe networkpolicy <name>` | NetworkPolicy 详情 | 包含规则匹配的 Pod 和流向 |
+| `kubectl get pods -n kube-system -l k8s-app=calico-node` | 查看 Calico node Pod | Calico 在每个节点运行一个 agent |
+| `kubectl -n kube-system logs -l k8s-app=calico-node --tail=50` | 查看 Calico 日志 | NetworkPolicy 不生效时首要排查 |
+| `calicoctl get ippool -o wide` | 查看 IP 地址池 | 确认 Pod CIDR 与 kubeadm init 一致 |
+| `calicoctl get felixconfiguration` | 查看 Calico Felix 配置 | Felix 是每个节点的策略执行引擎 |
+| `calicoctl get networkpolicy` | 查看 Calico 层面的网络策略 | 比 kubectl get netpol 更底层 |
+| `kubectl run test --image=busybox --rm -it --labels="app=test" -- wget -O- --timeout=3 http://<svc>` | 携带标签测试连通性 | NetworkPolicy 基于标签匹配，运行测试 Pod 时需带正确的 labels |
+| `kubectl exec <pod> -- nc -zv <target-ip> <port>` | 测试 TCP 端口通断 | 比 curl/wget 更底层的连通性测试 |
+| `kubectl get nodes -o wide \| awk '{print $6}'` | 提取所有节点 CIDR | Calico IPAM 基于节点 CIDR 分配 Pod IP |
+| `kubectl exec <pod> -- ip route` | 查看 Pod 内路由表 | 理解 Pod 出站流量路径 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：NetworkPolicy | https://kubernetes.io/docs/concepts/services-networking/network-policies/ |
+| Kubernetes 官方：声明 Network Policy | https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/ |
+| Calico 官方文档 | https://docs.tigera.io/calico/latest/about/ |
+| Calico 网络策略指南 | https://docs.tigera.io/calico/latest/network-policy/ |
+| CNI 规范 | https://github.com/containernetworking/cni/blob/master/SPEC.md |
+| Calico IPAM 原理 | https://docs.tigera.io/calico/latest/networking/ipam/ |

@@ -2,6 +2,7 @@
 title: Day 03 - 集群运维与 kubectl 精通
 module: M1-集群架构与搭建
 day: 3
+updated: 2026-06-10
 duration: 240 分钟
 level: 基础
 prerequisites:
@@ -173,7 +174,7 @@ kubectl top nodes
 kubectl top pods --all-namespaces
 
 # 4. 查看集群版本信息
-kubectl version --short
+kubectl version
 
 # 5. 检查证书到期时间
 sudo kubeadm certs check-expiration
@@ -385,3 +386,53 @@ Part E: 新增节点（10 分）
 - Part D: 健康报告完整（20 分）
 - Part E: join 命令正确（10 分）
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl version` | 查看客户端与服务端版本 | 版本偏差不允许超过 ±1 个小版本 |
+| `kubectl cluster-info dump` | 导出集群诊断信息 | 包含所有系统组件的日志摘要 |
+| `kubectl get ns` | 列出所有命名空间 | kube-system 存放集群组件，default 是用户默认空间 |
+| `kubectl get pods -A` | 所有命名空间的 Pod | `-A` = `--all-namespaces`，全局视角快速定位问题 |
+| `kubectl get pods -o wide` | Pod + 节点 + IP | 定位 Pod 在哪个节点、IP 是多少 |
+| `kubectl describe pod <pod>` | Pod 详细信息 | Events 段是排错第一入口，包含启动失败原因 |
+| `kubectl logs <pod>` | 查看 Pod 日志（单容器） | 最常用排错命令，`-f` 实时跟踪 |
+| `kubectl logs <pod> -c <container>` | 指定容器日志 | 多容器 Pod 必须用 `-c` 指定容器名 |
+| `kubectl logs <pod> --tail=50` | 最后 50 行日志 | 避免刷屏 |
+| `kubectl logs <pod> --since=5m` | 最近 5 分钟日志 | 排查近期异常 |
+| `kubectl exec <pod> -- <cmd>` | 容器内执行命令 | `--` 分隔 kubectl 参数和容器内命令 |
+| `kubectl exec -it <pod> -- /bin/sh` | 交互式进入容器 | 排错时检查文件/网络/进程 |
+| `kubectl get all -n <ns>` | 命名空间内所有资源 | Pod/Service/Deploy/RS 一览 |
+| `kubectl explain pod.spec.containers` | 查看资源字段文档 | 终端查 API 字段，写 YAML 神器 |
+| `kubectl explain pod.spec --recursive` | 递归查看所有子字段 | 全面了解资源 YAML 结构 |
+| `kubectl api-resources` | 列出所有 API 资源 | 包含 short name（svc/deploy/po）和 API Group |
+| `kubectl api-versions` | 列出所有 API 版本 | 了解支持的 API Group 和版本 |
+| `kubectl apply -f file.yaml` | 声明式创建/更新 | 幂等安全，推荐优先使用 |
+| `kubectl create -f file.yaml` | 命令式创建 | 重复执行报错"already exists" |
+| `kubectl delete -f file.yaml` | 按 YAML 删除 | 删除 YAML 中定义的所有资源 |
+| `kubectl create deploy nginx --image=nginx --dry-run=client -o yaml > deploy.yaml` | 生成 YAML 不创建 | YAML 速成技巧，`--dry-run=client` 仅本地校验 |
+| `kubectl edit deploy <name>` | 直接编辑集群资源 | 实时生效；建议先 `get -o yaml > backup.yaml` |
+| `kubectl patch deploy <name> -p '{"spec":{"replicas":3}}'` | JSON Patch 部分更新 | 比 edit 更安全，适合脚本化 |
+| `kubectl scale deploy <name> --replicas=5` | 快速扩缩副本 | 等价于修改 replicas 字段 |
+| `kubectl rollout status deploy <name>` | 查看滚动更新进度 | 脚本中阻塞等待更新完成 |
+| `kubectl rollout history deploy <name>` | 查看部署历史 | revision 号配合 `--revision` 查看变更详情 |
+| `kubectl rollout undo deploy <name>` | 回滚上一版本 | 仅回滚 deploy 模板，不涉及代码仓库 |
+| `kubectl rollout undo deploy <name> --to-revision=2` | 回滚到指定版本 | 历史默认保留 10 个 revision |
+| `ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key snapshot save /backup/etcd-$(date +%F).db` | etcd 快照备份 | 静态 Pod 管理的 etcd 需指定 TLS 证书路径（kubeadm 默认 mTLS）；`ETCDCTL_API=3` 强制使用 v3 API |
+| `ETCDCTL_API=3 etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key snapshot status /backup/etcd-xxx.db` | 查看快照完整性 | 输出快照的 etcd 版本、包含的 key 数量和文件大小 |
+| `kubeadm certs check-expiration` | 查看证书过期时间 | 证书过期是生产常见故障，默认 1 年 |
+| `kubeadm upgrade plan` | 查看可升级版本 | 升级前必做 |
+| `kubectl config get-contexts` | 查看 kubeconfig 上下文 | 多集群切换 |
+| `kubectl config use-context <name>` | 切换集群上下文 | 多集群管理 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| kubectl 命令参考 | https://kubernetes.io/docs/reference/kubectl/ |
+| kubectl 速查表 | https://kubernetes.io/docs/reference/kubectl/quick-reference/ |
+| Kubernetes API 资源概览 | https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/ |
+| kubeadm 升级指南 | https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/ |
+| etcd 备份与恢复 | https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#backing-up-an-etcd-cluster |
+| kubectl explain 用法 | https://kubernetes.io/docs/reference/kubectl/ |

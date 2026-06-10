@@ -2,6 +2,7 @@
 title: Day 19 - RBAC 权限控制
 module: M6-安全与认证
 day: 19
+updated: 2026-06-10
 duration: 240 分钟
 level: 进阶
 prerequisites:
@@ -310,3 +311,36 @@ kubectl api-resources | grep <resource>
 - RoleBinding/ClusterRoleBinding 正确（20 分）
 - 权限验证（30 分）
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl auth can-i create pods` | 检查当前用户权限 | 快速验证 RBAC 配置是否正确 |
+| `kubectl auth can-i create pods --as=system:serviceaccount:<ns>:<sa>` | 检查某 SA 权限 | 调试 ServiceAccount 权限问题 |
+| `kubectl auth can-i --list` | 列出当前用户所有权限 | 输出完整的资源-动词矩阵 |
+| `kubectl auth can-i '*' '*'` | 检查是否集群管理员 | 返回 yes 说明拥有全部权限 |
+| `kubectl get role -A` | 列出所有 Role | 命名空间级权限 |
+| `kubectl get rolebinding -A` | 列出所有 RoleBinding | 查看 Role 与用户/SA 的绑定关系 |
+| `kubectl get clusterrole` | 列出 ClusterRole | 集群级权限（节点、PV、StorageClass 等） |
+| `kubectl get clusterrolebinding` | 列出 ClusterRoleBinding | 集群级绑定关系 |
+| `kubectl describe role <name> -n <ns>` | Role 详情 | 查看具体允许的资源和动词 |
+| `kubectl describe clusterrole <name>` | ClusterRole 详情 | 系统自带 cluster-admin/edit/view 的权限范围 |
+| `kubectl create role <name> --verb=get,list,watch --resource=pods -n <ns>` | 快速创建 Role | `--verb` 和 `--resource` 即可，无需手写 YAML |
+| `kubectl create rolebinding <name> --role=<role> --user=<user> -n <ns>` | 绑定 Role 到用户 | 给真实用户授权 |
+| `kubectl create rolebinding <name> --role=<role> --serviceaccount=<ns>:<sa> -n <ns>` | 绑定 Role 到 SA | 给 ServiceAccount 授权 |
+| `kubectl create clusterrole <name> --verb=get,list --resource=nodes` | 创建 ClusterRole | 集群级资源必须用 ClusterRole |
+| `kubectl create clusterrolebinding <name> --clusterrole=<role> --serviceaccount=<ns>:<sa>` | 绑定 ClusterRole 到 SA | 跨命名空间的 SA 绑定集群级权限 |
+| `kubectl get sa -A` | 列出所有 ServiceAccount | 每个 NS 有默认 default SA |
+| `kubectl get secrets \| grep <sa>-token` | 查找 SA 的 Token Secret | 1.24+ 不再自动创建，需手动 `kubectl create token <sa>` |
+| `kubectl create token <sa> -n <ns>` | 创建 SA 临时 Token | 1.24+ 推荐方式，有时效性 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：RBAC | https://kubernetes.io/docs/reference/access-authn-authz/rbac/ |
+| Kubernetes 官方：鉴权概述 | https://kubernetes.io/docs/reference/access-authn-authz/authorization/ |
+| Kubernetes 官方：使用 RBAC 授权 | https://kubernetes.io/docs/reference/access-authn-authz/rbac/#command-line-utilities |
+| Kubernetes 官方：ServiceAccount | https://kubernetes.io/docs/concepts/security/service-accounts/ |
+| Kubernetes 官方：kubectl auth can-i | https://kubernetes.io/docs/reference/access-authn-authz/authorization/#checking-api-access |

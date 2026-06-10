@@ -2,6 +2,7 @@
 title: Day 12 - ConfigMap 与 Secret
 module: M4-存储与配置管理
 day: 12
+updated: 2026-06-10
 duration: 240 分钟
 level: 核心
 prerequisites:
@@ -416,3 +417,37 @@ kubectl get secret <name> -o jsonpath='{.data.<key>}' | base64 -d
 - 热更新验证（15 分）
 - Immutable 属性（10 分）
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl get cm` | 列出 ConfigMap | short name: cm |
+| `kubectl get cm <name> -o yaml` | 查看 ConfigMap 完整内容 | 检查所有 key-value 数据 |
+| `kubectl create cm <name> --from-file=<file>` | 从文件创建 ConfigMap | key 为文件名，value 为文件内容 |
+| `kubectl create cm <name> --from-file=key=<file>` | 从文件创建并指定 key | key 可以不同于文件名 |
+| `kubectl create cm <name> --from-literal=key=value` | 从字面值创建 ConfigMap | 快速创建简单配置项，多个 `--from-literal` 可合并 |
+| `kubectl create cm <name> --from-env-file=<file>` | 从 .env 文件创建 ConfigMap | 每行 KEY=VALUE 格式 |
+| `kubectl get secret` | 列出 Secret | 默认只显示名称和类型（不显示值） |
+| `kubectl get secret <name> -o yaml` | 查看 Secret 完整 YAML | data 字段为 base64 编码 |
+| `kubectl get secret <name> -o jsonpath='{.data.<key>}' \| base64 -d` | 解码 Secret 某个 key | jsonpath 提取 + base64 解码，常用组合 |
+| `kubectl get secret <name> -o jsonpath='{.data}' \| jq 'map_values(@base64d)'` | 解码所有 Secret 字段 | jq 一次性解码所有 base64 值 |
+| `kubectl create secret generic <name> --from-literal=key=value` | 创建 Opaque Secret | 值自动 base64 编码存储（注意：仅仅是编码非加密） |
+| `kubectl create secret generic <name> --from-file=<file>` | 从文件创建 Secret | 文件内容自动 base64 |
+| `kubectl create secret docker-registry <name> --docker-server=<url> --docker-username=<user> --docker-password=<pass>` | 创建镜像拉取密钥 | 私有镜像仓库认证 |
+| `kubectl create secret tls <name> --cert=cert.pem --key=key.pem` | 创建 TLS Secret | Ingress HTTPS 专用 |
+| `kubectl describe cm <name>` | ConfigMap 概要 | 显示 key 列表但不显示 value |
+| `kubectl edit cm <name>` | 在线编辑 ConfigMap | 立即生效，挂载到 Pod 中的文件会延迟更新（取决于 kubelet 同步周期） |
+| `kubectl set env deploy/<name> --from=cm/<cm-name>` | 将 ConfigMap 注入为环境变量 | 更新 Deployment 环境变量，触发滚动更新 |
+| `echo -n "secret-value" \| base64` | base64 编码 | 手动编码 Secret 值，填入 YAML 中的 data 字段 |
+| `kubectl exec <pod> -- cat /etc/config/<key>` | 验证 ConfigMap 挂载内容 | 确认文件内容和路径是否正确 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：ConfigMap | https://kubernetes.io/docs/concepts/configuration/configmap/ |
+| Kubernetes 官方：Secret | https://kubernetes.io/docs/concepts/configuration/secret/ |
+| Kubernetes 官方：配置 Pod 使用 ConfigMap | https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/ |
+| Kubernetes 官方：Secret 管理最佳实践 | https://kubernetes.io/docs/concepts/configuration/secret/#best-practices |
+| Kubernetes 官方：不可变 ConfigMap 与 Secret | https://kubernetes.io/docs/concepts/configuration/configmap/#configmap-immutable |

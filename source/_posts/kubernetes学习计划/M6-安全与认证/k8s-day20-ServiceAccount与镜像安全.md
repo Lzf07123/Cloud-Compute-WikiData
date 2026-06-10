@@ -2,6 +2,7 @@
 title: Day 20 - ServiceAccount、镜像安全与 Pod Security
 module: M6-安全与认证
 day: 20
+updated: 2026-06-10
 duration: 240 分钟
 level: 进阶
 prerequisites:
@@ -310,3 +311,32 @@ kubectl get pod <pod-name> -o yaml | grep -A15 securityContext
 - 探针配置（15 分）
 - 安全验证（15 分）
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl get sa -A` | 列出所有 ServiceAccount | 每个 NS 有默认 default SA |
+| `kubectl describe sa <name> -n <ns>` | SA 详情 | 查看关联的 Secrets 和镜像拉取密钥 |
+| `kubectl create sa <name> -n <ns>` | 创建 ServiceAccount | SA 创建后需绑定 Role 才有权限 |
+| `kubectl create token <sa> -n <ns>` | 生成 SA 临时 Token（1.24+） | 有时效性，用于外部访问 apiserver |
+| `kubectl create token <sa> -n <ns> --duration=1h` | 指定 Token 有效期 | 默认 1h，最长 48h |
+| `kubectl get pod <pod> -o jsonpath='{.spec.serviceAccountName}'` | 查看 Pod 使用的 SA | 默认使用 default SA |
+| `kubectl get podsecurity` | 查看 Pod Security Admission 配置 | 1.25+ 替代 PSP，三个等级：privileged/baseline/restricted |
+| `kubectl label ns <ns> pod-security.kubernetes.io/enforce=restricted` | 设置命名空间安全等级 | restricted 最严格，禁止特权容器、hostPath 等 |
+| `kubectl label ns <ns> pod-security.kubernetes.io/warn=baseline` | 设置安全警告等级 | 仅警告不拒绝 |
+| `kubectl get secret \| grep <sa>-docker` | 查找镜像拉取密钥 | 私有仓库认证 |
+| `kubectl create secret docker-registry <name> --docker-server=<url> --docker-username=<user> --docker-password=<pass>` | 创建镜像拉取密钥 | 在 Pod spec 中通过 imagePullSecrets 引用 |
+| `kubectl patch sa default -n <ns> -p '{"imagePullSecrets":[{"name":"<secret>"}]}'` | 给默认 SA 添加镜像拉取密钥 | 该 NS 所有使用 default SA 的 Pod 自动携带 |
+| `kubectl get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[*].image}{"\n"}{end}'` | 列出所有 Pod 的镜像 | 审计镜像版本 |
+| `kubectl set image deploy/<name> <container>=<image>@sha256:<digest>` | 使用镜像摘要更新 | 比 tag 更安全，防止标签篡改 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：ServiceAccount | https://kubernetes.io/docs/concepts/security/service-accounts/ |
+| Kubernetes 官方：Pod Security Admission | https://kubernetes.io/docs/concepts/security/pod-security-admission/ |
+| Kubernetes 官方：Pod 安全标准 | https://kubernetes.io/docs/concepts/security/pod-security-standards/ |
+| Kubernetes 官方：镜像拉取密钥 | https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
+| Kubernetes 官方：镜像安全最佳实践 | https://kubernetes.io/docs/concepts/security/ |

@@ -2,6 +2,7 @@
 title: Day 13 - Volume 与 PV/PVC
 module: M4-存储与配置管理
 day: 13
+updated: 2026-06-10
 duration: 240 分钟
 level: 核心
 prerequisites:
@@ -395,3 +396,32 @@ kubectl get pvc <pvc-name> -o yaml | grep storageClassName
 - 数据持久性验证（15 分）
 - PV 生命周期理解（15 分）
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl get pv` | 列出 PersistentVolume | STATUS: Available (空闲)/Bound (已绑定)/Released (PVC 已删但未回收)/Failed |
+| `kubectl get pv -o wide` | PV + 容量/访问模式/回收策略/状态/声明 | 快速审计存储资源 |
+| `kubectl describe pv <name>` | PV 详细信息 | 查看 Reclaim Policy、AccessModes、底层存储类型（hostPath/NFS/CSI 等） |
+| `kubectl get pvc` | 列出 PersistentVolumeClaim | STATUS: Pending (无匹配 PV)/Bound (已绑定) |
+| `kubectl get pvc -A` | 所有命名空间的 PVC | 跨 NS 视角排查存储资源使用 |
+| `kubectl describe pvc <name>` | PVC 详细信息 | Events 段显示绑定过程；Pending 时查看失败原因 |
+| `kubectl get pv,pvc` | 同时查看 PV/PVC | 逗号分隔查看绑定关系 |
+| `kubectl patch pv <name> -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'` | 修改 PV 回收策略 | 防止 PVC 删除时 PV 被自动回收（Retain/Recycle/Delete） |
+| `kubectl delete pvc <name>` | 删除 PVC | PV 的 Reclaim Policy 决定 PV 后续状态 |
+| `kubectl get pods -o wide \| grep <pod>` | 查看 Pod 所在节点 | PV hostPath 必须确认 Pod 调度到了正确节点 |
+| `kubectl exec <pod> -- df -h` | 查看 Pod 内挂载存储空间 | 验证 PV 是否挂载成功及容量是否正确 |
+| `kubectl exec <pod> -- ls -la /mnt/data` | 查看挂载目录内容 | 验证文件是否存在和权限 |
+| `kubectl exec <pod> -- touch /mnt/data/test && echo "ok" > /mnt/data/test` | 验证存储读写 | 确认 PV 不是只读挂载 |
+| `kubectl get sc` | 列出 StorageClass | 动态供给与 PV/PVC 配合使用 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：PersistentVolume | https://kubernetes.io/docs/concepts/storage/persistent-volumes/ |
+| Kubernetes 官方：卷 | https://kubernetes.io/docs/concepts/storage/volumes/ |
+| Kubernetes 官方：配置 Pod 使用 PV | https://kubernetes.io/docs/concepts/storage/persistent-volumes/ |
+| Kubernetes 官方：访问模式 | https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes |
+| Kubernetes 官方：回收策略 | https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaim-policy |

@@ -2,6 +2,7 @@
 title: Day 21 - 安全综合实战
 module: M6-安全与认证
 day: 21
+updated: 2026-06-10
 duration: 240 分钟
 level: 进阶
 prerequisites:
@@ -249,3 +250,27 @@ kubectl get pods --all-namespaces -o json | \
 - NetworkPolicy 配置（20 分）
 - hostPath 移除（15 分）
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl auth can-i --list --as=system:serviceaccount:<ns>:<sa>` | 列出 SA 的完整权限 | RBAC 问题排查第一命令 |
+| `kubectl get role,rolebinding,clusterrole,clusterrolebinding -A` | RBAC 全貌 | 安全审计时快速扫描所有权限配置 |
+| `kubectl get sa -A` | 所有命名空间的 SA | 检查冗余 SA |
+| `kubectl get pods -o json \| jq '.items[] \| {name:.metadata.name, sa:.spec.serviceAccountName, securityContext:.spec.securityContext, containerSecurity:.spec.containers[].securityContext}'` | 审计 Pod 安全上下文 | jq 一次性提取安全相关字段 |
+| `kubectl get pods -o json \| jq '[.items[] \| select(.spec.containers[].securityContext.privileged==true)]'` | 查找特权容器 | 安全审计：特权容器可以逃逸 |
+| `kubectl get pods -o json \| jq '[.items[] \| select(.spec.hostNetwork==true)]'` | 查找使用 hostNetwork 的 Pod | 可以监听节点网络接口，高风险 |
+| `kubectl get pods -o json \| jq '[.items[] \| select(.spec.volumes[]?.hostPath)]'` | 查找挂载 hostPath 的 Pod | 可以访问节点文件系统 |
+| `kubectl -n kube-system get cm kubeadm-config -o jsonpath='{.data.ClusterConfiguration}' \| grep -A 5 "apiServer"` | 查看 apiserver 启动参数 | 确认准入控制器和加密配置 |
+| `kubectl get --raw /apis/authorization.k8s.io/v1/selfsubjectaccessreviews` | 自检 API 访问 | 编程式权限检查的 API 版 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：安全总览 | https://kubernetes.io/docs/concepts/security/ |
+| Kubernetes 官方：安全最佳实践 | https://kubernetes.io/docs/concepts/security/security-checklist/ |
+| Kubernetes 官方：RBAC 最佳实践 | https://kubernetes.io/docs/concepts/security/rbac-good-practices/ |
+| NSA/CISA Kubernetes 加固指南 | https://media.defense.gov/2022/Aug/29/2003066362/-1/-1/0/CTR_KUBERNETES_HARDENING_GUIDANCE_1.2_20220829.PDF |
+| CIS Kubernetes Benchmark | https://www.cisecurity.org/benchmark/kubernetes |

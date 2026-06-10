@@ -2,6 +2,7 @@
 title: Day 11 - 网络综合实战
 module: M3-网络与服务发现
 day: 11
+updated: 2026-06-10
 duration: 240 分钟
 level: 核心
 prerequisites:
@@ -244,3 +245,27 @@ kubectl get pods -n kube-system -l k8s-app=kube-dns
 - NetworkPolicy 隔离正确（40 分）
 - 验证全面（20 分）
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl get svc,endpoints,ingress,networkpolicy` | 网络资源一览 | 逗号分隔多资源类型，快速审计网络配置 |
+| `kubectl run net-test --image=nicolaka/netshoot --rm -it -- /bin/bash` | 网络调试 Pod | netshoot 包含 curl/wget/nslookup/dig/nc/iperf 等全套工具 |
+| `kubectl exec <pod> -- curl -s -o /dev/null -w "%{http_code}" http://<svc>:<port>` | 测试 HTTP 状态码 | 仅输出 HTTP code，脚本化健康检查 |
+| `kubectl exec <pod> -- dig +short <svc>.<ns>.svc.cluster.local` | DNS 解析（dig 方式） | 比 nslookup 更详细，可分析 DNS 查询链 |
+| `kubectl exec <pod> -- traceroute <target-ip>` | 追踪 Pod 网络路径 | 理解数据包从 Pod 到目标的跳数 |
+| `kubectl exec <pod> -- iperf3 -c <target-ip>` | 网络带宽测试 | 性能基准，评估 CNI 插件吞吐 |
+| `kubectl get pods -o=custom-columns=NAME:.metadata.name,IP:.status.podIP,NODE:.spec.nodeName` | 自定义列查看 Pod 信息 | 同时显示 Pod 名、IP、所在节点 |
+| `kubectl label ns <ns> pod-security.kubernetes.io/enforce=restricted` | 设置命名空间 Pod 安全等级 | 综合实战中验证安全策略与网络策略协同 |
+| `kubectl auth can-i create networkpolicies --as=system:serviceaccount:<ns>:<sa>` | 验证 SA 是否有创建 NetworkPolicy 权限 | RBAC + NetworkPolicy 联合排错 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：服务、负载均衡与网络 | https://kubernetes.io/docs/concepts/services-networking/ |
+| Kubernetes 官方：网络策略演练 | https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/ |
+| netshoot 网络调试镜像 | https://github.com/nicolaka/netshoot |
+| Calico 网络策略示例 | https://docs.tigera.io/calico/latest/network-policy/get-started/ |
+| Kubernetes 网络模型 | https://kubernetes.io/docs/concepts/services-networking/#the-kubernetes-network-model |

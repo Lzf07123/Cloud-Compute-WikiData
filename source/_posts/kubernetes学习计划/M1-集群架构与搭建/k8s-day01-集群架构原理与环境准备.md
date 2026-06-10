@@ -2,6 +2,7 @@
 title: Day 01 - 集群架构原理与环境准备
 module: M1-集群架构与搭建
 day: 1
+updated: 2026-06-10
 duration: 240 分钟
 level: 基础
 prerequisites:
@@ -348,6 +349,47 @@ kubectl logs -n kube-system -l k8s-app=calico-node --tail=50
 ```
 
 ---
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `sudo swapoff -a` | 关闭 Swap | kubelet 强制要求，否则拒绝启动 |
+| `sudo sed -i '/ swap / s/^/#/' /etc/fstab` | 永久禁用 Swap | 注释 fstab 中 swap 行，重启后仍生效 |
+| `sudo modprobe br_netfilter` | 加载 br_netfilter 模块 | 允许桥接流量经过 iptables 处理 |
+| `sudo modprobe overlay` | 加载 overlay 模块 | 容器存储驱动依赖 |
+| `sudo sysctl --system` | 应用所有 sysctl 配置 | 重新加载 /etc/sysctl.d/ 下所有配置 |
+| `sudo apt-get install -y containerd` | 安装 containerd 运行时 | K8s 1.24+ 默认容器运行时 |
+| `containerd config default \| sudo tee /etc/containerd/config.toml` | 生成 containerd 默认配置 | 必须修改 SystemdCgroup = true |
+| `sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml` | 启用 SystemdCgroup | 与 kubelet 的 cgroup 驱动保持一致 |
+| `sudo systemctl restart containerd && sudo systemctl enable containerd` | 重启并开机自启 containerd | 配置修改后必须重启 |
+| `sudo apt-mark hold kubelet kubeadm kubectl` | 锁定 K8s 组件版本 | 防止 apt upgrade 意外升级导致版本不一致 |
+| `sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --kubernetes-version=v1.29.0` | 初始化 K8s 集群 | 下载镜像、生成证书、启动控制平面组件为静态 Pod |
+| `mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config` | 配置 kubectl 认证 | 将 admin 证书复制到用户目录 |
+| `sudo chown $(id -u):$(id -g) $HOME/.kube/config` | 修改 kubeconfig 权限 | 让普通用户也能使用 kubectl |
+| `kubectl apply -f calico.yaml` | 安装 Calico CNI | 提供 Pod 网络和 NetworkPolicy 支持 |
+| `kubectl get pods -n kube-system --watch` | 实时监控系统 Pod | 等待 CoreDNS 和 Calico Pod 就绪 |
+| `kubectl get nodes` | 查看节点状态 | STATUS 必须为 Ready |
+| `kubectl get componentstatuses` | 查看控制平面组件健康 | 检查 scheduler/controller-manager/etcd 状态 |
+| `kubectl get --raw='/readyz?verbose'` | 查看 apiserver 就绪探测详情 | 比 componentstatuses 更准确（1.19+） |
+| `kubectl cluster-info` | 查看集群信息 | 输出 apiserver 和 CoreDNS 地址 |
+| `sudo crictl ps` | 列出容器（containerd） | K8s 1.24+ 替代 docker ps |
+| `sudo crictl ps \| grep etcd` | 查找 etcd 容器 ID | 静态 Pod 通过 crictl 管理 |
+| `sudo crictl exec -it <etcd-id> sh` | 进入 etcd 容器 | 用于执行 etcdctl 命令探索存储 |
+| `ETCDCTL_API=3 etcdctl --cacert=... --cert=... --key=... get / --prefix --keys-only \| head -30` | 列出 etcd 中的 key | 查看集群存储在 etcd 中的资源 |
+| `echo 'source <(kubectl completion bash)' >> ~/.bashrc` | 启用 kubectl 自动补全 | 按 Tab 补全命令和资源名 |
+| `alias k=kubectl` | 设置 kubectl 别名 | 减少输入量，赛题时间紧张时很有用 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：安装 kubeadm | https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/ |
+| Kubernetes 官方：创建集群 | https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/ |
+| containerd 官方文档 | https://github.com/containerd/containerd/blob/main/docs/getting-started.md |
+| Calico 快速开始 | https://docs.tigera.io/calico/latest/getting-started/kubernetes/quickstart |
+| Linux 内核模块 overlay/br_netfilter | https://kubernetes.io/docs/setup/production-environment/container-runtimes/ |
+| kubectl 安装与配置 | https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/ |
 
 ## 📝 今日笔记模板
 

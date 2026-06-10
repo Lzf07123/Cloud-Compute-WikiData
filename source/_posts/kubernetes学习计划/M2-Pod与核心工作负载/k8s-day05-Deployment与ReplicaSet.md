@@ -2,6 +2,7 @@
 title: Day 05 - Deployment 与 ReplicaSet
 module: M2-Pod与核心工作负载
 day: 5
+updated: 2026-06-10
 duration: 240 分钟
 level: 核心
 prerequisites:
@@ -343,3 +344,41 @@ kubectl get pod -l app=web-app -o jsonpath='{range .items[*]}{.metadata.name}{":
 - 扩缩容正确（15 分）
 - history 记录完整（10 分）
 ```
+
+---
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl create deploy nginx --image=nginx:alpine` | 创建 Deployment | 最快捷的部署方式 |
+| `kubectl get deploy` | 列出 Deployment | DESIRED/CURRENT/READY/UP-TO-DATE/AVAILABLE 五个状态字段 |
+| `kubectl get deploy -o wide` | Deployment + 镜像/标签/选择器 | 确认当前使用的镜像版本 |
+| `kubectl get rs` | 列出 ReplicaSet | Deployment 每次更新生成新 RS |
+| `kubectl get deploy,rs,pod` | 同时查看 Deploy→RS→Pod 层级 | 逗号分隔多资源类型 |
+| `kubectl describe deploy <name>` | Deployment 详细信息 | 包含滚动更新策略、事件历史 |
+| `kubectl scale deploy <name> --replicas=5` | 扩缩副本 | 等价于修改 spec.replicas |
+| `kubectl set image deploy/<name> <container>=<new-image>:<tag>` | 更新容器镜像 | 触发滚动更新，比 edit 效率高 |
+| `kubectl set resources deploy/<name> -c=<container> --limits=cpu=200m,memory=256Mi --requests=cpu=100m,memory=128Mi` | 设置资源限制 | 更新 Pod 模板中的 resources 字段 |
+| `kubectl rollout status deploy/<name>` | 查看滚动更新进度 | 输出 "successfully rolled out" 即完成 |
+| `kubectl rollout history deploy/<name>` | 查看部署历史 | 每次更新生成一个 revision 号 |
+| `kubectl rollout history deploy/<name> --revision=3` | 查看第 3 个版本的详情 | 对比不同版本的镜像和配置 |
+| `kubectl rollout undo deploy/<name>` | 回滚上一版本 | 创建新 RS 并回退 Pod 模板 |
+| `kubectl rollout undo deploy/<name> --to-revision=2` | 回滚到指定版本 | revision 必须存在于历史中（默认保留 10 个） |
+| `kubectl rollout pause deploy/<name>` | 暂停滚动更新 | 金丝雀发布时暂停以验证新版 |
+| `kubectl rollout resume deploy/<name>` | 恢复滚动更新 | 暂停后恢复继续滚动 |
+| `kubectl rollout restart deploy/<name>` | 重启所有 Pod（滚动重建） | 1.15+ 支持，配置变更后快速生效 |
+| `kubectl patch deploy <name> -p '{"spec":{"minReadySeconds":10}}'` | JSON Patch 修改字段 | 比 edit 安全，适合 CI/CD |
+| `kubectl delete deploy <name>` | 删除 Deployment | 级联删除 RS 和 Pod（默认） |
+| `kubectl delete deploy <name> --cascade=orphan` | 仅删 Deploy 保留 Pod | Pod 变为孤儿，由新控制器接管 |
+| `kubectl get pod --show-labels` | Pod + 标签 | 验证标签选择器是否匹配 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：Deployment | https://kubernetes.io/docs/concepts/workloads/controllers/deployment/ |
+| Kubernetes 官方：ReplicaSet | https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
+| Kubernetes 官方：滚动更新 | https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/ |
+| Kubernetes 官方：回滚 Deployment | https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-back-a-deployment |
+| Kubernetes 官方：kubectl rollout | https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#rollout |

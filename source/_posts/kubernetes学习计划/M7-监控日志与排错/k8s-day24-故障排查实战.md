@@ -2,6 +2,7 @@
 title: Day 24 - 故障排查实战
 module: M7-监控日志与排错
 day: 24
+updated: 2026-06-10
 duration: 240 分钟
 level: 进阶
 prerequisites:
@@ -294,3 +295,38 @@ kubectl delete pvc impossible-pvc
 - 每个故障：排查步骤(10分) + 根因分析(5分) + 解决方案(5分)
 - 总计 100 分
 ```
+
+---
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl describe pod <pod> \| tail -30` | Pod Events（排错第一入口） | 80% 的故障在 Events 里能找到原因 |
+| `kubectl get events --sort-by=.lastTimestamp` | 按时间排序所有事件 | 全局视角查看集群正在发生什么 |
+| `kubectl get events -w` | 实时监听事件 | 操作时开一个终端 watch，观察连锁反应 |
+| `kubectl get events --field-selector type=Warning` | 只看 Warning 事件 | 过滤 Normal 噪音，聚焦异常 |
+| `kubectl get pods --field-selector=status.phase=Pending` | 筛选 Pending Pod | 调度失败/镜像拉取失败 |
+| `kubectl get pods --field-selector=status.phase=Failed` | 筛选 Failed Pod | CrashLoopBackOff/Error/Completed(exit≠0) |
+| `kubectl get pods --field-selector=status.phase!=Running` | 筛选非 Running Pod | 一次性找出所有问题 Pod |
+| `kubectl describe pod <pod> \| grep -A 5 "State:\|Ready:\|Restart"` | 容器状态摘要 | 快速确认容器是 Waiting/Running/Terminated |
+| `kubectl describe pod <pod> \| grep -B 2 "Exit Code"` | 查看容器退出码 | Exit Code 137=OOMKilled, 143=SIGTERM, 1=应用错误 |
+| `kubectl logs <pod> --previous` | 上一次崩溃的日志 | CrashLoopBackOff 时当前容器可能还没产生日志 |
+| `kubectl -n kube-system logs kube-apiserver-<node>` | apiserver 日志 | 集群入口故障，大量 5xx/超时根因在此 |
+| `kubectl -n kube-system logs -l k8s-app=kube-dns --tail=50` | CoreDNS 日志 | DNS 解析超时/失败时的排查 |
+| `kubectl -n kube-system logs -l k8s-app=calico-node --tail=50` | CNI 日志 | 网络不通、Pod IP 分配失败 |
+| `journalctl -u kubelet --since "5 min ago" --no-pager` | kubelet 近 5 分钟日志 | 无需 `--no-pager` 短输出更易读 |
+| `kubectl cluster-info dump \| grep -i "error\|failed" \| head -30` | 集群诊断 + 错误过滤 | 输出所有组件的日志摘要 |
+| `kubectl get componentstatuses` | 控制平面组件健康 | 1.19+ 建议用 `--raw='/readyz?verbose'` |
+| `kubectl get nodes -o json \| jq '.items[] \| {name:.metadata.name, conditions:.status.conditions}'` | 节点 Conditions JSON 输出 | 结构化的节点健康状况 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：排错指南 | https://kubernetes.io/docs/tasks/debug/ |
+| Kubernetes 官方：排错 Pod | https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/ |
+| Kubernetes 官方：排错 Service | https://kubernetes.io/docs/tasks/debug/debug-application/debug-service/ |
+| Kubernetes 官方：排错集群 | https://kubernetes.io/docs/tasks/debug/debug-cluster/ |
+| Kubernetes 官方：节点健康监控 | https://kubernetes.io/docs/tasks/debug/debug-cluster/kubectl-node-summary/ |
+| kubectl 排错速查表 | https://kubernetes.io/docs/reference/kubectl/quick-reference/ |

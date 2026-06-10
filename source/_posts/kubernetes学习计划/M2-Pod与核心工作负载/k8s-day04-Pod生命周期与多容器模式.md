@@ -2,6 +2,7 @@
 title: Day 04 - Pod 生命周期与多容器模式
 module: M2-Pod与核心工作负载
 day: 4
+updated: 2026-06-10
 duration: 240 分钟
 level: 核心
 prerequisites:
@@ -438,3 +439,39 @@ kubectl delete pod ready-fail
 - 探针配置正确（15 分）
 - 排错分析（10 分）
 ```
+
+---
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl run nginx --image=nginx:alpine` | 快速创建 Pod | 直接创建单个 Pod（非 Deployment） |
+| `kubectl run nginx --image=nginx:alpine --dry-run=client -o yaml > pod.yaml` | 生成 Pod YAML | 最佳 YAML 生成方式，比手写快且不出错 |
+| `kubectl get pods -o wide` | Pod + 节点 + IP | 定位 Pod 运行位置 |
+| `kubectl get pods -w` | 实时监控 Pod 状态变化 | 观察 Pod 从 Pending → Running 全过程 |
+| `kubectl describe pod <pod>` | Pod 详细信息 | Events 段包含调度决策、镜像拉取状态、容器启停原因 |
+| `kubectl logs <pod> -c <container> --tail=20` | 指定容器最后 20 行日志 | 多容器模式必须用 -c 指定 |
+| `kubectl logs <pod> --all-containers=true` | 所有容器日志 | 一次性查看 Pod 内全部容器输出 |
+| `kubectl exec <pod> -- <cmd>` | 在容器内执行命令 | 用于健康检查、调试 |
+| `kubectl exec -it <pod> -- /bin/sh` | 交互式进入容器 | 查看文件系统、进程、网络连通性 |
+| `kubectl port-forward pod/<pod> 8080:80` | 本地端口转发到 Pod | 无需 Service 直接访问 Pod 端口 |
+| `kubectl delete pod <pod>` | 删除 Pod | 优雅终止（默认 30s） |
+| `kubectl delete pod <pod> --force --grace-period=0` | 强制立即删除 | 卡在 Terminating 时救急 |
+| `kubectl delete pod <pod> --now` | 立即删除 Pod | `--now` = `--grace-period=1` |
+| `kubectl wait --for=condition=Ready pod/<pod>` | 等待 Pod 就绪 | 脚本中阻塞直到 Pod Ready |
+| `kubectl cp <pod>:<path> <local-path>` | 从 Pod 复制文件 | 双向可操作 |
+| `kubectl top pods` | Pod 实时资源用量 | 需安装 metrics-server |
+| `kubectl get events --field-selector involvedObject.name=<pod>` | 查看特定 Pod 的 Event | 比 describe 更轻量 |
+| `kubectl debug -it <pod> --image=busybox --target=<container>` | 调试容器（临时容器） | 1.25+ 支持，不影响原容器运行 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：Pod | https://kubernetes.io/docs/concepts/workloads/pods/ |
+| Kubernetes 官方：Pod 生命周期 | https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/ |
+| Kubernetes 官方：Init 容器 | https://kubernetes.io/docs/concepts/workloads/pods/init-containers/ |
+| Kubernetes 官方：探针配置 | https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
+| Kubernetes 官方：边车容器 | https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/ |
+| Kubernetes 官方：临时容器调试 | https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/#ephemeral-container |

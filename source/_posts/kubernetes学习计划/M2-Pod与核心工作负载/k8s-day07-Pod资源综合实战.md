@@ -2,6 +2,7 @@
 title: Day 07 - Pod 资源综合实战
 module: M2-Pod与核心工作负载
 day: 7
+updated: 2026-06-10
 duration: 240 分钟
 level: 核心
 prerequisites:
@@ -338,3 +339,30 @@ kubectl rollout history deploy/backend -n microshop
 kubectl delete ns microshop
 kubectl delete ns ecommerce
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl apply -f <manifest>.yaml` | 声明式部署资源 | 综合实战中一次性部署多种资源 |
+| `kubectl get all` | 查看所有资源 | Pod/Service/Deploy/RS/StatefulSet/DaemonSet/Job 一览 |
+| `kubectl get pods --show-labels` | Pod + 标签 | 验证标签是否与 Service Selector 匹配 |
+| `kubectl get pods -L app,version` | 按指定标签列显示 Pod | `-L` 将标签值作为独立列展示 |
+| `kubectl describe svc <name>` | Service 详情 | 查看 Endpoints 是否绑定到正确的 Pod |
+| `kubectl get endpoints <svc>` | 查看 Service 后端 Endpoints | 为空说明 Selector 不匹配或 Pod 未就绪 |
+| `kubectl run tmp --image=busybox --rm -it -- wget -O- http://<svc>:<port>` | 临时 Pod 测试服务连通性 | `--rm` 退出即删，测试网络首选 |
+| `kubectl exec <pod> -- env` | 查看容器环境变量 | 验证 ConfigMap/Secret 注入是否正确 |
+| `kubectl exec <pod> -- cat /etc/config/key` | 查看挂载的配置文件 | 验证 ConfigMap/Secret 挂载内容 |
+| `kubectl exec <pod> -- nslookup <svc-name>` | 验证 DNS 解析 | 确认 CoreDNS 正常工作 |
+| `kubectl -n <ns> logs -l app=<name> --tail=20` | 按标签批量查看日志 | `-l` 按标签选择器筛选 Pod |
+| `kubectl top pods --sort-by=cpu` | 按 CPU 排序 Pod 用量 | 找出资源消耗最大的 Pod |
+| `kubectl get events --sort-by=.metadata.creationTimestamp` | 按时间排序事件 | 按时间线排查问题 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：工作负载 | https://kubernetes.io/docs/concepts/workloads/ |
+| Kubernetes 官方：标签与选择器 | https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
+| Kubernetes 官方：Service | https://kubernetes.io/docs/concepts/services-networking/service/ |
+| Kubernetes 官方：应用排错 | https://kubernetes.io/docs/tasks/debug/debug-application/ |

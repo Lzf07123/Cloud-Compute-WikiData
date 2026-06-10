@@ -2,6 +2,7 @@
 title: Day 09 - Ingress 与外部流量接入
 module: M3-网络与服务发现
 day: 9
+updated: 2026-06-10
 duration: 240 分钟
 level: 核心
 prerequisites:
@@ -371,3 +372,33 @@ kubectl get ingress <name> -o yaml | grep -A5 tls
 - TLS 配置正确（25 分）
 - 验证全部通过（10 分）
 ```
+
+---
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl get ingress` | 列出 Ingress | ADDRESS 为空说明 Ingress Controller 未就绪 |
+| `kubectl get ingress -o wide` | Ingress + 主机/地址 | 查看 Host 规则和分配的 ADDRESS |
+| `kubectl describe ingress <name>` | Ingress 详细规则 | 查看每条 Path 规则和后端 Service |
+| `kubectl get ingressclass` | 列出 IngressClass | 多个 Ingress Controller 时用于区分 |
+| `kubectl -n ingress-nginx get pods` | 查看 Ingress Controller Pod | nginx-ingress 默认部署在 ingress-nginx 命名空间 |
+| `kubectl -n ingress-nginx logs -l app.kubernetes.io/name=ingress-nginx` | 查看 Ingress Controller 日志 | Ingress 路由异常时的首要排查 |
+| `kubectl -n ingress-nginx get svc` | 查看 Ingress Controller Service | 确认是否分配了 EXTERNAL-IP |
+| `curl -H "Host: <hostname>" http://<node-ip>:<nodeport>` | 测试 Ingress 路由 | 绕过 DNS 直接用 Header 指定 Host |
+| `curl -k https://<hostname>` | 测试 HTTPS Ingress | `-k` 跳过自签名证书验证 |
+| `kubectl create ingress <name> --rule="host/path=svc:port" --dry-run=client -o yaml` | 生成 Ingress YAML | 快速生成基本的 Ingress 规则模板 |
+| `kubectl get svc -A \| grep LoadBalancer` | 查找所有 LB 类型 Service | 云环境中 LB 会分配公网 IP |
+| `kubectl patch ingress <name> -p '{"metadata":{"annotations":{"nginx.ingress.kubernetes.io/rewrite-target":"/"}}}}'` | 添加 Ingress 注解 | nginx-ingress rewrite 注解实现 URL 重写 |
+| `kubectl create secret tls <name> --cert=cert.pem --key=key.pem` | 创建 TLS Secret | Ingress HTTPS 必须用此类型 Secret |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：Ingress | https://kubernetes.io/docs/concepts/services-networking/ingress/ |
+| Kubernetes 官方：Ingress Controller | https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/ |
+| NGINX Ingress Controller 文档 | https://kubernetes.github.io/ingress-nginx/ |
+| NGINX Ingress 注解参考 | https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/ |
+| Kubernetes 官方：TLS/SSL | https://kubernetes.io/docs/concepts/services-networking/ingress/#tls |

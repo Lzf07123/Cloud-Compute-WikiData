@@ -2,6 +2,7 @@
 title: Day 08 - Service 与集群内服务发现
 module: M3-网络与服务发现
 day: 8
+updated: 2026-06-10
 duration: 240 分钟
 level: 核心
 prerequisites:
@@ -316,3 +317,34 @@ kubectl rollout restart deploy/coredns -n kube-system
 - DNS 解析正常（15 分）
 - Endpoint 正确（10 分）
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl get svc` | 列出所有 Service | TYPE 列显示 ClusterIP/NodePort/LoadBalancer/ExternalName |
+| `kubectl get svc -o wide` | Service + 选择器/端口 | 确认 Selector 和暴露的端口 |
+| `kubectl get endpoints` | 查看 Service 后端端点 | 为空说明 Selector 没匹配到 Running Pod |
+| `kubectl describe svc <name>` | Service 详细信息 | 查看 SessionAffinity、Endpoints、Events |
+| `kubectl expose deploy <name> --port=80 --target-port=8080` | 快速创建 Service 暴露 Deployment | 默认创建 ClusterIP 类型 |
+| `kubectl expose deploy <name> --type=NodePort --port=80 --target-port=8080` | 创建 NodePort Service | 节点 IP:30000-32767 可外部访问 |
+| `kubectl expose deploy <name> --type=LoadBalancer --port=80` | 创建 LoadBalancer Service | 云厂商分配外部 LB IP（学习环境会一直 Pending） |
+| `kubectl run test --image=busybox --rm -it -- wget -O- http://<svc-name>` | 临时 Pod 测试 Service 可达性 | `--rm` 退出即删除，网络调试首选 |
+| `kubectl exec <pod> -- nslookup <svc-name>` | 验证 CoreDNS 解析 | 解析失败说明 CoreDNS 故障或 SVC 不存在 |
+| `kubectl exec <pod> -- nslookup <svc-name>.<ns>.svc.cluster.local` | 验证 FQDN 解析 | 全限定域名格式：`<svc>.<namespace>.svc.cluster.local` |
+| `kubectl exec <pod> -- curl -s <svc-name>.<ns>.svc.cluster.local:<port>` | 通过 FQDN 访问服务 | 跨命名空间通信必须用 FQDN |
+| `kubectl get pods -l app=<label>` | 按标签查 Pod | 验证 Service Selector 是否匹配到正确的 Pod |
+| `kubectl patch svc <name> -p '{"spec":{"sessionAffinity":"ClientIP"}}'` | 修改会话亲和性 | 同一客户端 IP 始终路由到同一 Pod |
+| `kubectl create svc clusterip <name> --tcp=80:8080 --dry-run=client -o yaml` | 生成 ClusterIP Service YAML | `--tcp` 指定 `<port>:<targetPort>` |
+| `kubectl create svc nodeport <name> --tcp=80:8080 --node-port=30080 --dry-run=client -o yaml` | 生成 NodePort Service YAML | 指定固定 NodePort 而非随机端口 |
+| `kubectl -n kube-system logs -l k8s-app=kube-dns` | 查看 CoreDNS 日志 | DNS 解析故障时首要排查 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：Service | https://kubernetes.io/docs/concepts/services-networking/service/ |
+| Kubernetes 官方：DNS 与服务发现 | https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/ |
+| Kubernetes 官方：Service 调试 | https://kubernetes.io/docs/tasks/debug/debug-application/debug-service/ |
+| Kubernetes 官方：EndpointSlice | https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/ |
+| CoreDNS 官方文档 | https://coredns.io/manual/toc/ |

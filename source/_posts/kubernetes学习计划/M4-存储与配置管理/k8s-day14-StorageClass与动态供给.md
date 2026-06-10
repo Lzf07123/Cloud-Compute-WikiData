@@ -2,6 +2,7 @@
 title: Day 14 - StorageClass 与动态供给
 module: M4-存储与配置管理
 day: 14
+updated: 2026-06-10
 duration: 240 分钟
 level: 核心
 prerequisites:
@@ -363,3 +364,33 @@ NFS 服务器已部署（IP: 10.0.0.1），共享路径 /srv/nfs/k8s
 - 扩容成功 + 数据完整（25 分）
 - ReclaimPolicy 验证（10 分）
 ```
+
+---
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl get sc` | 列出 StorageClass | 默认 SC 标记为 `(default)` |
+| `kubectl get sc -o yaml` | StorageClass 详细配置 | 查看 provisioner、parameters、reclaimPolicy、allowVolumeExpansion |
+| `kubectl describe sc <name>` | StorageClass 详情 | 包含创建事件和配置参数 |
+| `kubectl patch sc <name> -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'` | 设为默认 StorageClass | 不指定 storageClassName 的 PVC 自动使用默认 SC |
+| `kubectl patch sc <name> -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'` | 取消默认 StorageClass | 防止误用不想要的 SC |
+| `kubectl patch sc <name> -p '{"allowVolumeExpansion":true}'` | 启用卷在线扩容 | PVC spec.resources.requests.storage 允许增大 |
+| `kubectl get pvc -o wide` | PVC + 绑定的 PV + SC | 确认 PVC 使用了哪个 StorageClass |
+| `kubectl describe pvc <name>` | PVC 详情 | Events 显示 Provisioning/FailedProvisioning 过程 |
+| `kubectl delete pvc <name> && kubectl get pv -w` | 观察 PVC 删除后 PV 回收 | Reclaim Policy: Delete 时 PV 自动消失；Retain 时 PV 变为 Released |
+| `kubectl patch pvc <name> -p '{"spec":{"resources":{"requests":{"storage":"2Gi"}}}}'` | 扩容 PVC | 需要 SC 启用 allowVolumeExpansion；只能增大不能缩小 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：StorageClass | https://kubernetes.io/docs/concepts/storage/storage-classes/ |
+| Kubernetes 官方：动态卷供给 | https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/ |
+| Kubernetes 官方：卷扩容 | https://kubernetes.io/docs/concepts/storage/persistent-volumes/#expanding-persistent-volumes-claims |
+| Kubernetes 官方：CSI 驱动 | https://kubernetes-csi.github.io/docs/ |
+| NFS Subdir External Provisioner | https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner |
+| Rancher Local Path Provisioner | https://github.com/rancher/local-path-provisioner |
+
+## 📝 今日笔记模板

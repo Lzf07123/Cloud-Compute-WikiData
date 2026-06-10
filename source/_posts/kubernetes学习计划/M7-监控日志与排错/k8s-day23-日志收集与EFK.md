@@ -2,6 +2,7 @@
 title: Day 23 - 日志收集与 EFK
 module: M7-监控日志与排错
 day: 23
+updated: 2026-06-10
 duration: 240 分钟
 level: 进阶
 prerequisites:
@@ -276,3 +277,34 @@ du -sh /var/log/containers/* | sort -rh | head -10
 - Fluent Bit 部署 + 验证（30 分）
 - 排查分析（30 分）
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl logs <pod> -f` | 实时跟踪 Pod 日志 | 等于 `tail -f` |
+| `kubectl logs <pod> --tail=100` | 最后 100 行日志 | 避免刷屏 |
+| `kubectl logs <pod> --since=10m` | 最近 10 分钟日志 | 时间范围过滤 |
+| `kubectl logs <pod> --timestamps` | 带时间戳的日志 | 确定日志时间线 |
+| `kubectl logs <pod> -c <container>` | 指定容器日志 | 多容器 Pod 必须用 `-c` |
+| `kubectl logs <pod> --all-containers=true` | 所有容器日志 | 一次性查看 Pod 所有容器 |
+| `kubectl logs <pod> --previous` | 查看上一次崩溃的日志 | 容器重启后的历史日志 |
+| `kubectl logs -l app=<name> --tail=20` | 按标签批量查看日志 | `-l` 按标签选择器筛选 |
+| `kubectl logs -l app=<name> --all-containers=true --since=5m` | 批量日志 + 时间过滤 | 组合选项精确定位 |
+| `kubectl stern "app-*" -n <ns>` | 多 Pod 日志流（stern 工具） | 比 kubectl logs -l 更好用的实时多 Pod 日志，需安装 stern |
+| `journalctl -u kubelet -f` | 实时查看 kubelet 节点日志 | Pod 启停失败根因在 kubelet |
+| `journalctl -u containerd -f` | 实时查看 containerd 日志 | 容器运行时层面排错 |
+| `crictl logs <container-id>` | 容器日志（CRI 层） | kubectl logs 不可用时的备选 |
+| `kubectl -n logging logs -l app=fluentd --tail=50` | 查看 Fluentd 日志 | 日志收集管道故障排查 |
+| `kubectl -n logging logs -l app=elasticsearch --tail=50` | 查看 Elasticsearch 日志 | ES 集群健康状态检查 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：日志架构 | https://kubernetes.io/docs/concepts/cluster-administration/logging/ |
+| Kubernetes 官方：kubectl logs | https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#logs |
+| stern 多 Pod 日志工具 | https://github.com/stern/stern |
+| Fluentd Kubernetes 集成 | https://docs.fluentd.org/container-deployment/kubernetes |
+| Elasticsearch 官方文档 | https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html |
+| EFK Stack 部署指南 | https://github.com/fluent/fluentd-kubernetes-daemonset （Fluentd DaemonSet 官方示例，原 kubernetes/cluster/addons 已在 v1.24+ 移除） |

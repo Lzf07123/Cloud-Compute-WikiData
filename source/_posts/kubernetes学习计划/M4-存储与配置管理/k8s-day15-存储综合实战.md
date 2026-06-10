@@ -2,6 +2,7 @@
 title: Day 15 - 存储综合实战
 module: M4-存储与配置管理
 day: 15
+updated: 2026-06-10
 duration: 240 分钟
 level: 核心
 prerequisites:
@@ -246,3 +247,26 @@ kubectl get secret wp-secrets -n wp-demo -o jsonpath='{.data.WORDPRESS_DB_PASSWO
 ```bash
 kubectl delete ns wp-demo cms-app
 ```
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl get pv,pvc,sc` | 存储资源一览 | 同时查看 PV/PVC/SC 的绑定和供给关系 |
+| `kubectl get pvc -A --field-selector=status.phase=Pending` | 查找所有未绑定的 PVC | Pending 意味着没有匹配的 PV 或 SC 供给失败 |
+| `kubectl get events --field-selector=reason=ProvisioningFailed` | 查看供给失败事件 | 动态供给失败时的排错入口 |
+| `kubectl exec <pod> -- df -h \| grep /mnt` | 验证存储挂载容量 | 确认 PV 正确挂载且容量匹配 |
+| `kubectl exec <pod> -- cat /proc/mounts \| grep /mnt` | 查看挂载详情 | 文件系统类型、挂载选项 |
+| `kubectl exec <pod> -- touch /mnt/data/write-test` | 验证存储可写 | ReadWriteOnce 模式下测试写权限 |
+| `kubectl exec <pod> -- rm /mnt/data/write-test` | 验证存储可删除 | ReadWriteMany 多 Pod 同时操作验证 |
+| `kubectl diff -f manifest.yaml` | 预览修改差异 | 综合实战中修改 YAML 后先 diff 确认变更 |
+| `kubectl apply --server-side -f manifest.yaml` | 服务端 Apply | 处理大文件或复杂 CRD 时的备选方案 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：存储最佳实践 | https://kubernetes.io/docs/concepts/storage/ |
+| Kubernetes 官方：调试 PVC | https://kubernetes.io/docs/tasks/debug/debug-application/ |
+| Kubernetes 官方：StatefulSet 与存储 | https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#using-statefulsets |
+| Kubernetes 存储 SIG | https://github.com/kubernetes/community/tree/master/sig-storage |

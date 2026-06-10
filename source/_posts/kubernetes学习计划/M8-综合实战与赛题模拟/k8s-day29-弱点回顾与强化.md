@@ -2,6 +2,7 @@
 title: Day 29 - 弱点回顾与强化
 module: M8-综合实战与赛题模拟
 day: 29
+updated: 2026-06-10
 duration: 240 分钟
 level: 冲刺
 prerequisites:
@@ -182,3 +183,30 @@ kubectl expose deploy <name> --port=80 --dry-run=client -o yaml
 - [ ] 完成针对性强化练习
 - [ ] 整理个人速查手册
 - [ ] 准备好明天的全真模拟
+
+## 📋 命令速查
+
+弱点回顾中高频使用的验证与修复命令：
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl auth can-i --list` | 列出当前用户全部权限 | 回顾 RBAC 配置是否正确 |
+| `kubectl get events -A --sort-by=.lastTimestamp \| tail -20` | 全集群最近事件 | 弱点排查第一步 |
+| `kubectl get pods -A --field-selector=status.phase!=Running` | 找所有异常 Pod | 一次性定位所有问题 |
+| `kubectl describe pod <pod> \| grep -E "State:\|Exit Code\|Restart"` | 容器状态摘要 | 快速判断容器状态和重启原因 |
+| `kubectl top pods -A --sort-by=cpu` | 按 CPU 排序 | 找资源消耗大户 |
+| `kubectl top pods -A --sort-by=memory` | 按内存排序 | 找内存泄漏 Pod |
+| `kubectl get pvc -A --field-selector=status.phase=Pending` | 未绑定的 PVC | 存储问题排查 |
+| `kubectl logs <pod> --previous \| tail -30` | 上一次崩溃日志 | CrashLoopBackOff 问题排查 |
+| `kubectl exec <pod> -- nslookup <svc>.<ns>.svc.cluster.local` | 验证 DNS | 网络问题必须先排除 DNS |
+| `kubectl -n kube-system logs kube-apiserver-<node> \| grep -i error \| tail -10` | apiserver 错误日志 | 集群级故障溯源 |
+| `journalctl -u kubelet --since "30 min ago" \| grep -i error` | 节点 kubelet 错误 | 节点 NotReady 溯源 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Kubernetes 官方：排错指南 | https://kubernetes.io/docs/tasks/debug/ |
+| Kubernetes 官方：排错 Pod | https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/ |
+| Kubernetes 官方：排错集群 | https://kubernetes.io/docs/tasks/debug/debug-cluster/ |
+| Kubernetes 常见问题 | https://github.com/kubernetes/kubernetes/wiki/User-FAQ |

@@ -2,6 +2,7 @@
 title: Day 22 - Prometheus 监控体系
 module: M7-监控日志与排错
 day: 22
+updated: 2026-06-10
 duration: 240 分钟
 level: 进阶
 prerequisites:
@@ -282,3 +283,34 @@ kubectl get svc <name> -o yaml | grep -A5 labels
 - Grafana 仪表盘可用（20 分）
 - 整体验证（15 分）
 ```
+
+---
+
+## 📋 命令速查
+
+| 命令 | 功能 | 注解 |
+|------|------|------|
+| `kubectl get --raw /metrics` | 查看 apiserver 指标 | 原生 Prometheus 格式，kube-state-metrics 的补充 |
+| `kubectl top nodes` | 查看节点实时资源用量 | 依赖 metrics-server |
+| `kubectl top pods -A --sort-by=cpu` | 按 CPU 排序 Pod 用量 | 按 `--sort-by=memory` 可改为内存排序 |
+| `kubectl port-forward -n monitoring svc/prometheus-server 9090:80` | 本地访问 Prometheus UI | 无 Ingress 时的快捷方式 |
+| `kubectl port-forward -n monitoring svc/grafana 3000:80` | 本地访问 Grafana | 默认账密 admin/admin |
+| `kubectl -n monitoring logs -l app=prometheus --tail=50` | 查看 Prometheus 日志 | Prometheus 启动失败时首要排查 |
+| `kubectl -n monitoring exec -it prometheus-<pod> -- promtool query instant http://localhost:9090 'up'` | Prometheus CLI 查询 | promtool 是 Prometheus 自带的调试工具 |
+| `helm repo add prometheus-community https://prometheus-community.github.io/helm-charts` | 添加 Prometheus Helm 仓库 | kube-prometheus-stack 包含 Prometheus+Grafana+AlertManager+NodeExporter |
+| `helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring --create-namespace` | 一键安装监控全家桶 | Helm Chart 安装是最快捷的方式 |
+| `kubectl get servicemonitor -A` | 列出 ServiceMonitor | Prometheus Operator CRD，定义采集目标 |
+| `kubectl get prometheusrules -A` | 列出告警规则 | Prometheus Operator CRD |
+| `kubectl get alertmanager -A` | 列出 AlertManager 实例 | Prometheus Operator CRD |
+| `kubectl -n kube-system logs -l k8s-app=metrics-server --tail=20` | 查看 metrics-server 日志 | kubectl top 不可用时的排错入口 |
+
+## 📚 参考来源
+
+| 来源 | 链接 / 说明 |
+|------|------------|
+| Prometheus 官方文档 | https://prometheus.io/docs/ |
+| Prometheus Operator 文档 | https://prometheus-operator.dev/ |
+| kube-prometheus-stack Helm Chart | https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack |
+| Grafana 官方文档 | https://grafana.com/docs/ |
+| Kubernetes 官方：监控 | https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/ |
+| PromQL 教程 | https://prometheus.io/docs/prometheus/latest/querying/basics/ |
