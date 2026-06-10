@@ -8,7 +8,7 @@ level: 基础
 prerequisites:
   - Docker 基础操作（docker run/build/push）
   - Linux 基本命令（systemctl、journalctl）
-  - 一台 Ubuntu 22.04 云服务器（≥ 2C4G）
+  - 一台 CentOS Stream 9 云服务器（≥ 2C4G）
 objectives:
   - 理解 K8s 架构（控制平面 vs 数据平面）
   - 掌握各核心组件的职责
@@ -121,9 +121,9 @@ net.ipv4.ip_forward                 = 1
 EOF
 sudo sysctl --system
 
-# 4. 安装 containerd
-sudo apt-get update
-sudo apt-get install -y containerd
+# 4. 安装 containerd（通过 Docker CE 仓库）
+sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo dnf install -y containerd.io
 sudo mkdir -p /etc/containerd
 containerd config default | sudo tee /etc/containerd/config.toml
 # 修改 SystemdCgroup = true
@@ -135,16 +135,20 @@ sudo systemctl enable containerd
 ### 安装 kubeadm/kubelet/kubectl
 
 ```bash
-# 5. 添加 K8s APT 源
-sudo apt-get update
-sudo apt-get install -y apt-transport-https ca-certificates curl gpg
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+# 5. 添加 K8s YUM 源
+cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
+EOF
 
 # 6. 安装
-sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl
-sudo apt-mark hold kubelet kubeadm kubectl
+sudo dnf install -y kubelet kubeadm kubectl
+sudo dnf install -y dnf-plugins-core
+sudo dnf versionlock kubelet kubeadm kubectl
 
 # 7. 验证版本
 kubeadm version
@@ -327,7 +331,7 @@ kubectl logs -n kube-system -l k8s-app=calico-node --tail=50
 **题目：单节点集群部署**
 
 ```
-【环境】一台全新的 Ubuntu 22.04 云服务器（2C4G）
+【环境】一台全新的 CentOS Stream 9 云服务器（2C4G）
 【要求】
 1. 安装 containerd、kubeadm、kubelet、kubectl（kubeadm 1.29）
 2. 使用 kubeadm 初始化单节点集群，指定：
@@ -359,11 +363,11 @@ kubectl logs -n kube-system -l k8s-app=calico-node --tail=50
 | `sudo modprobe br_netfilter` | 加载 br_netfilter 模块 | 允许桥接流量经过 iptables 处理 |
 | `sudo modprobe overlay` | 加载 overlay 模块 | 容器存储驱动依赖 |
 | `sudo sysctl --system` | 应用所有 sysctl 配置 | 重新加载 /etc/sysctl.d/ 下所有配置 |
-| `sudo apt-get install -y containerd` | 安装 containerd 运行时 | K8s 1.24+ 默认容器运行时 |
+| `sudo dnf install -y containerd.io` | 安装 containerd 运行时 | K8s 1.24+ 默认容器运行时，通过 Docker CE 仓库安装 |
 | `containerd config default \| sudo tee /etc/containerd/config.toml` | 生成 containerd 默认配置 | 必须修改 SystemdCgroup = true |
 | `sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml` | 启用 SystemdCgroup | 与 kubelet 的 cgroup 驱动保持一致 |
 | `sudo systemctl restart containerd && sudo systemctl enable containerd` | 重启并开机自启 containerd | 配置修改后必须重启 |
-| `sudo apt-mark hold kubelet kubeadm kubectl` | 锁定 K8s 组件版本 | 防止 apt upgrade 意外升级导致版本不一致 |
+| `sudo dnf versionlock kubelet kubeadm kubectl` | 锁定 K8s 组件版本 | 防止 dnf upgrade 意外升级导致版本不一致 |
 | `sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --kubernetes-version=v1.29.0` | 初始化 K8s 集群 | 下载镜像、生成证书、启动控制平面组件为静态 Pod |
 | `mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config` | 配置 kubectl 认证 | 将 admin 证书复制到用户目录 |
 | `sudo chown $(id -u):$(id -g) $HOME/.kube/config` | 修改 kubeconfig 权限 | 让普通用户也能使用 kubectl |

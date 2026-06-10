@@ -70,21 +70,20 @@ PVC 创建 → StorageClass → Provisioner → 自动创建 PV → 绑定 PVC
 # === 在 Master 或独立存储节点上安装 NFS Server ===
 
 # 1. 安装 NFS 服务端
-sudo apt-get update
-sudo apt-get install -y nfs-kernel-server
+sudo dnf install -y nfs-utils
 
 # 2. 创建共享目录
 sudo mkdir -p /srv/nfs/k8s
-sudo chown nobody:nogroup /srv/nfs/k8s
+sudo chown nobody:nobody /srv/nfs/k8s
 sudo chmod 777 /srv/nfs/k8s
 
 # 3. 配置 exports
 echo "/srv/nfs/k8s *(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
 sudo exportfs -rav
-sudo systemctl restart nfs-kernel-server
+sudo systemctl enable --now nfs-server
 
 # 4. 验证 NFS 可用（在 worker 节点测试）
-# sudo apt-get install -y nfs-common
+# sudo dnf install -y nfs-utils
 # sudo mount -t nfs <master-ip>:/srv/nfs/k8s /mnt
 # ls /mnt
 # sudo umount /mnt

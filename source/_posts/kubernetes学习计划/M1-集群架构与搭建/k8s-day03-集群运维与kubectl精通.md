@@ -193,18 +193,17 @@ kubectl get --raw='/healthz?verbose'
 # 1. 查看当前版本和可升级版本
 kubeadm upgrade plan
 
-# 2. 解锁 kubeadm（如果之前 hold 了）
-sudo apt-mark unhold kubeadm
-sudo apt-get update
-sudo apt-get install -y kubeadm=1.29.5-1.1  # 替换为目标版本
+# 2. 解锁 kubeadm（如果之前 versionlock 了）
+sudo dnf versionlock delete kubeadm
+sudo dnf install -y kubeadm-1.29.5  # 替换为目标版本
 
 # 3. 执行升级
 sudo kubeadm upgrade apply v1.29.5
 
 # 4. 升级 kubelet 和 kubectl
-sudo apt-mark unhold kubelet kubectl
-sudo apt-get install -y kubelet=1.29.5-1.1 kubectl=1.29.5-1.1
-sudo apt-mark hold kubelet kubectl
+sudo dnf versionlock delete kubelet kubectl
+sudo dnf install -y kubelet-1.29.5 kubectl-1.29.5
+sudo dnf versionlock add kubelet kubectl
 
 # 5. 重启 kubelet
 sudo systemctl daemon-reload
@@ -220,15 +219,14 @@ kubectl get nodes
 kubectl drain k8s-node1 --ignore-daemonsets --delete-emptydir-data
 
 # 8. 在 worker 上升级
-sudo apt-mark unhold kubeadm
-sudo apt-get update
-sudo apt-get install -y kubeadm=1.29.5-1.1
+sudo dnf versionlock delete kubeadm
+sudo dnf install -y kubeadm-1.29.5
 sudo kubeadm upgrade node
 
 # 9. 升级 kubelet
-sudo apt-mark unhold kubelet
-sudo apt-get install -y kubelet=1.29.5-1.1
-sudo apt-mark hold kubelet
+sudo dnf versionlock delete kubelet
+sudo dnf install -y kubelet-1.29.5
+sudo dnf versionlock add kubelet
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
 

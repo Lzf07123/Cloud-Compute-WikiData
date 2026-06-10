@@ -7,7 +7,7 @@ duration: 240 分钟
 level: 基础
 prerequisites:
   - Day 01 完成，单节点集群就绪
-  - 额外 2 台 Ubuntu 22.04 云服务器（≥ 2C2G）
+  - 额外 2 台 CentOS Stream 9 云服务器（≥ 2C2G）
   - 3 台服务器在同一内网（VPC）
 objectives:
   - 掌握 kubeadm join 流程
@@ -113,8 +113,8 @@ EOF
 sudo sysctl --system
 
 # containerd
-sudo apt-get update
-sudo apt-get install -y containerd
+sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo dnf install -y containerd.io
 sudo mkdir -p /etc/containerd
 containerd config default | sudo tee /etc/containerd/config.toml
 sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
@@ -122,12 +122,17 @@ sudo systemctl restart containerd
 sudo systemctl enable containerd
 
 # kubeadm/kubelet/kubectl
-sudo apt-get install -y apt-transport-https ca-certificates curl gpg
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
-sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl
-sudo apt-mark hold kubelet kubeadm kubectl
+cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
+EOF
+sudo dnf install -y kubelet kubeadm kubectl
+sudo dnf install -y dnf-plugins-core
+sudo dnf versionlock kubelet kubeadm kubectl
 ```
 
 **在 Master 上获取 join 命令：**
