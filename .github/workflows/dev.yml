@@ -21,4 +21,5 @@ jobs:
             git pull origin dev
             ls -la
             npx hexo clean
+            npx hexo generate
             systemctl restart hexo.service

@@ -21,6 +21,7 @@ jobs:
             git pull origin main
             ls -la
             /root/.nvm/versions/node/v26.2.0/bin/node /root/.nvm/versions/node/v26.2.0/bin/hexo clean
+            /root/.nvm/versions/node/v26.2.0/bin/node /root/.nvm/versions/node/v26.2.0/bin/hexo generate
             systemctl restart hexo.service
 
 
