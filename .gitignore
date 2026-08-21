@@ -1,6 +1,0 @@
-.DS_Store
-.env
-public/
-run.sh
-node_modules/
-db.json
